@@ -10,6 +10,7 @@ import MapCanvas from '@/v2/MapCanvas';
 import { Mode, Assignments, canCapture } from '@/v2/rules';
 import TerritoryDetailsPanel from '@/v2/TerritoryDetailsPanel';
 // applyCalendarUnlocks imported above
+import PlannerControls from '@/v2/PlannerControls';
 
 const seasons = { S1, S2, S3, S4 } as const;
 
@@ -170,6 +171,28 @@ export default function V2() {
       <main className="container mx-auto px-4 py-4 flex flex-col gap-3">
         <div className="flex items-center gap-3">
           {/* Action Timeline Controls */}
+          <div className="flex-1 min-w-[420px] border rounded bg-card/60 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-medium">Planner</div>
+            </div>
+            <PlannerControls
+              map={map}
+              season={season}
+              alliances={alliances}
+              currentTick={currentTick}
+              existingEvents={events}
+              replaceFutureDefault={true}
+              onUpdateAlliance={(id, patch) => {
+                setAlliances(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a));
+              }}
+              onApplyPlan={(planned, replaceFuture) => {
+                const past = events.filter(e => e.tick < currentTick);
+                const future = events.filter(e => e.tick >= currentTick);
+                const merged = replaceFuture ? [...past, ...planned] : [...events, ...planned];
+                setEvents(merged.sort((a,b)=> a.tick - b.tick));
+              }}
+            />
+          </div>
           <div className="flex-1 min-w-[420px] border rounded bg-card/60 p-3">
             <div className="flex items-center justify-between mb-2">
               <div className="font-medium">Action Timeline</div>
