@@ -287,7 +287,7 @@ export default function V2() {
           )}
         </div>
         {/* Bottom legend */}
-        <AllianceLegend map={map} assignments={derivedAssignments} selectedAlliance={selectedAlliance} onSelectAlliance={setSelectedAlliance} onCreateAlliance={handleCreateAlliance} onRemoveAlliance={handleRemoveAlliance} />
+        <AllianceLegend map={map} assignments={derivedAssignments} selectedAlliance={selectedAlliance} onSelectAlliance={setSelectedAlliance} onCreateAlliance={handleCreateAlliance} onRemoveAlliance={handleRemoveAlliance} events={events} currentTick={currentTick} />
 
 
       </main>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Assignments } from './rules';
-import { Alliance, MapData, Territory } from './domain';
+import { Alliance, MapData, Territory, type Tick, type ActionEvent, dayHalfFromTick } from './domain';
 import { Card } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,17 @@ interface Props {
   onSelectAlliance: (name: string | null) => void;
   onCreateAlliance: (name: string, color: string) => void;
   onRemoveAlliance: (id: string) => void;
+  events: ActionEvent[];
+  currentTick: Tick;
 }
 
-export default function AllianceLegend({ map, assignments, selectedAlliance, onSelectAlliance, onCreateAlliance, onRemoveAlliance }: Props) {
+export default function AllianceLegend({ map, assignments, selectedAlliance, onSelectAlliance, onCreateAlliance, onRemoveAlliance, events, currentTick }: Props) {
   const [openFor, setOpenFor] = useState<string | null>(null);
 
   const stats = useMemo(() => {
-    const byName = new Map<string, { alliance: Alliance; terr: Territory[]; mithril: number; spice: number }>();
-    for (const a of map.alliances) byName.set(a.name, { alliance: a, terr: [], mithril: 0, spice: 0 });
+    const { day } = dayHalfFromTick(currentTick);
+    const byName = new Map<string, { alliance: Alliance; terr: Territory[]; mithril: number; spice: number; todayS: number; todayC: number; lastTick: number | null; lastLabel: string | null }>();
+    for (const a of map.alliances) byName.set(a.name, { alliance: a, terr: [], mithril: 0, spice: 0, todayS: 0, todayC: 0, lastTick: null, lastLabel: null });
     for (const t of map.territories) {
       const asg = assignments[t.id];
       if (!asg) continue;
@@ -31,10 +34,29 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
       if (t.resourceType === 'Mithril') rec.mithril += t.resourceValue;
       if (t.resourceType === 'Spice') rec.spice += t.resourceValue;
     }
+    // daily caps used and last action label per alliance
+    for (const e of events) {
+      const rec = byName.get(e.alliance);
+      if (!rec) continue;
+      // Track last event per alliance
+      if (rec.lastTick === null || e.tick > rec.lastTick) {
+        const dhalf = dayHalfFromTick(e.tick);
+        rec.lastTick = e.tick;
+        rec.lastLabel = `Day ${dhalf.day} ${dhalf.half}`;
+      }
+      // Daily capture counts for today only
+      const d = dayHalfFromTick(e.tick).day;
+      if (d !== day || e.action !== 'capture') continue;
+      const t = map.territories.find(tt => tt.id === e.tileId);
+      if (!t) continue;
+      if (t.tileType === 'stronghold') rec.todayS += 1;
+      else if (t.tileType === 'city') rec.todayC += 1;
+    }
+
     const arr = Array.from(byName.values());
     arr.sort((a, b) => b.terr.length - a.terr.length);
     return arr;
-  }, [map.alliances, map.territories, assignments]);
+  }, [map.alliances, map.territories, assignments, events, currentTick]);
 
   return (
     <div className="mt-3 border rounded bg-card/60">
@@ -43,7 +65,7 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
         <CreateAllianceInline onCreate={onCreateAlliance} />
       </div>
       <div className="px-2 pb-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-        {stats.map(({ alliance, terr, mithril, spice }) => (
+        {stats.map(({ alliance, terr, mithril, spice, todayS, todayC, lastTick, lastLabel }) => (
           <Card key={alliance.id} className={`p-2 border ${selectedAlliance===alliance.name? 'ring-2 ring-primary': ''}`}>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: alliance.color }} />
@@ -57,6 +79,10 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
               <div>M/hr {mithril}</div>
               <div>S/hr {spice}</div>
               <div className="col-span-2">S {terr.filter(t=>t.tileType==='stronghold').length}/8 • C {terr.filter(t=>t.tileType==='city').length}/8</div>
+              <div className="col-span-2">Today: S {todayS}/2 • C {todayC}/2</div>
+              {lastLabel && (
+                <div className="col-span-2">Last: {lastLabel} • Tick {lastTick}</div>
+              )}
             </div>
             <div className="mt-2">
               <button className="text-xs underline" onClick={()=> setOpenFor(alliance.name)}>Details</button>
