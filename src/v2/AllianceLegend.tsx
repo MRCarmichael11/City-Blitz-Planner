@@ -65,10 +65,6 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
         ))}
       </div>
 
-      {/* Top 5 summary stays mounted below */}
-      <div className="p-2 border-t">
-        <TopFiveSummary map={map} assignments={assignments} />
-      </div>
 
       <Sheet open={!!openFor} onOpenChange={(v)=>{ if (!v) setOpenFor(null); }}>
         <SheetContent side="bottom" className="h-[70vh] overflow-y-auto">
@@ -107,38 +103,6 @@ function AllianceDetails({ name, map, assignments }: { name: string; map: MapDat
   );
 }
 
-function TopFiveSummary({ map, assignments }: { map: MapData; assignments: Assignments }) {
-  const list = useMemo(() => {
-    const agg = new Map<string, { alliance: Alliance; m: number; s: number; count: number }>();
-    for (const a of map.alliances) agg.set(a.name, { alliance: a, m: 0, s: 0, count: 0 });
-    for (const t of map.territories) {
-      const asg = assignments[t.id];
-      if (!asg) continue;
-      const rec = agg.get(asg.alliance);
-      if (!rec) continue;
-      if (t.resourceType === 'Mithril') rec.m += t.resourceValue;
-      if (t.resourceType === 'Spice') rec.s += t.resourceValue;
-      rec.count += 1;
-    }
-    return Array.from(agg.values())
-      .sort((a,b)=> (b.m+b.s) - (a.m+a.s))
-      .slice(0, 5);
-  }, [map.alliances, map.territories, assignments]);
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
-      {list.map(({ alliance, m, s, count }) => (
-        <Card key={alliance.id} className="p-2">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: alliance.color }} />
-            <div className="text-xs font-medium truncate" title={alliance.name}>{alliance.name}</div>
-            <div className="ml-auto text-[10px] text-muted-foreground">{count}</div>
-          </div>
-          <div className="mt-1 text-[10px] text-muted-foreground">M/hr {m} • S/hr {s}</div>
-        </Card>
-      ))}
-    </div>
-  );
-}
 
 function labelFor(t: Territory) {
   if (t.tileType === 'stronghold') return `S${t.buildingLevel}`;
