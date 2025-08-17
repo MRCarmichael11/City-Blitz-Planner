@@ -144,9 +144,9 @@ export default function V2() {
     }
   }, [alliances, events, season.key]);
 
-  const handleCreateAlliance = (name: string, color: string) => {
+  const handleCreateAlliance = (name: string, color: string, priority?: number) => {
     const id = 'a' + Math.random().toString(36).slice(2, 8);
-    setAlliances(prev => [...prev, { id, name, color }]);
+    setAlliances(prev => [...prev, { id, name, color, priority }]);
   };
   const handleRemoveAlliance = (id: string) => {
     setAlliances(prev => prev.filter(a => a.id !== id));
@@ -310,7 +310,7 @@ export default function V2() {
           )}
         </div>
         {/* Bottom legend */}
-        <AllianceLegend map={map} assignments={derivedAssignments} selectedAlliance={selectedAlliance} onSelectAlliance={setSelectedAlliance} onCreateAlliance={handleCreateAlliance} onRemoveAlliance={handleRemoveAlliance} events={events} currentTick={currentTick} />
+        <AllianceLegend map={map} assignments={derivedAssignments} selectedAlliance={selectedAlliance} onSelectAlliance={setSelectedAlliance} onCreateAlliance={handleCreateAlliance} onRemoveAlliance={handleRemoveAlliance} onUpdateAlliance={(id, patch)=> setAlliances(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a))} events={events} currentTick={currentTick} />
 
 
       </main>

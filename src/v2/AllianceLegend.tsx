@@ -12,13 +12,14 @@ interface Props {
   assignments: Assignments;
   selectedAlliance: string | null;
   onSelectAlliance: (name: string | null) => void;
-  onCreateAlliance: (name: string, color: string) => void;
+  onCreateAlliance: (name: string, color: string, priority?: number) => void;
   onRemoveAlliance: (id: string) => void;
+  onUpdateAlliance: (id: string, patch: Partial<Alliance>) => void;
   events: ActionEvent[];
   currentTick: Tick;
 }
 
-export default function AllianceLegend({ map, assignments, selectedAlliance, onSelectAlliance, onCreateAlliance, onRemoveAlliance, events, currentTick }: Props) {
+export default function AllianceLegend({ map, assignments, selectedAlliance, onSelectAlliance, onCreateAlliance, onRemoveAlliance, onUpdateAlliance, events, currentTick }: Props) {
   const [openFor, setOpenFor] = useState<string | null>(null);
 
   const stats = useMemo(() => {
@@ -80,6 +81,10 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
               <div>S/hr {spice}</div>
               <div className="col-span-2">S {terr.filter(t=>t.tileType==='stronghold').length}/8 • C {terr.filter(t=>t.tileType==='city').length}/8</div>
               <div className="col-span-2">Today: S {todayS}/2 • C {todayC}/2</div>
+              <div className="col-span-2 flex items-center gap-1">
+                <span>Priority</span>
+                <Input type="number" className="h-7 w-16" value={alliance.priority ?? ''} onChange={(e)=> onUpdateAlliance(alliance.id, { priority: e.target.value === '' ? undefined : Number(e.target.value) })} />
+              </div>
               {lastLabel && (
                 <div className="col-span-2">Last: {lastLabel} • Tick {lastTick}</div>
               )}
@@ -137,7 +142,7 @@ function labelFor(t: Territory) {
   return 'Cap';
 }
 
-function CreateAllianceInline({ onCreate }: { onCreate: (name: string, color: string) => void }) {
+function CreateAllianceInline({ onCreate }: { onCreate: (name: string, color: string, priority?: number) => void }) {
   const palette = [
     '#ef4444','#22c55e','#3b82f6','#eab308','#a855f7','#06b6d4','#f97316','#14b8a6','#84cc16','#f43f5e',
     '#8b5cf6','#0ea5e9','#10b981','#fb7185','#6366f1','#059669','#7c3aed','#f59e0b','#dc2626','#65a30d',
@@ -145,6 +150,7 @@ function CreateAllianceInline({ onCreate }: { onCreate: (name: string, color: st
   ];
   let name = '';
   let color = palette[0];
+  let priority: number | undefined = undefined;
   return (
     <div className="ml-auto flex items-center gap-2">
       <Input placeholder="Alliance name" onChange={(e)=> name = e.target.value} className="h-8 w-36" />
@@ -158,7 +164,11 @@ function CreateAllianceInline({ onCreate }: { onCreate: (name: string, color: st
           ))}
         </SelectContent>
       </Select>
-      <Button className="h-8" onClick={()=>{ if (!name.trim()) return; onCreate(name.trim(), color); }}>Add</Button>
+      <div className="flex items-center gap-1">
+        <span className="text-xs">Priority</span>
+        <Input type="number" className="h-8 w-20" onChange={(e)=> { const v = e.target.value; priority = v === '' ? undefined : Number(v); }} />
+      </div>
+      <Button className="h-8" onClick={()=>{ if (!name.trim()) return; onCreate(name.trim(), color, priority); }}>Add</Button>
     </div>
   );
 }
