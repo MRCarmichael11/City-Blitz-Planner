@@ -1,4 +1,4 @@
-import { Alliance, SeasonCalendar, Territory, Tick, ActionEvent, dayHalfFromTick } from './domain';
+import { Alliance, SeasonCalendar, Territory, Tick, ActionEvent, dayHalfFromTick, tickFromDayHalf } from './domain';
 
 export type Mode = 'planning' | 'action';
 
@@ -143,6 +143,19 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
   // Action mode restrictions
   // 1) Unlock state (cities only). Step 1 is a pre-unlock window; cities unlock starting step 2.
   if (!isCityUnlocked(t)) return { ok: false, reason: 'City is locked at this step' };
+
+  // Capitol rule: Only capturable at final day/tick of the season (last day PM) and final step
+  if (t.tileType === 'capitol') {
+    if (!p.currentTick) return { ok: false, reason: 'Capitol can only be captured at the final tick of the season' };
+    const sd = p.calendar.stepDays || [28];
+    const lastDay = sd[sd.length - 1] || 28;
+    const finalTick = tickFromDayHalf(lastDay, 'PM');
+    const { day } = dayHalfFromTick(p.currentTick);
+    const currentStep = (()=>{ let s=1; for (let i=0;i<sd.length;i++){ if (day >= sd[i]) s=i+1; } return Math.max(1, Math.min(s, p.calendar.steps)); })();
+    if (p.currentTick !== finalTick || currentStep !== p.calendar.steps) {
+      return { ok: false, reason: 'Capitol is only capturable at the final event (last day PM)' };
+    }
+  }
 
   // Determine if this alliance already owns anything
   const totals2 = countsTotal(p.assignments, p.selectedAlliance, p.territories);
