@@ -1,5 +1,5 @@
 import { ActionEvent, Alliance, MapData, SeasonDefinition, Territory, Tick, dayHalfFromTick, tickFromDayHalf, applyCalendarUnlocks } from './domain';
-import { Assignments, canCapture } from './rules';
+import { Assignments, canCapture, hasAdjacentOwned, countsTotal } from './rules';
 
 export interface PlannerOptions {
   replaceFuture?: boolean;
@@ -194,7 +194,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
       let side: 'N'|'S'|'E'|'W' = 'W';
       if (absx >= absy) side = dx < 0 ? 'W' : 'E'; else side = dy < 0 ? 'N' : 'S';
       const edges = map.territories.filter(t => isEdgeStronghold(t, map.gridSize.rows, map.gridSize.cols));
-      // Prefer Lv1 SH on the chosen side line first
+      // Prefer Lv1 SH on the chosen side line first, with at least one adjacent Lv1 neighbor for Day 1 PM
       const sideFilter = (t: Territory) => {
         if (side === 'W') return t.col === 1;
         if (side === 'E') return t.col === map.gridSize.cols;
@@ -202,9 +202,12 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
         return t.row === map.gridSize.rows;
       };
       const edgeOnSide = edges.filter(sideFilter);
-      const scoreNearest = (list: Territory[]) => {
+      const allLv1 = map.territories.filter(tt => tt.tileType === 'stronghold' && tt.buildingLevel === 1);
+      const hasLv1Neighbor = (t: Territory) => allLv1.some(nn => nn.id !== t.id && (Math.abs(latticeXY(nn).x - latticeXY(t).x) + Math.abs(latticeXY(nn).y - latticeXY(t).y) === 2));
+      const scoreNearest = (list: Territory[], requireNeighbor = false) => {
         let best: Territory | null = null; let bestScore = Infinity;
         for (const t of list) {
+          if (requireNeighbor && !hasLv1Neighbor(t)) continue;
           const p = latticeXY(t);
           const d = Math.abs(p.x - c.x) + Math.abs(p.y - c.y);
           if (d < bestScore) { bestScore = d; best = t; }
@@ -212,7 +215,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
         return best;
       };
       const lvl1OnSide = edgeOnSide.filter(t => t.buildingLevel === 1);
-      const pick = scoreNearest(lvl1OnSide) || scoreNearest(edgeOnSide) || scoreNearest(edges);
+      const pick = scoreNearest(lvl1OnSide, true) || scoreNearest(lvl1OnSide) || scoreNearest(edgeOnSide, true) || scoreNearest(edgeOnSide) || scoreNearest(edges);
       return pick ?? starts[a.name] ?? null;
     }
 
@@ -276,6 +279,34 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
           });
           // Strict corridor filter: only take cities inside corridor or explicitly in final plan for this alliance
           const adjStrict = adjPre.filter(ct => inCorridor(ct) || (plannedTarget[ct.id]?.alliance === a.name));
+          // If at city cap and still missing final targets, proactively free a slot (drop far, non-corridor, non-target), then recompute
+          const totalsC = countsTotal(currentAsgAM, a.name, terrUnlocked).cities;
+          const missingCityTargets = Object.entries(plannedTarget).some(([tid, asg]) => asg.alliance === a.name && terrUnlocked.find(t => t.id === tid) && currentAsgAM[tid]?.alliance !== a.name && terrUnlocked.find(t => t.id === tid)?.tileType === 'city');
+          if (totalsC >= 8 && missingCityTargets && adjStrict.length === 0 && ownedCities.length > 0) {
+            const sortedToDump = [...ownedCities]
+              .filter(t => !(plannedTarget[t.id]?.alliance === a.name))
+              .filter(t => !inCorridor(t))
+              .sort((aa,bb) => {
+                const da = Math.abs(latticeXY(aa).x - targetC.x) + Math.abs(latticeXY(aa).y - targetC.y);
+                const db = Math.abs(latticeXY(bb).x - targetC.x) + Math.abs(latticeXY(bb).y - targetC.y);
+                return db - da;
+              });
+            const dump = sortedToDump[0];
+            if (dump) {
+              const ev: ActionEvent = { tick: tickAM, tileId: dump.id, alliance: a.name, action: 'release' };
+              simEvents = [...simEvents, ev];
+              report.push(`Plan: ${a.name} release ${dump.coordinates} at Day ${day} AM to free city slot (proactive)`);
+              // recompute after drop
+              const afterAsg = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickAM);
+              const adjPre2 = candidates.filter(ct => {
+                if (reservedByOthers.has(ct.id)) return false;
+                const ok = canCapture(ct, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: afterAsg, selectedAlliance: a.name, currentTick: tickAM, events: simEvents } as const);
+                return ok.ok;
+              });
+              const adjStrict2 = adjPre2.filter(ct => inCorridor(ct) || (plannedTarget[ct.id]?.alliance === a.name));
+              adjStrict.splice(0, adjStrict.length, ...adjStrict2);
+            }
+          }
           // Prefer planned targets, then corridor alignment, then closeness to target centroid
           const prefer = (t: Territory) => (plannedTarget[t.id]?.alliance === a.name ? 1 : 0);
           adjPre.sort((x,y) => {
@@ -372,6 +403,38 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
         });
         // Strict corridor filter: only take SHs inside corridor or explicitly in final plan for this alliance
         const shAdj = shAdjPre.filter(st => inCorridor(st) || (plannedTarget[st.id]?.alliance === a.name));
+        // If at SH cap and still missing final targets, proactively free a slot (drop far, non-corridor, non-target), then recompute
+        const totalsS = countsTotal(buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM), a.name, terrUnlocked).strongholds;
+        const missingSHTargets = Object.entries(plannedTarget).some(([tid, asg]) => asg.alliance === a.name && terrUnlocked.find(t => t.id === tid) && buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM)[tid]?.alliance !== a.name && terrUnlocked.find(t => t.id === tid)?.tileType === 'stronghold');
+        if (totalsS >= 8 && missingSHTargets && shAdj.length === 0) {
+          const currentAsg2 = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM);
+          const ownedSH2 = Object.entries(currentAsg2)
+            .filter(([,v]) => v.alliance === a.name)
+            .map(([id]) => terrUnlocked.find(t => t.id === id)!)
+            .filter(t => t && t.tileType === 'stronghold');
+          const sortedToDump2 = [...ownedSH2]
+            .filter(t => !(plannedTarget[t.id]?.alliance === a.name))
+            .filter(t => !inCorridor(t))
+            .sort((aa,bb) => {
+              const da = Math.abs(latticeXY(aa).x - targetC.x) + Math.abs(latticeXY(aa).y - targetC.y);
+              const db = Math.abs(latticeXY(bb).x - targetC.x) + Math.abs(latticeXY(bb).y - targetC.y);
+              return db - da;
+            });
+          const dump2 = sortedToDump2[0];
+          if (dump2) {
+            const ev: ActionEvent = { tick: tickPM, tileId: dump2.id, alliance: a.name, action: 'release' };
+            simEvents = [...simEvents, ev];
+            report.push(`Plan: ${a.name} release ${dump2.coordinates} at Day ${day} PM to free SH slot (proactive)`);
+            // recompute after drop
+            const afterAsg2 = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM);
+            const shAdjPre2 = shCand.filter(st => {
+              const res = canCapture(st, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: afterAsg2, selectedAlliance: a.name, currentTick: tickPM, events: simEvents } as const);
+              return res.ok;
+            });
+            const shAdj2 = shAdjPre2.filter(st => inCorridor(st) || (plannedTarget[st.id]?.alliance === a.name));
+            shAdj.splice(0, shAdj.length, ...shAdj2);
+          }
+        }
         const preferSH = (t: Territory) => (plannedTarget[t.id]?.alliance === a.name ? 1 : 0);
         shAdj.sort((x,y) => {
           const py = preferSH(y) - preferSH(x);
