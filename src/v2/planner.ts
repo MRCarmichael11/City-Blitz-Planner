@@ -238,6 +238,9 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
       const targetC = centroidFor(a);
       const start = chooseStartForAlliance(a);
       const width = priorityCorridorWidth(a.priority);
+      // Precompute strict corridor mask toward target (width by priority)
+      const inCorridor = (t: Territory) => corridorPenaltyToTarget(latticeXY(t), start, targetC, width) <= 0.5;
+      const corridorSet = new Set<string>(map.territories.filter(tt => isCapturable(tt) && inCorridor(tt)).map(tt => tt.id));
 
       for (let day = currentDay; day <= lastDay; day++) {
         const step = stepFromDay(day, season);
@@ -271,6 +274,8 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
             const ok = canCapture(ct, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: currentAsgAM, selectedAlliance: a.name, currentTick: tickAM, events: simEvents } as const);
             return ok.ok;
           });
+          // Strict corridor filter: only take cities inside corridor or explicitly in final plan for this alliance
+          const adjStrict = adjPre.filter(ct => inCorridor(ct) || (plannedTarget[ct.id]?.alliance === a.name));
           // Prefer planned targets, then corridor alignment, then closeness to target centroid
           const prefer = (t: Territory) => (plannedTarget[t.id]?.alliance === a.name ? 1 : 0);
           adjPre.sort((x,y) => {
@@ -283,7 +288,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
             const dy = (Math.abs(py2.x - targetC.x) + Math.abs(py2.y - targetC.y));
             return dx - dy;
           });
-          const previewTargets = adjPre.slice(0, 2);
+          const previewTargets = adjStrict.slice(0, 2);
           const needCitySlots = Math.max(0, (ownedCities.length + previewTargets.length) - 8);
           if (needCitySlots > 0) {
             // Avoid dropping planned end-state cities and those adjacent to today's preview targets
@@ -312,7 +317,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
           }
           // Now actually take up to 2 cities for the AM
           let takenC = 0;
-          for (const ct of adjPre) {
+          for (const ct of adjStrict) {
             if (takenC >= 2) break;
             const placed = scheduleCapture(a.name, ct, tickAM);
             if (placed) {
@@ -361,10 +366,12 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
         }
         // Apply pacing filter
         shCand = shCand.filter(t => maxAllowedByPriority(a, t));
-        const shAdj = shCand.filter(st => {
+        const shAdjPre = shCand.filter(st => {
           const res = canCapture(st, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: simAssignments, selectedAlliance: a.name, currentTick: tickPM, events: simEvents } as const);
           return res.ok;
         });
+        // Strict corridor filter: only take SHs inside corridor or explicitly in final plan for this alliance
+        const shAdj = shAdjPre.filter(st => inCorridor(st) || (plannedTarget[st.id]?.alliance === a.name));
         const preferSH = (t: Territory) => (plannedTarget[t.id]?.alliance === a.name ? 1 : 0);
         shAdj.sort((x,y) => {
           const py = preferSH(y) - preferSH(x);
@@ -424,6 +431,10 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
       // Reserve this alliance's planned target tiles to avoid lower priorities trying to take them
       for (const [tid, v] of Object.entries(plannedTarget)) {
         if (v.alliance === a.name) reservedByOthers.add(tid);
+      }
+      // Also reserve this alliance's corridor for lower priorities (top priorities only)
+      if ((a.priority ?? 99) <= 2) {
+        for (const tid of corridorSet) reservedByOthers.add(tid);
       }
     }
 
