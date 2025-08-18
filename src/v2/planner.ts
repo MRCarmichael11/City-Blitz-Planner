@@ -5,6 +5,7 @@ export interface PlannerOptions {
   replaceFuture?: boolean;
   maxTick?: Tick;
   plowBias?: 'center' | 'breadth';
+  corridorWidth?: number; // desired corridor width in tiles (4-6 typical)
 }
 
 export interface PlannerResult {
@@ -60,12 +61,21 @@ function pickStarts(alliances: Alliance[], map: MapData): Record<string, Territo
   const anchors = anchorCandidates(map.gridSize.rows, map.gridSize.cols);
   const used = new Set<string>();
   const sh = map.territories.filter(t => isEdgeStronghold(t, map.gridSize.rows, map.gridSize.cols));
-  function nearestTo(r: number, c: number): Territory | null {
-    let best: Territory | null = null; let bestD = Number.POSITIVE_INFINITY;
+  const assigned: Territory[] = [];
+  function pickStartNear(r: number, c: number): Territory | null {
+    let best: Territory | null = null; let bestScore = -Infinity;
     for (const t of sh) {
       if (used.has(t.id)) continue;
-      const d = Math.abs(t.row - r) + Math.abs(t.col - c);
-      if (d < bestD) { bestD = d; best = t; }
+      // maximize distance to already assigned starts to create spacing
+      let minDist = Infinity;
+      for (const a of assigned) {
+        const d = Math.abs(t.row - a.row) + Math.abs(t.col - a.col);
+        if (d < minDist) minDist = d;
+      }
+      if (!assigned.length) minDist = 999;
+      const toAnchor = Math.abs(t.row - r) + Math.abs(t.col - c);
+      const score = minDist * 100 - toAnchor; // heavy spacing bias, tie-break by closeness to anchor
+      if (score > bestScore) { bestScore = score; best = t; }
     }
     return best;
   }
@@ -87,8 +97,8 @@ function pickStarts(alliances: Alliance[], map: MapData): Record<string, Territo
       const opposite = (anchorIndex + 2) % anchors.length;
       const a2 = anchors[opposite];
       const targetAnchor = (i % 2 === 0) ? a1 : a2;
-      const start = nearestTo(targetAnchor.r, targetAnchor.c);
-      if (start) used.add(start.id);
+      const start = pickStartNear(targetAnchor.r, targetAnchor.c);
+      if (start) { used.add(start.id); assigned.push(start); }
       starts[a.name] = start ?? null;
       if (i % 2 === 1) anchorIndex++; // advance after assigning pair
     }
@@ -113,6 +123,7 @@ function stepFromDay(day: number, season: SeasonDefinition): number {
 export function planSeason(map: MapData, season: SeasonDefinition, alliances: Alliance[], currentTick: Tick, existingEvents: ActionEvent[], options?: PlannerOptions): PlannerResult {
   const report: string[] = [];
   const maxTick = options?.maxTick ?? endOfSeasonTick(season);
+  const corridorWidth = Math.max(2, Math.min(8, options?.corridorWidth ?? 4));
 
   // Priority ordering (lower number = higher priority)
   const allies = [...alliances].sort((a, b) => (a.priority ?? Number.POSITIVE_INFINITY) - (b.priority ?? Number.POSITIVE_INFINITY));
@@ -172,10 +183,29 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
   // Scoring helpers (favor center proximity; strongholds favor preferred level)
   const cap = findCapitol(map.territories);
   const capXY = cap ? latticeXY(cap) : { x: (map.gridSize.cols*2)/2, y: (map.gridSize.rows*2)/2 };
-  function scoreCity(t: Territory) { return -manhattan(latticeXY(t), capXY); }
-  function scoreStronghold(t: Territory, preferredLevel: number) {
+  function scoreCity(t: Territory, start: Territory | null) {
+    const base = -manhattan(latticeXY(t), capXY);
+    // corridor preference: penalize being far from the start->cap line beyond corridorWidth/2
+    if (!start) return base;
+    const s = latticeXY(start); const p = latticeXY(t);
+    const vx = capXY.x - s.x, vy = capXY.y - s.y;
+    const vLen = Math.max(1, Math.hypot(vx, vy));
+    const nx = -vy / vLen, ny = vx / vLen; // unit normal
+    const dist = Math.abs((p.x - s.x) * nx + (p.y - s.y) * ny);
+    const penalty = Math.max(0, dist - corridorWidth / 2) * 2; // 2 points per unit outside
+    return base - penalty;
+  }
+  function scoreStronghold(t: Territory, preferredLevel: number, start: Territory | null) {
     const levelScore = (t.buildingLevel === preferredLevel) ? 1000 : (t.buildingLevel === preferredLevel - 1 ? 500 : 0);
-    return levelScore - manhattan(latticeXY(t), capXY);
+    const base = levelScore - manhattan(latticeXY(t), capXY);
+    if (!start) return base;
+    const s = latticeXY(start); const p = latticeXY(t);
+    const vx = capXY.x - s.x, vy = capXY.y - s.y;
+    const vLen = Math.max(1, Math.hypot(vx, vy));
+    const nx = -vy / vLen, ny = vx / vLen;
+    const dist = Math.abs((p.x - s.x) * nx + (p.y - s.y) * ny);
+    const penalty = Math.max(0, dist - corridorWidth / 2) * 2;
+    return base - penalty;
   }
 
   // Day-by-day greedy scheduling
@@ -188,7 +218,64 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
     // Enforce first capture if needed
     for (const a of allies) ensureFirstCapture(a, day);
 
-    // City pass: up to 2 per alliance/day (only current unlocked level)
+    // Stronghold pass first: up to 2 per alliance/day (prefer highest allowed level, then lower)
+    for (const a of allies) {
+      let takenS = 0;
+      const asg = buildAssignmentsUpToTick(simEvents, map.territories, tickPM);
+      const ownedIds = new Set(Object.entries(asg).filter(([,v]) => v.alliance === a.name).map(([k]) => k));
+      const sh = map.territories.filter(t => t.tileType === 'stronghold' && t.buildingLevel <= shLvl && !ownedIds.has(t.id));
+      const adj = sh.filter(st => {
+        const res = canCapture(st, { mode:'action', step: stepFromDay(day, season), calendar: season.calendar, territories: map.territories, assignments: asg, selectedAlliance: a.name, currentTick: tickAM, events: simEvents } as const);
+        return res.ok;
+      });
+      const start = starts[a.name] ?? null;
+      adj.sort((x,y) => scoreStronghold(y, shLvl, start) - scoreStronghold(x, shLvl, start));
+
+      // Determine how many we expect to take today (up to 2)
+      const previewTargets = adj.slice(0, 2);
+
+      // Release planning to free capacity for higher-level captures (drop lowest-level farthest from center, not adjacent to targets)
+      const currentAsg = buildAssignmentsUpToTick(simEvents, map.territories, tickAM);
+      const ownedSH = Object.entries(currentAsg)
+        .filter(([,v]) => v.alliance === a.name)
+        .map(([id]) => map.territories.find(t => t.id === id)!)
+        .filter(t => t && t.tileType === 'stronghold');
+      const strongholdCount = ownedSH.length;
+      const needSlots = Math.max(0, (strongholdCount + previewTargets.length) - 8);
+      if (needSlots > 0) {
+        // protected adjacency set: tiles near targets should not be released
+        const protectedIds = new Set<string>();
+        for (const tgt of previewTargets) {
+          for (const o of ownedSH) {
+            const man = Math.abs((2*o.col + (o.offset?.x?1:0)) - (2*tgt.col + (tgt.offset?.x?1:0))) + Math.abs((2*o.row + (o.offset?.y?1:0)) - (2*tgt.row + (tgt.offset?.y?1:0)));
+            if (man === 2) protectedIds.add(o.id);
+          }
+        }
+        const sortedToDump = [...ownedSH]
+          .filter(t => !protectedIds.has(t.id))
+          .sort((a,b) => {
+            // prefer lower level, then farther from center
+            if (a.buildingLevel !== b.buildingLevel) return a.buildingLevel - b.buildingLevel;
+            const da = manhattan(latticeXY(a), capXY);
+            const db = manhattan(latticeXY(b), capXY);
+            return db - da;
+          });
+        for (let i = 0; i < Math.min(needSlots, sortedToDump.length); i++) {
+          const dump = sortedToDump[i];
+          const ev: ActionEvent = { tick: tickAM, tileId: dump.id, alliance: a.name, action: 'release' };
+          simEvents = [...simEvents, ev];
+          report.push(`Plan: ${a.name} release ${dump.coordinates} at Day ${day} AM to free slot`);
+        }
+      }
+
+      for (const st of adj) {
+        if (takenS >= 2) break;
+        const placed = scheduleCapture(a.name, st, tickAM);
+        if (placed) takenS++;
+      }
+    }
+
+    // City pass second: up to 2 per alliance/day (only current unlocked level)
     if (cityLvl >= 1) {
       for (const a of allies) {
         let takenC = 0;
@@ -196,33 +283,16 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
         const ownedIds = new Set(Object.entries(asg).filter(([,v]) => v.alliance === a.name).map(([k]) => k));
         const cities = map.territories.filter(t => t.tileType === 'city' && t.buildingLevel === cityLvl && !ownedIds.has(t.id));
         const adj = cities.filter(ct => {
-          const res = canCapture(ct, { mode:'action', step: stepFromDay(day, season), calendar: season.calendar, territories: map.territories, assignments: asg, selectedAlliance: a.name, currentTick: tickAM, events: simEvents } as const);
+          const res = canCapture(ct, { mode:'action', step: stepFromDay(day, season), calendar: season.calendar, territories: map.territories, assignments: asg, selectedAlliance: a.name, currentTick: tickPM, events: simEvents } as const);
           return res.ok;
         });
-        adj.sort((x,y) => scoreCity(y) - scoreCity(x));
+        const start = starts[a.name] ?? null;
+        adj.sort((x,y) => scoreCity(y, start) - scoreCity(x, start));
         for (const ct of adj) {
           if (takenC >= 2) break;
-          const placed = scheduleCapture(a.name, ct, tickAM);
+          const placed = scheduleCapture(a.name, ct, tickPM);
           if (placed) takenC++;
         }
-      }
-    }
-
-    // Stronghold pass: up to 2 per alliance/day (prefer highest allowed level, then lower)
-    for (const a of allies) {
-      let takenS = 0;
-      const asg = buildAssignmentsUpToTick(simEvents, map.territories, tickPM);
-      const ownedIds = new Set(Object.entries(asg).filter(([,v]) => v.alliance === a.name).map(([k]) => k));
-      const sh = map.territories.filter(t => t.tileType === 'stronghold' && t.buildingLevel <= shLvl && !ownedIds.has(t.id));
-      const adj = sh.filter(st => {
-        const res = canCapture(st, { mode:'action', step: stepFromDay(day, season), calendar: season.calendar, territories: map.territories, assignments: asg, selectedAlliance: a.name, currentTick: tickPM, events: simEvents } as const);
-        return res.ok;
-      });
-      adj.sort((x,y) => scoreStronghold(y, shLvl) - scoreStronghold(x, shLvl));
-      for (const st of adj) {
-        if (takenS >= 2) break;
-        const placed = scheduleCapture(a.name, st, tickPM);
-        if (placed) takenS++;
       }
     }
   }
