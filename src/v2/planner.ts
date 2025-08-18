@@ -1,4 +1,4 @@
-import { ActionEvent, Alliance, MapData, SeasonDefinition, Territory, Tick, dayHalfFromTick, tickFromDayHalf } from './domain';
+import { ActionEvent, Alliance, MapData, SeasonDefinition, Territory, Tick, dayHalfFromTick, tickFromDayHalf, applyCalendarUnlocks } from './domain';
 import { Assignments, canCapture } from './rules';
 
 export interface PlannerOptions {
@@ -123,7 +123,7 @@ function stepFromDay(day: number, season: SeasonDefinition): number {
 export function planSeason(map: MapData, season: SeasonDefinition, alliances: Alliance[], currentTick: Tick, existingEvents: ActionEvent[], options?: PlannerOptions): PlannerResult {
   const report: string[] = [];
   const maxTick = options?.maxTick ?? endOfSeasonTick(season);
-  const corridorWidth = Math.max(2, Math.min(8, options?.corridorWidth ?? 4));
+  const corridorWidthBase = Math.max(2, Math.min(8, options?.corridorWidth ?? 4));
 
   // Priority ordering (lower number = higher priority)
   const allies = [...alliances].sort((a, b) => (a.priority ?? Number.POSITIVE_INFINITY) - (b.priority ?? Number.POSITIVE_INFINITY));
@@ -180,70 +180,145 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
     scheduleCapture(a.name, start, tickAM);
   };
 
-  // Scoring helpers (favor center proximity; strongholds favor preferred level)
+  // Scoring helpers with priority-scaled center bias and corridor width
   const cap = findCapitol(map.territories);
   const capXY = cap ? latticeXY(cap) : { x: (map.gridSize.cols*2)/2, y: (map.gridSize.rows*2)/2 };
-  function scoreCity(t: Territory, start: Territory | null) {
-    const base = -manhattan(latticeXY(t), capXY);
-    // corridor preference: penalize being far from the start->cap line beyond corridorWidth/2
-    if (!start) return base;
-    const s = latticeXY(start); const p = latticeXY(t);
+  function corridorPenalty(p: {x:number;y:number}, start: Territory | null, width: number) {
+    if (!start) return 0;
+    const s = latticeXY(start);
     const vx = capXY.x - s.x, vy = capXY.y - s.y;
     const vLen = Math.max(1, Math.hypot(vx, vy));
     const nx = -vy / vLen, ny = vx / vLen; // unit normal
     const dist = Math.abs((p.x - s.x) * nx + (p.y - s.y) * ny);
-    const penalty = Math.max(0, dist - corridorWidth / 2) * 2; // 2 points per unit outside
-    return base - penalty;
+    const pen = Math.max(0, dist - width / 2) * 2;
+    return pen;
   }
-  function scoreStronghold(t: Territory, preferredLevel: number, start: Territory | null) {
-    const levelScore = (t.buildingLevel === preferredLevel) ? 1000 : (t.buildingLevel === preferredLevel - 1 ? 500 : 0);
-    const base = levelScore - manhattan(latticeXY(t), capXY);
-    if (!start) return base;
-    const s = latticeXY(start); const p = latticeXY(t);
+  function insideCorridor(p: {x:number;y:number}, start: Territory | null, width: number) {
+    if (!start) return false;
+    const s = latticeXY(start);
     const vx = capXY.x - s.x, vy = capXY.y - s.y;
     const vLen = Math.max(1, Math.hypot(vx, vy));
     const nx = -vy / vLen, ny = vx / vLen;
     const dist = Math.abs((p.x - s.x) * nx + (p.y - s.y) * ny);
-    const penalty = Math.max(0, dist - corridorWidth / 2) * 2;
-    return base - penalty;
+    return dist <= width / 2;
+  }
+  function priorityCorridorWidth(priority?: number) {
+    if (priority === 1) return corridorWidthBase + 2;
+    if (priority === 2) return corridorWidthBase + 1;
+    if (priority === 3) return corridorWidthBase;
+    return Math.max(2, corridorWidthBase - 1);
+  }
+  function centerBias(priority?: number) {
+    if (priority === 1) return 2.0;
+    if (priority === 2) return 1.5;
+    if (priority === 3) return 1.2;
+    return 1.0;
+  }
+  function scoreCity(t: Territory, a: Alliance, startsMap: Record<string, Territory | null>, p1Start: Territory | null, p2Start: Territory | null) {
+    const p = latticeXY(t);
+    const base = -manhattan(p, capXY) * centerBias(a.priority);
+    const start = startsMap[a.name] ?? null;
+    const width = priorityCorridorWidth(a.priority);
+    const pen = corridorPenalty(p, start, width);
+    let avoidPen = 0;
+    if ((a.priority ?? 99) > 2) {
+      if (insideCorridor(p, p1Start, priorityCorridorWidth(1))) avoidPen += 50;
+      if (insideCorridor(p, p2Start, priorityCorridorWidth(2))) avoidPen += 30;
+    }
+    return base - pen - avoidPen;
+  }
+  function scoreStronghold(t: Territory, preferredLevel: number, a: Alliance, startsMap: Record<string, Territory | null>, p1Start: Territory | null, p2Start: Territory | null) {
+    const p = latticeXY(t);
+    const levelScore = (t.buildingLevel === preferredLevel) ? 1000 : (t.buildingLevel === preferredLevel - 1 ? 500 : 0);
+    const base = levelScore - manhattan(p, capXY) * centerBias(a.priority);
+    const start = startsMap[a.name] ?? null;
+    const width = priorityCorridorWidth(a.priority);
+    const pen = corridorPenalty(p, start, width);
+    let avoidPen = 0;
+    if ((a.priority ?? 99) > 2) {
+      if (insideCorridor(p, p1Start, priorityCorridorWidth(1))) avoidPen += 50;
+      if (insideCorridor(p, p2Start, priorityCorridorWidth(2))) avoidPen += 30;
+    }
+    return base - pen - avoidPen;
   }
 
   // Day-by-day greedy scheduling
+  // Identify top two priority starts for corridor reservation
+  const pSorted = [...allies].sort((a,b) => (a.priority ?? 99) - (b.priority ?? 99));
+  const p1 = pSorted[0];
+  const p2 = pSorted[1];
+  const p1Start = p1 ? starts[p1.name] ?? null : null;
+  const p2Start = p2 ? starts[p2.name] ?? null : null;
+
   for (let day = currentDay; day <= lastDay; day++) {
     const tickAM = tickFromDayHalf(day, 'AM');
     const tickPM = tickFromDayHalf(day, 'PM');
     const cityLvl = unlockedCityLevelAt(day); // 0 if cities locked
-    const shLvl = allowedStrongholdLevelAt(day);
+    const shLvl = Math.max(1, Math.min(6, allowedStrongholdLevelAt(day) + 1));
 
     // Enforce first capture if needed
     for (const a of allies) ensureFirstCapture(a, day);
 
-    // Stronghold pass first: up to 2 per alliance/day (prefer highest allowed level, then lower)
+    // CITY PASS FIRST (AM)
+    if (cityLvl >= 1) {
+      for (const a of allies) {
+        let takenC = 0;
+        const step = stepFromDay(day, season);
+        const tickCity = tickFromDayHalf(day, 'AM');
+        const terrUnlocked = applyCalendarUnlocks(map.territories, season.calendar, step);
+        const asg = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickCity);
+        const ownedIds = new Set(Object.entries(asg).filter(([,v]) => v.alliance === a.name).map(([k]) => k));
+        const tiers = Array.from({ length: cityLvl }, (_, i) => cityLvl - i);
+        for (const tier of tiers) {
+          if (takenC >= 2) break;
+          const pool = terrUnlocked.filter(t => t.tileType === 'city' && t.buildingLevel === tier && !ownedIds.has(t.id));
+          const adj = pool.filter(ct => {
+            const ok = canCapture(ct, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: asg, selectedAlliance: a.name, currentTick: tickCity, events: simEvents } as const);
+            if (!ok.ok) return false;
+            const holder = asg[ct.id]?.alliance;
+            if (holder && holder !== a.name) return false;
+            return true;
+          });
+          adj.sort((x,y) => scoreCity(y, a, starts, p1Start, p2Start) - scoreCity(x, a, starts, p1Start, p2Start));
+          for (const ct of adj) {
+            if (takenC >= 2) break;
+            const placed = scheduleCapture(a.name, ct, tickCity);
+            if (placed) takenC++;
+          }
+        }
+      }
+    }
+
+    // STRONGHOLD PASS SECOND (PM)
     for (const a of allies) {
       let takenS = 0;
-      const asg = buildAssignmentsUpToTick(simEvents, map.territories, tickPM);
+      const step = stepFromDay(day, season);
+      const tickCity = tickFromDayHalf(day, 'AM');
+      const terrUnlocked = applyCalendarUnlocks(map.territories, season.calendar, step);
+      const asg = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM);
       const ownedIds = new Set(Object.entries(asg).filter(([,v]) => v.alliance === a.name).map(([k]) => k));
-      const sh = map.territories.filter(t => t.tileType === 'stronghold' && t.buildingLevel <= shLvl && !ownedIds.has(t.id));
+      const sh = terrUnlocked.filter(t => t.tileType === 'stronghold' && t.buildingLevel <= shLvl && !ownedIds.has(t.id));
       const adj = sh.filter(st => {
-        const res = canCapture(st, { mode:'action', step: stepFromDay(day, season), calendar: season.calendar, territories: map.territories, assignments: asg, selectedAlliance: a.name, currentTick: tickAM, events: simEvents } as const);
-        return res.ok;
+        const res = canCapture(st, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: asg, selectedAlliance: a.name, currentTick: tickPM, events: simEvents } as const);
+        if (!res.ok) return false;
+        const holder = asg[st.id]?.alliance;
+        if (holder && holder !== a.name) return false;
+        return true;
       });
-      const start = starts[a.name] ?? null;
-      adj.sort((x,y) => scoreStronghold(y, shLvl, start) - scoreStronghold(x, shLvl, start));
+      adj.sort((x,y) => scoreStronghold(y, shLvl, a, starts, p1Start, p2Start) - scoreStronghold(x, shLvl, a, starts, p1Start, p2Start));
 
       // Determine how many we expect to take today (up to 2)
       const previewTargets = adj.slice(0, 2);
 
       // Release planning to free capacity for higher-level captures (drop lowest-level farthest from center, not adjacent to targets)
-      const currentAsg = buildAssignmentsUpToTick(simEvents, map.territories, tickAM);
+      const currentAsg = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM);
       const ownedSH = Object.entries(currentAsg)
         .filter(([,v]) => v.alliance === a.name)
-        .map(([id]) => map.territories.find(t => t.id === id)!)
+        .map(([id]) => terrUnlocked.find(t => t.id === id)!)
         .filter(t => t && t.tileType === 'stronghold');
       const strongholdCount = ownedSH.length;
       const needSlots = Math.max(0, (strongholdCount + previewTargets.length) - 8);
       if (needSlots > 0) {
-        // protected adjacency set: tiles near targets should not be released
         const protectedIds = new Set<string>();
         for (const tgt of previewTargets) {
           for (const o of ownedSH) {
@@ -254,7 +329,6 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
         const sortedToDump = [...ownedSH]
           .filter(t => !protectedIds.has(t.id))
           .sort((a,b) => {
-            // prefer lower level, then farther from center
             if (a.buildingLevel !== b.buildingLevel) return a.buildingLevel - b.buildingLevel;
             const da = manhattan(latticeXY(a), capXY);
             const db = manhattan(latticeXY(b), capXY);
@@ -262,37 +336,16 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
           });
         for (let i = 0; i < Math.min(needSlots, sortedToDump.length); i++) {
           const dump = sortedToDump[i];
-          const ev: ActionEvent = { tick: tickAM, tileId: dump.id, alliance: a.name, action: 'release' };
+          const ev: ActionEvent = { tick: tickPM, tileId: dump.id, alliance: a.name, action: 'release' };
           simEvents = [...simEvents, ev];
-          report.push(`Plan: ${a.name} release ${dump.coordinates} at Day ${day} AM to free slot`);
+          report.push(`Plan: ${a.name} release ${dump.coordinates} at Day ${day} PM to free slot`);
         }
       }
 
       for (const st of adj) {
         if (takenS >= 2) break;
-        const placed = scheduleCapture(a.name, st, tickAM);
+        const placed = scheduleCapture(a.name, st, tickPM);
         if (placed) takenS++;
-      }
-    }
-
-    // City pass second: up to 2 per alliance/day (only current unlocked level)
-    if (cityLvl >= 1) {
-      for (const a of allies) {
-        let takenC = 0;
-        const asg = buildAssignmentsUpToTick(simEvents, map.territories, tickPM);
-        const ownedIds = new Set(Object.entries(asg).filter(([,v]) => v.alliance === a.name).map(([k]) => k));
-        const cities = map.territories.filter(t => t.tileType === 'city' && t.buildingLevel === cityLvl && !ownedIds.has(t.id));
-        const adj = cities.filter(ct => {
-          const res = canCapture(ct, { mode:'action', step: stepFromDay(day, season), calendar: season.calendar, territories: map.territories, assignments: asg, selectedAlliance: a.name, currentTick: tickPM, events: simEvents } as const);
-          return res.ok;
-        });
-        const start = starts[a.name] ?? null;
-        adj.sort((x,y) => scoreCity(y, start) - scoreCity(x, start));
-        for (const ct of adj) {
-          if (takenC >= 2) break;
-          const placed = scheduleCapture(a.name, ct, tickPM);
-          if (placed) takenC++;
-        }
       }
     }
   }
