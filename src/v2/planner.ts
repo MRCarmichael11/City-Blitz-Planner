@@ -7,6 +7,8 @@ export interface PlannerOptions {
   plowBias?: 'center' | 'breadth';
   corridorWidth?: number; // desired corridor width in tiles (4-6 typical)
   plannedTarget?: Assignments; // final-day planned assignments to bias toward
+  // When true, planner will strongly prefer planned target tiles over non-target tiles
+  strictToTarget?: boolean;
 }
 
 export interface PlannerResult {
@@ -170,7 +172,8 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
     const step = stepFromDay(day, season);
     return Math.max(0, Math.min(6, step - 1));
   };
-  const allowedStrongholdLevelAt = (day: number) => Math.max(1, Math.min(6, unlockedCityLevelAt(day) + 1));
+  // Strongholds are NOT level-gated by step in rules; only first capture must be Lv1, adjacency after
+const allowedStrongholdLevelAt = (_day: number) => 6;
 
   // Ensure first capture (Lv1 SH) if alliance has no holdings yet
   const ensureFirstCapture = (a: Alliance, day: number) => {
@@ -291,11 +294,18 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
           const adj = pool.filter(ct => {
             const ok = canCapture(ct, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: asg, selectedAlliance: a.name, currentTick: tickCity, events: simEvents } as const);
             if (!ok.ok) return false;
-            const holder = asg[ct.id]?.alliance;
-            if (holder && holder !== a.name) return false;
             return true;
           });
-          adj.sort((x,y) => scoreCity(y, a, starts, p1Start, p2Start) - scoreCity(x, a, starts, p1Start, p2Start));
+          // If strictToTarget, move planned target tiles of this alliance to the front before score sort
+          const preferC = (t: Territory) => {
+            const planned = plannedTarget[t.id];
+            return planned && planned.alliance === a.name ? 1 : 0;
+          };
+          adj.sort((x,y) => {
+            const px = preferC(x), py = preferC(y);
+            if (px !== py) return py - px;
+            return scoreCity(y, a, starts, p1Start, p2Start) - scoreCity(x, a, starts, p1Start, p2Start);
+          });
           for (const ct of adj) {
             if (takenC >= 2) break;
             const placed = scheduleCapture(a.name, ct, tickCity);
@@ -313,15 +323,22 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
       const terrUnlocked = applyCalendarUnlocks(map.territories, season.calendar, step);
       const asg = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM);
       const ownedIds = new Set(Object.entries(asg).filter(([,v]) => v.alliance === a.name).map(([k]) => k));
-      const sh = terrUnlocked.filter(t => t.tileType === 'stronghold' && t.buildingLevel <= shLvl && !ownedIds.has(t.id));
+      const sh = terrUnlocked.filter(t => t.tileType === 'stronghold' && !ownedIds.has(t.id));
       const adj = sh.filter(st => {
         const res = canCapture(st, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: asg, selectedAlliance: a.name, currentTick: tickPM, events: simEvents } as const);
         if (!res.ok) return false;
-        const holder = asg[st.id]?.alliance;
-        if (holder && holder !== a.name) return false;
         return true;
       });
-      adj.sort((x,y) => scoreStronghold(y, shLvl, a, starts, p1Start, p2Start) - scoreStronghold(x, shLvl, a, starts, p1Start, p2Start));
+      // If strictToTarget, move planned target tiles of this alliance to the front before score sort
+      const preferSH = (t: Territory) => {
+        const planned = plannedTarget[t.id];
+        return planned && planned.alliance === a.name ? 1 : 0;
+      };
+      adj.sort((x,y) => {
+        const px = preferSH(x), py = preferSH(y);
+        if (px !== py) return py - px;
+        return scoreStronghold(y, shLvl, a, starts, p1Start, p2Start) - scoreStronghold(x, shLvl, a, starts, p1Start, p2Start);
+      });
 
       // Determine how many we expect to take today (up to 2)
       const previewTargets = adj.slice(0, 2);
@@ -368,6 +385,20 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
         const placed = scheduleCapture(a.name, st, tickPM);
         if (placed) takenS++;
       }
+    }
+  }
+
+  // Reconciliation pass: ensure final-day target is achieved where possible
+  const finalAsg = buildAssignmentsUpToTick(simEvents, map.territories, maxTick);
+  for (const [tid, planned] of Object.entries(plannedTarget)) {
+    if (!planned?.alliance) continue;
+    const current = finalAsg[tid]?.alliance;
+    if (current === planned.alliance) continue;
+    const tile = map.territories.find(t => t.id === tid);
+    if (!tile) continue;
+    const placed = scheduleCapture(planned.alliance, tile, currentTick);
+    if (placed) {
+      report.push(`Reconcile-to-target: ${planned.alliance} capture ${tile.coordinates} by Tick ${placed}`);
     }
   }
 

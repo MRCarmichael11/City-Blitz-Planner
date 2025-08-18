@@ -28,7 +28,7 @@ export default function PlannerControls({ map, season, alliances, currentTick, e
   }, [alliances]);
 
   const handlePreview = () => {
-    const { planned, report } = planSeason(map, season, alliances, currentTick, existingEvents, { replaceFuture, plannedTarget });
+    const { planned, report } = planSeason(map, season, alliances, currentTick, existingEvents, { replaceFuture, plannedTarget, strictToTarget: true });
     setPlanned(planned);
     setReport(report);
   };
