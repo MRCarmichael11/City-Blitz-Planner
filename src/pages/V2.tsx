@@ -235,6 +235,24 @@ export default function V2() {
 
 
 
+            {/* Mode toggle pill */}
+            <div className="inline-flex rounded-full border overflow-hidden">
+              <button
+                className={`px-3 py-1 text-xs ${mode==='planning' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
+                onClick={()=> setMode('planning')}
+                title="Plan your final-day end-state"
+              >
+                Planning
+              </button>
+              <button
+                className={`px-3 py-1 text-xs ${mode==='action' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
+                onClick={()=> setMode('action')}
+                title="Schedule day-by-day actions"
+              >
+                Action
+              </button>
+            </div>
+
             {/* Compact menus replacing inline controls */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
