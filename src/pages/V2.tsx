@@ -11,6 +11,8 @@ import { Mode, Assignments, canCapture } from '@/v2/rules';
 import TerritoryDetailsPanel from '@/v2/TerritoryDetailsPanel';
 // applyCalendarUnlocks imported above
 import PlannerControls from '@/v2/PlannerControls';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { ChevronDown } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const seasons = { S1, S2, S3, S4 } as const;
@@ -227,7 +229,7 @@ export default function V2() {
               <div className="text-xs text-muted-foreground">Set the final-day end-state per alliance. This plan is saved separately and used as the target for Action planning.</div>
             </div>
           )}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2 flex-wrap justify-end">
             {/* Theme toggle (simple) */}
             <button className="border rounded px-2 py-1" onClick={()=>{
               const el = document.documentElement; const isDark = el.classList.toggle('dark');
@@ -372,16 +374,176 @@ export default function V2() {
               </>
             ) : null}
 
-            <label className="text-sm">Alliance</label>
-            <select className="border rounded px-2 py-1 bg-card text-foreground" value={selectedAlliance ?? ''} onChange={(e)=> setSelectedAlliance(e.target.value || null)}>
-              <option value="">Select</option>
-              {alliances.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-            </select>
-            <label className="text-sm">Mode</label>
-            <select className="border rounded px-2 py-1 bg-card text-foreground" value={mode} onChange={(e)=>setMode(e.target.value as Mode)}>
-              <option value="planning">Planning</option>
-              <option value="action">Action</option>
-            </select>
+            {/* Compact menus replacing inline controls */}
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">Data <ChevronDown className="w-4 h-4" /></button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content className="z-50 min-w-[260px] rounded border bg-card p-1 shadow-md">
+                <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={()=>{
+                  const data = { version: 3, season: season.key, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+                  const blob = new Blob([JSON.stringify(data,null,2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob); const a = document.createElement('a');
+                  a.href = url; a.download = `lastwar-v3-${season.key}.json`; a.click(); URL.revokeObjectURL(url);
+                }}>Export</button>
+                <label className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded cursor-pointer inline-block">
+                  Import
+                  <input type="file" accept="application/json" className="hidden" onChange={async (e)=>{
+                    const f = e.target.files?.[0]; if (!f) return; const text = await f.text();
+                    try {
+                      const parsed = JSON.parse(text);
+                      if (parsed.version === 3) {
+                        if (parsed.alliances && Array.isArray(parsed.alliances)) setAlliances(parsed.alliances);
+                        if (parsed.eventsBySeason && parsed.eventsBySeason[season.key]) setEvents(parsed.eventsBySeason[season.key] as ActionEvent[]);
+                        if (parsed.plannedBySeason && parsed.plannedBySeason[season.key]) setPlannedAssignments(parsed.plannedBySeason[season.key] as Assignments);
+                        toast({ title: 'Imported', description: 'v3 data imported.' });
+                      } else if (parsed.version === 2) {
+                        if (parsed.alliances && Array.isArray(parsed.alliances)) setAlliances(parsed.alliances);
+                        if (parsed.stepsBySeason && parsed.stepsBySeason[season.key]) {
+                          const steps = parsed.stepsBySeason[season.key] as Record<number, Assignments>;
+                          const captures: ActionEvent[] = [];
+                          const tick1 = tickFromDayHalf(1, 'AM');
+                          const merged: Assignments = {};
+                          Object.values(steps).forEach((as: Assignments) => { Object.assign(merged, as); });
+                          for (const [tileId, a] of (Object.entries(merged) as Array<[string, import('@/v2/rules').Assignment]>)) {
+                            if (a.alliance) captures.push({ tick: tick1, tileId, alliance: a.alliance, action: 'capture' });
+                          }
+                          setEvents(captures);
+                        }
+                        toast({ title: 'Imported', description: 'v2 data imported (converted to events).' });
+                      } else if (parsed.version === 1) {
+                        if (parsed.alliances && Array.isArray(parsed.alliances)) setAlliances(parsed.alliances);
+                        if (parsed.assignmentsBySeason && parsed.assignmentsBySeason[season.key]) {
+                          const as = parsed.assignmentsBySeason[season.key] as Assignments;
+                          const captures: ActionEvent[] = [];
+                          const tick1 = tickFromDayHalf(1, 'AM');
+                          for (const [tileId, a] of (Object.entries(as) as Array<[string, import('@/v2/rules').Assignment]>)) {
+                            if (a.alliance) captures.push({ tick: tick1, tileId, alliance: a.alliance, action: 'capture' });
+                          }
+                          setEvents(captures);
+                        }
+                        toast({ title: 'Imported', description: 'v1 data imported (converted to events).' });
+                      } else {
+                        toast({ title: 'Invalid file', description: 'Unsupported version', });
+                      }
+                    } catch {
+                      toast({ title: 'Invalid file', description: 'Parse error', });
+                    }
+                  }} />
+                </label>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">Actions <ChevronDown className="w-4 h-4" /></button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content className="z-50 min-w-[260px] rounded border bg-card p-1 shadow-md">
+                {mode === 'action' ? (
+                  <div className="p-1">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" title="Remove all events from the current tick onward">Clear Future</button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Clear future events?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will delete all scheduled captures/releases at or after the current tick (Tick {currentTick}). Past history remains.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => {
+                            const past = events.filter(e => e.tick < currentTick);
+                            const future = events.filter(e => e.tick >= currentTick);
+                            setLastCleared(future);
+                            setEvents(past);
+                            toast({ title: 'Cleared future', description: `${future.length} event(s) removed from Tick ${currentTick} onward.` });
+                          }}>Confirm</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" title="Remove all events in this season">Clear All</button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Clear all events?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will delete all scheduled events for the current season. This cannot be undone after you leave the page.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => {
+                            setLastCleared(events);
+                            setEvents([]);
+                            toast({ title: 'Cleared all', description: `Removed ${events.length} event(s).` });
+                          }}>Confirm</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!lastCleared || lastCleared.length===0} onClick={() => {
+                      if (!lastCleared || lastCleared.length===0) return;
+                      setEvents(prev => [...prev, ...lastCleared].sort((a,b)=> a.tick - b.tick));
+                      toast({ title: 'Undo', description: `Restored ${lastCleared.length} event(s).` });
+                      setLastCleared(null);
+                    }}>Undo Clear</button>
+                  </div>
+                ) : (
+                  <div className="p-1">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" title="Remove all planned assignments for this season">Clear Plan</button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Clear planned final map?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will remove all planned assignments for {season.key}. Action timeline events are unaffected.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => {
+                            setLastClearedPlan(plannedAssignments);
+                            setPlannedAssignments({});
+                            toast({ title: 'Cleared plan', description: 'Removed all planned assignments for this season.' });
+                          }}>Confirm</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!lastClearedPlan} onClick={() => { if (!lastClearedPlan) return; setPlannedAssignments(lastClearedPlan); setLastClearedPlan(null); toast({ title: 'Undo', description: 'Restored planned assignments.' }); }}>Undo Clear Plan</button>
+                  </div>
+                )}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+
+            {/* Filters */}
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">Filters <ChevronDown className="w-4 h-4" /></button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content className="z-50 min-w-[220px] rounded border bg-card p-1 shadow-md">
+                <div className="px-2 py-1 text-xs text-muted-foreground">Alliance filter</div>
+                <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={()=> setSelectedAlliance(null)}>All</button>
+                {alliances.map(a => (
+                  <button key={a.id} className={`w-full text-left px-2 py-1 text-sm hover:bg-accent rounded ${selectedAlliance===a.name ? 'font-medium' : ''}`} onClick={()=> setSelectedAlliance(selectedAlliance===a.name ? null : a.name)}>
+                    {a.name}
+                  </button>
+                ))}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+
+            {/* Theme toggle */}
+            <button className="border rounded px-2 py-1" onClick={()=>{
+              const el = document.documentElement; const isDark = el.classList.toggle('dark');
+              localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            }}>Theme</button>
           </div>
         </div>
         <div className="flex-1 min-h-[60vh] flex relative">
