@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { ActionEvent, Alliance, MapData, SeasonDefinition, Tick } from './domain';
+import type { Assignments } from './rules';
 import { planSeason } from './planner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,12 +12,13 @@ interface Props {
   alliances: Alliance[];
   currentTick: Tick;
   existingEvents: ActionEvent[];
+  plannedTarget?: Assignments;
   replaceFutureDefault?: boolean;
   onUpdateAlliance: (id: string, patch: Partial<Alliance>) => void;
   onApplyPlan: (planned: ActionEvent[], replaceFuture: boolean) => void;
 }
 
-export default function PlannerControls({ map, season, alliances, currentTick, existingEvents, replaceFutureDefault = true, onUpdateAlliance, onApplyPlan }: Props) {
+export default function PlannerControls({ map, season, alliances, currentTick, existingEvents, plannedTarget, replaceFutureDefault = true, onUpdateAlliance, onApplyPlan }: Props) {
   const [replaceFuture, setReplaceFuture] = useState<boolean>(replaceFutureDefault);
   const [report, setReport] = useState<string[]>([]);
   const [planned, setPlanned] = useState<ActionEvent[]>([]);
@@ -26,7 +28,7 @@ export default function PlannerControls({ map, season, alliances, currentTick, e
   }, [alliances]);
 
   const handlePreview = () => {
-    const { planned, report } = planSeason(map, season, alliances, currentTick, existingEvents, { replaceFuture });
+    const { planned, report } = planSeason(map, season, alliances, currentTick, existingEvents, { replaceFuture, plannedTarget });
     setPlanned(planned);
     setReport(report);
   };

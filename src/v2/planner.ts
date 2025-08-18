@@ -6,6 +6,7 @@ export interface PlannerOptions {
   maxTick?: Tick;
   plowBias?: 'center' | 'breadth';
   corridorWidth?: number; // desired corridor width in tiles (4-6 typical)
+  plannedTarget?: Assignments; // final-day planned assignments to bias toward
 }
 
 export interface PlannerResult {
@@ -124,6 +125,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
   const report: string[] = [];
   const maxTick = options?.maxTick ?? endOfSeasonTick(season);
   const corridorWidthBase = Math.max(2, Math.min(8, options?.corridorWidth ?? 4));
+  const plannedTarget = (options?.plannedTarget ?? {}) as Assignments;
 
   // Priority ordering (lower number = higher priority)
   const allies = [...alliances].sort((a, b) => (a.priority ?? Number.POSITIVE_INFINITY) - (b.priority ?? Number.POSITIVE_INFINITY));
@@ -225,7 +227,14 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
       if (insideCorridor(p, p1Start, priorityCorridorWidth(1))) avoidPen += 50;
       if (insideCorridor(p, p2Start, priorityCorridorWidth(2))) avoidPen += 30;
     }
-    return base - pen - avoidPen;
+    // Bias toward planned final targets: prefer tiles in the saved end-state
+    let targetBias = 0;
+    const planned = plannedTarget[t.id];
+    if (planned) {
+      if (planned.alliance === a.name) targetBias += 1800;
+      else targetBias -= 1800;
+    }
+    return base - pen - avoidPen + targetBias;
   }
   function scoreStronghold(t: Territory, preferredLevel: number, a: Alliance, startsMap: Record<string, Territory | null>, p1Start: Territory | null, p2Start: Territory | null) {
     const p = latticeXY(t);
@@ -239,7 +248,14 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
       if (insideCorridor(p, p1Start, priorityCorridorWidth(1))) avoidPen += 50;
       if (insideCorridor(p, p2Start, priorityCorridorWidth(2))) avoidPen += 30;
     }
-    return base - pen - avoidPen;
+    // Bias toward planned final targets: prefer tiles in the saved end-state
+    let targetBias = 0;
+    const planned = plannedTarget[t.id];
+    if (planned) {
+      if (planned.alliance === a.name) targetBias += 1800;
+      else targetBias -= 1800;
+    }
+    return base - pen - avoidPen + targetBias;
   }
 
   // Day-by-day greedy scheduling
@@ -333,6 +349,11 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
             const da = manhattan(latticeXY(a), capXY);
             const db = manhattan(latticeXY(b), capXY);
             return db - da;
+          })
+          // keep planned end-state strongholds if possible
+          .filter(t => {
+            const planned = plannedTarget[t.id];
+            return !(planned && planned.alliance === a.name);
           });
         for (let i = 0; i < Math.min(needSlots, sortedToDump.length); i++) {
           const dump = sortedToDump[i];

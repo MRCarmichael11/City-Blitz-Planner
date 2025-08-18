@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { buildMapData, applyCalendarUnlocks, type Half, type Tick, type ActionEvent, tickFromDayHalf, dayHalfFromTick } from '@/v2/domain';
+import { buildMapData, applyCalendarUnlocks, type Half, type Tick, type ActionEvent, type Alliance, tickFromDayHalf, dayHalfFromTick } from '@/v2/domain';
 import { S1, S2, S3, S4 } from '@/v2/seasons';
 // Action timeline-driven planner (Season stepper removed)
 import AllianceLegend from '@/v2/AllianceLegend';
@@ -29,6 +29,8 @@ export default function V2() {
   // v3 Action events timeline (persisted)
   const [events, setEvents] = useState<ActionEvent[]>([]);
   const [lastCleared, setLastCleared] = useState<ActionEvent[] | null>(null);
+  // Planning mode: final-day target assignments (persisted)
+  const [plannedAssignments, setPlannedAssignments] = useState<Assignments>({});
 
   // Derive calendar step from current day for unlocks and legacy per-step budget
   const derivedStep = useMemo(() => {
@@ -66,7 +68,7 @@ export default function V2() {
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [selectedTerritory, setSelectedTerritory] = useState<import('@/v2/domain').Territory | null>(null);
 
-  const [alliances, setAlliances] = useState([] as { id: string; name: string; color: string }[]);
+  const [alliances, setAlliances] = useState<Alliance[]>([]);
   const baseMap = useMemo(() => buildMapData(season, alliances), [season, alliances]);
 
   // Initialize theme from localStorage on mount
@@ -76,7 +78,9 @@ export default function V2() {
     if (saved === 'dark') el.classList.add('dark');
     else if (saved === 'light') el.classList.remove('dark');
   }, []);
-  const map = { ...baseMap, territories: applyCalendarUnlocks(baseMap.territories, season.calendar, derivedStep) };
+  // Final-day view in planning mode
+  const displayStep = mode === 'planning' ? season.calendar.steps : derivedStep;
+  const map = { ...baseMap, territories: applyCalendarUnlocks(baseMap.territories, season.calendar, displayStep) };
   const { toast } = useToast();
 
   // Persistence (v3)
@@ -91,6 +95,7 @@ export default function V2() {
         const parsed3 = JSON.parse(raw3);
         if (parsed3.alliances && Array.isArray(parsed3.alliances)) setAlliances(parsed3.alliances);
         if (parsed3.eventsBySeason && parsed3.eventsBySeason[season.key]) setEvents(parsed3.eventsBySeason[season.key] as ActionEvent[]);
+        if (parsed3.plannedBySeason && parsed3.plannedBySeason[season.key]) setPlannedAssignments(parsed3.plannedBySeason[season.key] as Assignments);
         return;
       }
       // Fallback: v2 migration -> synthesize capture events at Day 1 AM
@@ -129,22 +134,24 @@ export default function V2() {
       /* noop */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [season.key]);
 
-  // Save on changes as v3
+  // Save on changes as v3 (including planned end-state)
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_V3);
-      const parsed = raw ? JSON.parse(raw) : { version: 3, alliances, eventsBySeason: {} };
+      const parsed = raw ? JSON.parse(raw) : { version: 3, alliances, eventsBySeason: {}, plannedBySeason: {} };
       parsed.version = 3;
       parsed.alliances = alliances;
       parsed.eventsBySeason = parsed.eventsBySeason || {};
       parsed.eventsBySeason[season.key] = events;
+      parsed.plannedBySeason = parsed.plannedBySeason || {};
+      parsed.plannedBySeason[season.key] = plannedAssignments;
       localStorage.setItem(STORAGE_KEY_V3, JSON.stringify(parsed));
     } catch {
       /* noop */
     }
-  }, [alliances, events, season.key]);
+  }, [alliances, events, plannedAssignments, season.key]);
 
   const handleCreateAlliance = (name: string, color: string, priority?: number) => {
     const id = 'a' + Math.random().toString(36).slice(2, 8);
@@ -183,6 +190,7 @@ export default function V2() {
               alliances={alliances}
               currentTick={currentTick}
               existingEvents={events}
+              plannedTarget={plannedAssignments}
               replaceFutureDefault={true}
               onUpdateAlliance={(id, patch) => {
                 setAlliances(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a));
@@ -195,19 +203,29 @@ export default function V2() {
               }}
             />
           </div>
-          <div className="flex-1 min-w-[420px] border rounded bg-card/60 p-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="font-medium">Action Timeline</div>
-              <div className="text-xs text-muted-foreground">Day {currentDay} {currentHalf} • Tick {currentTick} • Step {derivedStep}{Array.isArray(season.calendar.stepDays) && season.calendar.stepDays[derivedStep-1] ? ` • Day ${season.calendar.stepDays[derivedStep-1]}` : ''}{derivedStep===1 ? ' • Cities locked' : ''}</div>
+          {mode === 'action' ? (
+            <div className="flex-1 min-w-[420px] border rounded bg-card/60 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-medium">Action Timeline</div>
+                <div className="text-xs text-muted-foreground">Day {currentDay} {currentHalf} • Tick {currentTick} • Step {derivedStep}{Array.isArray(season.calendar.stepDays) && season.calendar.stepDays[derivedStep-1] ? ` • Day ${season.calendar.stepDays[derivedStep-1]}` : ''}{derivedStep===1 ? ' • Cities locked' : ''}</div>
+              </div>
+              <div className="flex items-center gap-3">
+                <input type="range" min={1} max={28} value={currentDay} onChange={(e)=> setCurrentDay(parseInt(e.target.value))} className="flex-1" />
+                <select className="border rounded px-2 py-1 bg-card text-foreground" value={currentHalf} onChange={(e)=> setCurrentHalf(e.target.value as Half)}>
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <input type="range" min={1} max={28} value={currentDay} onChange={(e)=> setCurrentDay(parseInt(e.target.value))} className="flex-1" />
-              <select className="border rounded px-2 py-1 bg-card text-foreground" value={currentHalf} onChange={(e)=> setCurrentHalf(e.target.value as Half)}>
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
+          ) : (
+            <div className="flex-1 min-w-[420px] border rounded bg-card/60 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-medium">Planning (Final Day)</div>
+                <div className="text-xs text-muted-foreground">Capitol available • Step {season.calendar.steps}</div>
+              </div>
+              <div className="text-xs text-muted-foreground">Set the final-day end-state per alliance. This plan is saved separately and used as the target for Action planning.</div>
             </div>
-          </div>
+          )}
           <div className="ml-auto flex items-center gap-2">
             {/* Theme toggle (simple) */}
             <button className="border rounded px-2 py-1" onClick={()=>{
@@ -272,7 +290,7 @@ export default function V2() {
 
             {/* Export/Import (v3) */}
             <button className="border rounded px-2 py-1" onClick={()=>{
-              const data = { version: 3, season: season.key, alliances, eventsBySeason: { [season.key]: events } };
+              const data = { version: 3, season: season.key, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
               const blob = new Blob([JSON.stringify(data,null,2)], { type: 'application/json' });
               const url = URL.createObjectURL(blob); const a = document.createElement('a');
               a.href = url; a.download = `lastwar-v3-${season.key}.json`; a.click(); URL.revokeObjectURL(url);
@@ -286,6 +304,7 @@ export default function V2() {
                   if (parsed.version === 3) {
                     if (parsed.alliances && Array.isArray(parsed.alliances)) setAlliances(parsed.alliances);
                     if (parsed.eventsBySeason && parsed.eventsBySeason[season.key]) setEvents(parsed.eventsBySeason[season.key] as ActionEvent[]);
+                    if (parsed.plannedBySeason && parsed.plannedBySeason[season.key]) setPlannedAssignments(parsed.plannedBySeason[season.key] as Assignments);
                     toast({ title: 'Imported', description: 'v3 data imported.' });
                   } else if (parsed.version === 2) {
                     if (parsed.alliances && Array.isArray(parsed.alliances)) setAlliances(parsed.alliances);
@@ -335,7 +354,7 @@ export default function V2() {
           </div>
         </div>
         <div className="flex-1 min-h-[60vh] flex relative">
-          <MapCanvas map={map} selectedAlliance={selectedAlliance} assignments={derivedAssignments} selectedId={selectedTerritory?.id ?? null} onSelectTerritory={(t)=>{
+          <MapCanvas map={map} selectedAlliance={selectedAlliance} assignments={mode === 'planning' ? plannedAssignments : derivedAssignments} selectedId={selectedTerritory?.id ?? null} onSelectTerritory={(t)=>{
             if (t.tileType === 'trading-post') {
               toast({ title: 'PvP Tile', description: 'Trading posts are player-held and uncapturable by alliances.' });
             }
@@ -347,19 +366,31 @@ export default function V2() {
               <TerritoryDetailsPanel
                 territory={selectedTerritory}
                 map={map}
-                assignments={derivedAssignments}
+                assignments={mode === 'planning' ? plannedAssignments : derivedAssignments}
                 selectedAlliance={selectedAlliance}
                 onAssign={(t)=>{
                   if (!selectedAlliance) { toast({ title: 'Select an alliance', description: 'Pick an alliance to assign the tile to.' }); return; }
-                  const res = canCapture(t, { mode, step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events });
-                  if (!res.ok) { toast({ title: 'Cannot capture', description: res.reason }); return; }
                   if (t.tileType === 'trading-post') { toast({ title: 'PvP Tile', description: 'Trading posts are player-held and uncapturable by alliances.' }); return; }
-                  setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }]);
-                  toast({ title: 'Captured', description: `${t.coordinates} → ${selectedAlliance}` });
+                  if (mode === 'planning') {
+                    const res = canCapture(t, { mode: 'planning', step: season.calendar.steps, calendar: season.calendar, territories: map.territories, assignments: plannedAssignments, selectedAlliance });
+                    if (!res.ok) { toast({ title: 'Cannot assign', description: res.reason }); return; }
+                    setPlannedAssignments(prev => ({ ...prev, [t.id]: { alliance: selectedAlliance, step: season.calendar.steps } }));
+                    toast({ title: 'Planned', description: `${t.coordinates} → ${selectedAlliance}` });
+                  } else {
+                    const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events });
+                    if (!res.ok) { toast({ title: 'Cannot capture', description: res.reason }); return; }
+                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }]);
+                    toast({ title: 'Captured', description: `${t.coordinates} → ${selectedAlliance}` });
+                  }
                 }}
                 onUnassign={(t)=>{
-                  setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }]);
-                  toast({ title: 'Released', description: `${t.coordinates}` });
+                  if (mode === 'planning') {
+                    setPlannedAssignments(prev => { const n = { ...prev }; delete n[t.id]; return n; });
+                    toast({ title: 'Unplanned', description: `${t.coordinates}` });
+                  } else {
+                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }]);
+                    toast({ title: 'Released', description: `${t.coordinates}` });
+                  }
                 }}
                 onClose={()=> setDetailsOpen(false)}
               />
@@ -367,7 +398,7 @@ export default function V2() {
           )}
         </div>
         {/* Bottom legend */}
-        <AllianceLegend map={map} assignments={derivedAssignments} selectedAlliance={selectedAlliance} onSelectAlliance={setSelectedAlliance} onCreateAlliance={handleCreateAlliance} onRemoveAlliance={handleRemoveAlliance} onUpdateAlliance={(id, patch)=> setAlliances(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a))} events={events} currentTick={currentTick} />
+        <AllianceLegend map={map} assignments={mode === 'planning' ? plannedAssignments : derivedAssignments} selectedAlliance={selectedAlliance} onSelectAlliance={setSelectedAlliance} onCreateAlliance={handleCreateAlliance} onRemoveAlliance={handleRemoveAlliance} onUpdateAlliance={(id, patch)=> setAlliances(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a))} events={events} currentTick={currentTick} />
 
 
       </main>
