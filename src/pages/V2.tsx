@@ -70,6 +70,9 @@ export default function V2() {
   }, [events, currentTick, season.calendar]);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [selectedTerritory, setSelectedTerritory] = useState<import('@/v2/domain').Territory | null>(null);
+  // Manual stepper state
+  const [manualMode, setManualMode] = useState<boolean>(false);
+  const [manualAction, setManualAction] = useState<'capture' | 'release'>('capture');
 
   const [alliances, setAlliances] = useState<Alliance[]>([]);
   const baseMap = useMemo(() => buildMapData(season, alliances), [season, alliances]);
@@ -218,6 +221,27 @@ export default function V2() {
                   <option value="AM">AM</option>
                   <option value="PM">PM</option>
                 </select>
+              </div>
+              {/* Manual stepper controls */}
+              <div className="mt-2 flex items-center gap-2">
+                <label className="flex items-center gap-2 text-xs">
+                  <input type="checkbox" checked={manualMode} onChange={() => setManualMode(v => !v)} />
+                  Manual stepper
+                </label>
+                <select
+                  className="border rounded px-2 py-1 bg-card text-foreground text-xs disabled:opacity-50"
+                  disabled={!manualMode}
+                  value={manualAction}
+                  onChange={(e)=> setManualAction(e.target.value as 'capture' | 'release')}
+                >
+                  <option value="capture">Capture</option>
+                  <option value="release">Release</option>
+                </select>
+                <div className="text-xs text-muted-foreground">
+                  {manualMode ? (
+                    selectedAlliance ? `Click a tile to ${manualAction} for ${selectedAlliance}` : 'Select an alliance in the legend'
+                  ) : 'Toggle to schedule by clicking the map'}
+                </div>
               </div>
             </div>
           ) : (
@@ -450,6 +474,26 @@ export default function V2() {
             }
             // Open details
             setSelectedTerritory(t); setDetailsOpen(true);
+            // Manual stepper in Action mode: schedule event on click
+            if (mode === 'action' && manualMode) {
+              if (!selectedAlliance && manualAction === 'capture') {
+                toast({ title: 'Select an alliance', description: 'Pick an alliance in the legend to capture.' });
+              } else {
+                if (manualAction === 'capture') {
+                  const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events });
+                  if (res.ok && selectedAlliance) {
+                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }]);
+                    toast({ title: 'Scheduled capture', description: `${t.coordinates} → ${selectedAlliance} at Tick ${currentTick}` });
+                  } else {
+                    toast({ title: 'Cannot capture', description: res.reason });
+                  }
+                } else {
+                  setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }]);
+                  toast({ title: 'Scheduled release', description: `${t.coordinates} at Tick ${currentTick}` });
+                }
+              }
+              return;
+            }
             // Fast-assign in Planning mode when an alliance is selected and capture is allowed
             if (mode === 'planning' && selectedAlliance) {
               const already = plannedAssignments[t.id]?.alliance === selectedAlliance;
