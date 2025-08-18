@@ -236,6 +236,76 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
     const dayFromTick = (t: Tick) => dayHalfFromTick(t).day;
     const currentDay = dayFromTick(currentTick);
 
+    // Day 1 (or current day) pre-schedule: ensure every alliance starts with 2 adjacent Lv1 SH
+    {
+      const preDay = currentDay;
+      const tickAM = tickFromDayHalf(preDay, 'AM');
+      const tickPM = tickFromDayHalf(preDay, 'PM');
+      const step = stepFromDay(preDay, season);
+      const terrUnlocked = applyCalendarUnlocks(map.territories, season.calendar, step);
+      const lv1All = terrUnlocked.filter(t => t.tileType==='stronghold' && t.buildingLevel===1);
+      const dist = (p:{x:number;y:number}, q:{x:number;y:number}) => Math.abs(p.x-q.x)+Math.abs(p.y-q.y);
+      // For each alliance in priority order
+      for (const a of allies) {
+        // Skip if they already own anything by AM
+        const asgAM = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickAM);
+        const ownsAny = Object.values(asgAM).some(v => v.alliance === a.name);
+        if (ownsAny) continue;
+        // Compute target centroid and side
+        const c = centroidFor(a);
+        const dx = c.x - capXY.x; const dy = c.y - capXY.y;
+        const absx = Math.abs(dx), absy = Math.abs(dy);
+        let side: 'N'|'S'|'E'|'W' = 'W';
+        if (absx >= absy) side = dx < 0 ? 'W' : 'E'; else side = dy < 0 ? 'N' : 'S';
+        const sideEdge = (t: Territory) => (side==='W'?t.col===1: side==='E'?t.col===map.gridSize.cols: side==='N'?t.row===1: t.row===map.gridSize.rows);
+        const lxy = (t: Territory) => latticeXY(t);
+        // Build candidate pairs: adjacent Lv1 pairs (Manhattan 2 on lattice)
+        const pairs: Array<{a:Territory;b:Territory;score:number}> = [];
+        const poolSide = lv1All.filter(sideEdge);
+        function pushPairs(pool: Territory[]) {
+          for (let i=0;i<pool.length;i++) {
+            for (let j=i+1;j<pool.length;j++) {
+              const t1=pool[i], t2=pool[j];
+              if (dist(lxy(t1), lxy(t2))!==2) continue; // must be adjacent on half-lattice
+              // skip if reserved already by someone else
+              if (reservedByOthers.has(t1.id) || reservedByOthers.has(t2.id)) continue;
+              // score: closeness of pair center to target centroid
+              const cx=(lxy(t1).x+lxy(t2).x)/2, cy=(lxy(t1).y+lxy(t2).y)/2;
+              const s = Math.abs(cx - c.x) + Math.abs(cy - c.y);
+              pairs.push({a:t1,b:t2,score:s});
+            }
+          }
+        }
+        // Try on side first, then all edges, then anywhere if needed
+        pushPairs(poolSide);
+        if (pairs.length===0) {
+          const edges = lv1All.filter(t => t.row===1||t.col===1||t.row===map.gridSize.rows||t.col===map.gridSize.cols);
+          pushPairs(edges);
+        }
+        if (pairs.length===0) {
+          pushPairs(lv1All); // anywhere
+        }
+        if (pairs.length===0) continue; // no valid pair available
+        pairs.sort((x,y)=> x.score - y.score);
+        const best = pairs[0];
+        // Schedule AM then PM
+        const ok1 = canCapture(best.a, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: asgAM, selectedAlliance: a.name, currentTick: tickAM, events: simEvents } as const);
+        if (ok1.ok) {
+          const placed1 = scheduleCapture(a.name, best.a, tickAM);
+          if (placed1) {
+            reservedByOthers.add(best.a.id);
+            const asgPM = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM);
+            // ensure second still free and adjacent
+            const ok2 = canCapture(best.b, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: asgPM, selectedAlliance: a.name, currentTick: tickPM, events: simEvents } as const);
+            if (ok2.ok) {
+              const placed2 = scheduleCapture(a.name, best.b, tickPM);
+              if (placed2) reservedByOthers.add(best.b.id);
+            }
+          }
+        }
+      }
+    }
+
     // Plan alliances strictly in priority order, one at a time
     for (const a of allies) {
       const targetC = centroidFor(a);
