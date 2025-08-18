@@ -31,6 +31,7 @@ export default function V2() {
   const [lastCleared, setLastCleared] = useState<ActionEvent[] | null>(null);
   // Planning mode: final-day target assignments (persisted)
   const [plannedAssignments, setPlannedAssignments] = useState<Assignments>({});
+  const [lastClearedPlan, setLastClearedPlan] = useState<Assignments | null>(null);
 
   // Derive calendar step from current day for unlocks and legacy per-step budget
   const derivedStep = useMemo(() => {
@@ -340,6 +341,36 @@ export default function V2() {
                 }
               }} />
             </label>
+
+            {/* Planning clear tools */}
+            {mode === 'planning' ? (
+              <>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="border rounded px-2 py-1" title="Remove all planned assignments for this season">Clear Plan</button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Clear planned final map?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will remove all planned assignments for {season.key}. Action timeline events are unaffected.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => {
+                        setLastClearedPlan(plannedAssignments);
+                        setPlannedAssignments({});
+                        toast({ title: 'Cleared plan', description: 'Removed all planned assignments for this season.' });
+                      }}>Confirm</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                {lastClearedPlan && (
+                  <button className="border rounded px-2 py-1" onClick={() => { setPlannedAssignments(lastClearedPlan); setLastClearedPlan(null); toast({ title: 'Undo', description: 'Restored planned assignments.' }); }}>Undo Clear Plan</button>
+                )}
+              </>
+            ) : null}
 
             <label className="text-sm">Alliance</label>
             <select className="border rounded px-2 py-1 bg-card text-foreground" value={selectedAlliance ?? ''} onChange={(e)=> setSelectedAlliance(e.target.value || null)}>
