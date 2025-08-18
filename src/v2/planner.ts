@@ -319,7 +319,15 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
             const dy = (Math.abs(py2.x - targetC.x) + Math.abs(py2.y - targetC.y));
             return dx - dy;
           });
-          const previewTargets = adjStrict.slice(0, 2);
+          // Frontier-only: restrict to candidates adjacent to frontier owned tiles (closest to target)
+          const ownedNowAM = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickAM);
+          const ownedTilesA = Object.entries(ownedNowAM).filter(([,v]) => v.alliance===a.name).map(([id])=>terrUnlocked.find(t=>t.id===id)!).filter(Boolean);
+          const distOf = (t: Territory) => Math.abs(latticeXY(t).x - targetC.x) + Math.abs(latticeXY(t).y - targetC.y);
+          const minOwnedDist = ownedTilesA.length ? Math.min(...ownedTilesA.map(distOf)) : Infinity;
+          const frontier = new Set(ownedTilesA.filter(t => distOf(t) === minOwnedDist).map(t=>t.id));
+          const isAdjToFrontier = (t: Territory) => ownedTilesA.some(o => frontier.has(o.id) && (Math.abs(latticeXY(o).x - latticeXY(t).x) + Math.abs(latticeXY(o).y - latticeXY(t).y) === 2));
+          const adjFrontier = adjStrict.filter(isAdjToFrontier);
+          const previewTargets = adjFrontier.slice(0, 2);
           const needCitySlots = Math.max(0, (ownedCities.length + previewTargets.length) - 8);
           if (needCitySlots > 0) {
             // Avoid dropping planned end-state cities and those adjacent to today's preview targets
@@ -348,7 +356,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
           }
           // Now actually take up to 2 cities for the AM
           let takenC = 0;
-          for (const ct of adjStrict) {
+          for (const ct of adjFrontier) {
             if (takenC >= 2) break;
             const placed = scheduleCapture(a.name, ct, tickAM);
             if (placed) {
@@ -402,7 +410,15 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
           return res.ok;
         });
         // Strict corridor filter: only take SHs inside corridor or explicitly in final plan for this alliance
-        const shAdj = shAdjPre.filter(st => inCorridor(st) || (plannedTarget[st.id]?.alliance === a.name));
+        const shAdjStrict = shAdjPre.filter(st => inCorridor(st) || (plannedTarget[st.id]?.alliance === a.name));
+        // Frontier-only: restrict to candidates adjacent to frontier owned tiles (closest to target)
+        const ownedNowPM = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM);
+        const ownedTilesAPM = Object.entries(ownedNowPM).filter(([,v]) => v.alliance===a.name).map(([id])=>terrUnlocked.find(t=>t.id===id)!).filter(Boolean);
+        const distOfPM = (t: Territory) => Math.abs(latticeXY(t).x - targetC.x) + Math.abs(latticeXY(t).y - targetC.y);
+        const minOwnedDistPM = ownedTilesAPM.length ? Math.min(...ownedTilesAPM.map(distOfPM)) : Infinity;
+        const frontierPM = new Set(ownedTilesAPM.filter(t => distOfPM(t) === minOwnedDistPM).map(t=>t.id));
+        const isAdjToFrontierPM = (t: Territory) => ownedTilesAPM.some(o => frontierPM.has(o.id) && (Math.abs(latticeXY(o).x - latticeXY(t).x) + Math.abs(latticeXY(o).y - latticeXY(t).y) === 2));
+        const shAdj = shAdjStrict.filter(isAdjToFrontierPM);
         // If at SH cap and still missing final targets, proactively free a slot (drop far, non-corridor, non-target), then recompute
         const totalsS = countsTotal(buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM), a.name, terrUnlocked).strongholds;
         const missingSHTargets = Object.entries(plannedTarget).some(([tid, asg]) => asg.alliance === a.name && terrUnlocked.find(t => t.id === tid) && buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM)[tid]?.alliance !== a.name && terrUnlocked.find(t => t.id === tid)?.tileType === 'stronghold');
