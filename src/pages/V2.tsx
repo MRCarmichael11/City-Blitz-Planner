@@ -11,6 +11,7 @@ import { Mode, Assignments, canCapture } from '@/v2/rules';
 import TerritoryDetailsPanel from '@/v2/TerritoryDetailsPanel';
 // applyCalendarUnlocks imported above
 import PlannerControls from '@/v2/PlannerControls';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const seasons = { S1, S2, S3, S4 } as const;
 
@@ -27,6 +28,7 @@ export default function V2() {
   const [mode, setMode] = useState<Mode>('planning');
   // v3 Action events timeline (persisted)
   const [events, setEvents] = useState<ActionEvent[]>([]);
+  const [lastCleared, setLastCleared] = useState<ActionEvent[] | null>(null);
 
   // Derive calendar step from current day for unlocks and legacy per-step budget
   const derivedStep = useMemo(() => {
@@ -212,6 +214,61 @@ export default function V2() {
               const el = document.documentElement; const isDark = el.classList.toggle('dark');
               localStorage.setItem('theme', isDark ? 'dark' : 'light');
             }}>Theme</button>
+
+            {/* Clear Map tools */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="border rounded px-2 py-1" title="Remove all events from the current tick onward">Clear Future</button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear future events?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will delete all scheduled captures/releases at or after the current tick (Tick {currentTick}). Past history remains.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => {
+                    const past = events.filter(e => e.tick < currentTick);
+                    const future = events.filter(e => e.tick >= currentTick);
+                    setLastCleared(future);
+                    setEvents(past);
+                    toast({ title: 'Cleared future', description: `${future.length} event(s) removed from Tick ${currentTick} onward.` });
+                  }}>Confirm</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="border rounded px-2 py-1" title="Remove all events in this season">Clear All</button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear all events?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will delete all scheduled events for the current season. This cannot be undone after you leave the page.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => {
+                    setLastCleared(events);
+                    setEvents([]);
+                    toast({ title: 'Cleared all', description: `Removed ${events.length} event(s).` });
+                  }}>Confirm</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {lastCleared && lastCleared.length > 0 && (
+              <button className="border rounded px-2 py-1" onClick={() => {
+                setEvents(prev => [...prev, ...lastCleared].sort((a,b)=> a.tick - b.tick));
+                toast({ title: 'Undo', description: `Restored ${lastCleared.length} event(s).` });
+                setLastCleared(null);
+              }}>Undo Clear</button>
+            )}
 
             {/* Export/Import (v3) */}
             <button className="border rounded px-2 py-1" onClick={()=>{
