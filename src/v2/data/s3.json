@@ -95,25 +95,25 @@
     },
     {
       "coordinates": "B2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "C2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "D2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "E2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -131,31 +131,31 @@
     },
     {
       "coordinates": "H2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "I2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "J2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "K2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "L2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -173,25 +173,25 @@
     },
     {
       "coordinates": "B3",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "C3",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "D3",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "E3",
-      "level": 3,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
@@ -209,31 +209,31 @@
     },
     {
       "coordinates": "H3",
-      "level": 3,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "I3",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "J3",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "K3",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "L3",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -251,25 +251,25 @@
     },
     {
       "coordinates": "B4",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "C4",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "D4",
-      "level": 4,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "E4",
-      "level": 4,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
@@ -287,31 +287,31 @@
     },
     {
       "coordinates": "H4",
-      "level": 4,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "I4",
-      "level": 4,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "J4",
-      "level": 4,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "K4",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "L4",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -329,25 +329,25 @@
     },
     {
       "coordinates": "B5",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "C5",
-      "level": 3,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "D5",
-      "level": 4,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "E5",
-      "level": 5,
+      "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
@@ -365,31 +365,31 @@
     },
     {
       "coordinates": "H5",
-      "level": 5,
+      "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "I5",
-      "level": 5,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "J5",
-      "level": 4,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "K5",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "L5",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -443,31 +443,31 @@
     },
     {
       "coordinates": "H6",
-      "level": 6,
+      "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 200
     },
     {
       "coordinates": "I6",
-      "level": 5,
+      "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "J6",
-      "level": 4,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "K6",
-      "level": 3,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "L6",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -515,31 +515,31 @@
     },
     {
       "coordinates": "H7",
-      "level": 6,
+      "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 200
     },
     {
       "coordinates": "I7",
-      "level": 5,
+      "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "J7",
-      "level": 4,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "K7",
-      "level": 3,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "L7",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -557,67 +557,67 @@
     },
     {
       "coordinates": "B8",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "C8",
-      "level": 3,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "D8",
-      "level": 4,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "E8",
-      "level": 5,
+      "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "F8",
-      "level": 6,
+      "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 200
     },
     {
       "coordinates": "G8",
-      "level": 6,
+      "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 200
     },
     {
       "coordinates": "H8",
-      "level": 6,
+      "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 200
     },
     {
       "coordinates": "I8",
-      "level": 5,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "J8",
-      "level": 4,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "K8",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "L8",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -635,67 +635,67 @@
     },
     {
       "coordinates": "B9",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "C9",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "D9",
-      "level": 4,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "E9",
-      "level": 5,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "F9",
-      "level": 5,
+      "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "G9",
-      "level": 5,
+      "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "H9",
-      "level": 5,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "I9",
-      "level": 5,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 180
     },
     {
       "coordinates": "J9",
-      "level": 4,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "K9",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "L9",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -713,67 +713,67 @@
     },
     {
       "coordinates": "B10",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "C10",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "D10",
-      "level": 4,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "E10",
-      "level": 4,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "F10",
-      "level": 4,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "G10",
-      "level": 4,
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "H10",
-      "level": 4,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "I10",
-      "level": 4,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "J10",
-      "level": 4,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 160
     },
     {
       "coordinates": "K10",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "L10",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -791,67 +791,67 @@
     },
     {
       "coordinates": "B11",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "C11",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "D11",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "E11",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "F11",
-      "level": 3,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "G11",
-      "level": 3,
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "H11",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "I11",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "J11",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "K11",
-      "level": 3,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 140
     },
     {
       "coordinates": "L11",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -869,67 +869,67 @@
     },
     {
       "coordinates": "B12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "C12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "D12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "E12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "F12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "G12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "H12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "I12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "J12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "K12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "L12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -1132,7 +1132,7 @@
     {
       "coordinates": "A2",
       "level": 1,
-      "subLabel": "VIllage",
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1142,8 +1142,8 @@
     },
     {
       "coordinates": "C2",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1153,8 +1153,8 @@
     },
     {
       "coordinates": "D2",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1164,8 +1164,8 @@
     },
     {
       "coordinates": "E2",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1197,8 +1197,8 @@
     },
     {
       "coordinates": "H2",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1208,8 +1208,8 @@
     },
     {
       "coordinates": "I2",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1219,8 +1219,8 @@
     },
     {
       "coordinates": "J2",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1252,8 +1252,8 @@
     },
     {
       "coordinates": "B3",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1263,8 +1263,8 @@
     },
     {
       "coordinates": "D3",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1274,8 +1274,8 @@
     },
     {
       "coordinates": "E3",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 2,
+      "subLabel": "Altar",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1307,8 +1307,8 @@
     },
     {
       "coordinates": "H3",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 2,
+      "subLabel": "Altar",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1318,8 +1318,8 @@
     },
     {
       "coordinates": "I3",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1329,8 +1329,8 @@
     },
     {
       "coordinates": "K3",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1341,7 +1341,7 @@
     {
       "coordinates": "L3",
       "level": 1,
-      "subLabel": "Vilalge",
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1362,8 +1362,8 @@
     },
     {
       "coordinates": "B4",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1373,8 +1373,8 @@
     },
     {
       "coordinates": "C4",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1384,8 +1384,8 @@
     },
     {
       "coordinates": "E4",
-      "level": 4,
-      "subLabel": "Temple of the Sun",
+      "level": 3,
+      "subLabel": "Town",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1417,8 +1417,8 @@
     },
     {
       "coordinates": "H4",
-      "level": 4,
-      "subLabel": "Temple of the Sun",
+      "level": 3,
+      "subLabel": "Town",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1428,8 +1428,8 @@
     },
     {
       "coordinates": "J4",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1439,8 +1439,8 @@
     },
     {
       "coordinates": "K4",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1472,8 +1472,8 @@
     },
     {
       "coordinates": "B5",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1483,8 +1483,8 @@
     },
     {
       "coordinates": "C5",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 2,
+      "subLabel": "Altar",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1494,8 +1494,8 @@
     },
     {
       "coordinates": "D5",
-      "level": 4,
-      "subLabel": "Temple of the Sun",
+      "level": 3,
+      "subLabel": "Town",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1527,8 +1527,8 @@
     },
     {
       "coordinates": "I5",
-      "level": 4,
-      "subLabel": "Temple of the Sun",
+      "level": 3,
+      "subLabel": "Town",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1538,8 +1538,8 @@
     },
     {
       "coordinates": "J5",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 2,
+      "subLabel": "Altar",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1549,8 +1549,8 @@
     },
     {
       "coordinates": "K5",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1638,7 +1638,7 @@
     {
       "coordinates": "G6",
       "level": 6,
-      "subLabel": "Temple of the Sun",
+      "subLabel": "Ancient Tombs",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1648,8 +1648,8 @@
     },
     {
       "coordinates": "H6",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 5,
+      "subLabel": "Ancient Tombs",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1659,8 +1659,8 @@
     },
     {
       "coordinates": "I6",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 4,
+      "subLabel": "Temple of the Sun",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1670,8 +1670,8 @@
     },
     {
       "coordinates": "J6",
-      "level": 1,
-      "subLabel": "Village",
+      "level": 3,
+      "subLabel": "Town",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1748,7 +1748,7 @@
     {
       "coordinates": "G7",
       "level": 6,
-      "subLabel": "Temple of the Sun",
+      "subLabel": "Ancient Tombs",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1758,8 +1758,8 @@
     },
     {
       "coordinates": "H7",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 5,
+      "subLabel": "Ancient Tombs",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1769,8 +1769,8 @@
     },
     {
       "coordinates": "I7",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 4,
+      "subLabel": "Temple of the Sun",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1780,8 +1780,8 @@
     },
     {
       "coordinates": "J7",
-      "level": 1,
-      "subLabel": "Village",
+      "level": 3,
+      "subLabel": "Town",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1802,8 +1802,8 @@
     },
     {
       "coordinates": "B8",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1813,8 +1813,8 @@
     },
     {
       "coordinates": "C8",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 2,
+      "subLabel": "Altar",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1824,8 +1824,8 @@
     },
     {
       "coordinates": "D8",
-      "level": 4,
-      "subLabel": "Temple of the Sun",
+      "level": 3,
+      "subLabel": "Town",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1857,8 +1857,8 @@
     },
     {
       "coordinates": "I8",
-      "level": 4,
-      "subLabel": "Temple of the Sun",
+      "level": 3,
+      "subLabel": "Town",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1868,8 +1868,8 @@
     },
     {
       "coordinates": "J8",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 2,
+      "subLabel": "Altar",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1879,8 +1879,8 @@
     },
     {
       "coordinates": "K8",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1912,8 +1912,8 @@
     },
     {
       "coordinates": "B9",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1923,8 +1923,8 @@
     },
     {
       "coordinates": "C9",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1934,8 +1934,8 @@
     },
     {
       "coordinates": "E9",
-      "level": 4,
-      "subLabel": "Temple of the Sun",
+      "level": 3,
+      "subLabel": "Town",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1967,8 +1967,8 @@
     },
     {
       "coordinates": "H9",
-      "level": 4,
-      "subLabel": "Temple of the Sun",
+      "level": 3,
+      "subLabel": "Town",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1978,8 +1978,8 @@
     },
     {
       "coordinates": "J9",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -1989,8 +1989,8 @@
     },
     {
       "coordinates": "K9",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2022,8 +2022,8 @@
     },
     {
       "coordinates": "B10",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2033,8 +2033,8 @@
     },
     {
       "coordinates": "D10",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2044,8 +2044,8 @@
     },
     {
       "coordinates": "E10",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 2,
+      "subLabel": "Altar",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2077,8 +2077,8 @@
     },
     {
       "coordinates": "H10",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 2,
+      "subLabel": "Altar",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2088,8 +2088,8 @@
     },
     {
       "coordinates": "I10",
-      "level": 3,
-      "subLabel": "Town",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2099,8 +2099,8 @@
     },
     {
       "coordinates": "K10",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2111,7 +2111,7 @@
     {
       "coordinates": "L10",
       "level": 1,
-      "subLabel": "Vilalge",
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2122,7 +2122,7 @@
     {
       "coordinates": "A11",
       "level": 1,
-      "subLabel": "VIllage",
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2132,8 +2132,8 @@
     },
     {
       "coordinates": "C11",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2143,8 +2143,8 @@
     },
     {
       "coordinates": "D11",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2154,8 +2154,8 @@
     },
     {
       "coordinates": "E11",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2187,8 +2187,8 @@
     },
     {
       "coordinates": "H11",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2198,8 +2198,8 @@
     },
     {
       "coordinates": "I11",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2209,8 +2209,8 @@
     },
     {
       "coordinates": "J11",
-      "level": 2,
-      "subLabel": "Altar",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2341,8 +2341,8 @@
     },
     {
       "coordinates": "K6",
-      "level": 6,
-      "subLabel": "Ancient Tombs",
+      "level": 2,
+      "subLabel": "Altar",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2352,8 +2352,8 @@
     },
     {
       "coordinates": "K7",
-      "level": 6,
-      "subLabel": "Ancient Tombs",
+      "level": 2,
+      "subLabel": "Altar",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2363,8 +2363,8 @@
     },
     {
       "coordinates": "L6",
-      "level": 6,
-      "subLabel": "Ancient Tombs",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
@@ -2374,8 +2374,8 @@
     },
     {
       "coordinates": "L7",
-      "level": 6,
-      "subLabel": "Ancient Tombs",
+      "level": 1,
+      "subLabel": "Village",
       "offset": {
         "x": 0.5,
         "y": 0.5
