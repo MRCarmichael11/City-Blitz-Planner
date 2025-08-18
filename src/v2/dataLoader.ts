@@ -37,6 +37,9 @@ export function buildSeasonFromDataset(ds: SeasonDataset): SeasonDefinition {
     calendar,
     generateBaseMap() {
       const territories: Territory[] = [];
+      const strongholdValue = (lvl: number) => 100 + (Math.max(1, Math.min(6, lvl)) - 1) * 20; // S1..S6 => 100..200 by 20s
+      const cityValue = (lvl: number) => Math.max(1, Math.min(6, lvl)) * 100; // T1..T6 => 100..600 by 100s
+
       // strongholds
       for (const s of ds.strongholds) territories.push({
         id: s.coordinates,
@@ -47,7 +50,7 @@ export function buildSeasonFromDataset(ds: SeasonDataset): SeasonDefinition {
         buildingLevel: s.level,
         buildingType: 'Stronghold',
         resourceType: (s.resourceType as ResourceType) || 'Mithril',
-        resourceValue: s.resourceValue ?? 0,
+        resourceValue: strongholdValue(s.level),
       });
       // cities (intersection)
       for (const c of ds.cities) territories.push({
@@ -60,7 +63,7 @@ export function buildSeasonFromDataset(ds: SeasonDataset): SeasonDefinition {
         buildingType: 'City',
         subLabel: c.subLabel,
         resourceType: (c.resourceType as ResourceType) || 'Spice',
-        resourceValue: c.resourceValue ?? 0,
+        resourceValue: cityValue(c.level),
         isUnlocked: false,
         offset: c.offset ?? { x: 0.5, y: 0.5 },
       });

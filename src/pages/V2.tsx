@@ -445,8 +445,24 @@ export default function V2() {
           <MapCanvas map={map} selectedAlliance={selectedAlliance} assignments={mode === 'planning' ? plannedAssignments : derivedAssignments} selectedId={selectedTerritory?.id ?? null} onSelectTerritory={(t)=>{
             if (t.tileType === 'trading-post') {
               toast({ title: 'PvP Tile', description: 'Trading posts are player-held and uncapturable by alliances.' });
+              setSelectedTerritory(t); setDetailsOpen(true);
+              return;
             }
+            // Open details
             setSelectedTerritory(t); setDetailsOpen(true);
+            // Fast-assign in Planning mode when an alliance is selected and capture is allowed
+            if (mode === 'planning' && selectedAlliance) {
+              const already = plannedAssignments[t.id]?.alliance === selectedAlliance;
+              if (!already) {
+                const res = canCapture(t, { mode: 'planning', step: season.calendar.steps, calendar: season.calendar, territories: map.territories, assignments: plannedAssignments, selectedAlliance });
+                if (res.ok) {
+                  setPlannedAssignments(prev => ({ ...prev, [t.id]: { alliance: selectedAlliance, step: season.calendar.steps } }));
+                  toast({ title: 'Planned', description: `${t.coordinates} → ${selectedAlliance}` });
+                } else {
+                  toast({ title: 'Cannot assign', description: res.reason });
+                }
+              }
+            }
           }} />
           {/* Docked details panel */}
           {detailsOpen && (

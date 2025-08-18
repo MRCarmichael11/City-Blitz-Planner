@@ -162,6 +162,276 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
     return null;
   };
 
+  // If strict per-priority pathing is requested, run the layered planner
+  if (options?.strictToTarget) {
+    const stepDays = season.calendar.stepDays || [3,6,10,13,17,20,28];
+    const lastDay = stepDays[stepDays.length - 1] || 28;
+
+    // Helper: centroid of planned target for an alliance
+    const centroidFor = (ally: Alliance) => {
+      const ids = Object.entries(plannedTarget).filter(([,v]) => v.alliance === ally.name).map(([id]) => id);
+      if (ids.length === 0) return latticeXY(findCapitol(map.territories) || map.territories[0]);
+      let sx = 0, sy = 0;
+      for (const id of ids) {
+        const t = map.territories.find(tt => tt.id === id);
+        if (!t) continue;
+        const p = latticeXY(t); sx += p.x; sy += p.y;
+      }
+      return { x: sx / Math.max(1, ids.length), y: sy / Math.max(1, ids.length) };
+    };
+    const cap = findCapitol(map.territories);
+    const capXY = cap ? latticeXY(cap) : { x: (map.gridSize.cols*2)/2, y: (map.gridSize.rows*2)/2 };
+
+    function chooseStartForAlliance(a: Alliance): Territory | null {
+      // Prefer existing owned SH at currentTick
+      const owned = Object.entries(simAssignments).filter(([,v]) => v.alliance === a.name).map(([id]) => map.territories.find(t => t.id === id)!).filter(Boolean);
+      const ownedSH = owned.find(t => t.tileType === 'stronghold');
+      if (ownedSH) return ownedSH;
+      // Otherwise, pick edge based on final-day footprint direction (toward centroid vs map center)
+      const c = centroidFor(a);
+      const dx = c.x - capXY.x; const dy = c.y - capXY.y;
+      const absx = Math.abs(dx), absy = Math.abs(dy);
+      let side: 'N'|'S'|'E'|'W' = 'W';
+      if (absx >= absy) side = dx < 0 ? 'W' : 'E'; else side = dy < 0 ? 'N' : 'S';
+      const edges = map.territories.filter(t => isEdgeStronghold(t, map.gridSize.rows, map.gridSize.cols));
+      // Prefer Lv1 SH on the chosen side line first
+      const sideFilter = (t: Territory) => {
+        if (side === 'W') return t.col === 1;
+        if (side === 'E') return t.col === map.gridSize.cols;
+        if (side === 'N') return t.row === 1;
+        return t.row === map.gridSize.rows;
+      };
+      const edgeOnSide = edges.filter(sideFilter);
+      const scoreNearest = (list: Territory[]) => {
+        let best: Territory | null = null; let bestScore = Infinity;
+        for (const t of list) {
+          const p = latticeXY(t);
+          const d = Math.abs(p.x - c.x) + Math.abs(p.y - c.y);
+          if (d < bestScore) { bestScore = d; best = t; }
+        }
+        return best;
+      };
+      const lvl1OnSide = edgeOnSide.filter(t => t.buildingLevel === 1);
+      const pick = scoreNearest(lvl1OnSide) || scoreNearest(edgeOnSide) || scoreNearest(edges);
+      return pick ?? starts[a.name] ?? null;
+    }
+
+    function corridorPenaltyToTarget(p: {x:number;y:number}, start: Territory | null, target: {x:number;y:number}, width: number) {
+      if (!start) return 0;
+      const s = latticeXY(start);
+      const vx = target.x - s.x, vy = target.y - s.y;
+      const vLen = Math.max(1, Math.hypot(vx, vy));
+      const nx = -vy / vLen, ny = vx / vLen; // unit normal
+      const dist = Math.abs((p.x - s.x) * nx + (p.y - s.y) * ny);
+      const pen = Math.max(0, dist - width / 2) * 5;
+      return pen;
+    }
+
+    // Reserve set: all plannedTarget tiles for alliances already planned
+    const reservedByOthers = new Set<string>();
+
+    const dayFromTick = (t: Tick) => dayHalfFromTick(t).day;
+    const currentDay = dayFromTick(currentTick);
+
+    // Plan alliances strictly in priority order, one at a time
+    for (const a of allies) {
+      const targetC = centroidFor(a);
+      const start = chooseStartForAlliance(a);
+      const width = priorityCorridorWidth(a.priority);
+
+      for (let day = currentDay; day <= lastDay; day++) {
+        const step = stepFromDay(day, season);
+        const tickAM = tickFromDayHalf(day, 'AM');
+        const tickPM = tickFromDayHalf(day, 'PM');
+        const terrUnlocked = applyCalendarUnlocks(map.territories, season.calendar, step);
+
+        // Refresh assignments at AM
+        simAssignments = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickAM);
+        const ownedIds = new Set(Object.entries(simAssignments).filter(([,v]) => v.alliance === a.name).map(([k]) => k));
+
+        // Ensure first capture (Lv1 SH)
+        if (ownedIds.size === 0 && start) {
+          scheduleCapture(a.name, start, tickAM);
+          simAssignments = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickAM);
+        }
+
+        // AM pass: cities (prefer plannedTarget of this alliance, avoid reservedByOthers)
+        const maxCityLvl = Math.max(0, Math.min(6, step - 1));
+        if (maxCityLvl >= 1) {
+          // Preview candidates to check capacity and optionally release far non-target cities
+          const currentAsgAM = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickAM);
+          const ownedCities = Object.entries(currentAsgAM)
+            .filter(([,v]) => v.alliance === a.name)
+            .map(([id]) => terrUnlocked.find(t => t.id === id)!)
+            .filter(t => t && t.tileType === 'city');
+          // Build candidate list first
+          const candidates = terrUnlocked.filter(t => t.tileType === 'city' && t.buildingLevel <= maxCityLvl);
+          const adjPre = candidates.filter(ct => {
+            if (reservedByOthers.has(ct.id)) return false;
+            const ok = canCapture(ct, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: currentAsgAM, selectedAlliance: a.name, currentTick: tickAM, events: simEvents } as const);
+            return ok.ok;
+          });
+          // Prefer planned targets, then corridor alignment, then closeness to target centroid
+          const prefer = (t: Territory) => (plannedTarget[t.id]?.alliance === a.name ? 1 : 0);
+          adjPre.sort((x,y) => {
+            const py = prefer(y) - prefer(x);
+            if (py !== 0) return py;
+            const px = latticeXY(x), py2 = latticeXY(y);
+            const scx = corridorPenaltyToTarget(px, start, targetC, width) - corridorPenaltyToTarget(py2, start, targetC, width);
+            if (scx !== 0) return scx;
+            const dx = (Math.abs(px.x - targetC.x) + Math.abs(px.y - targetC.y));
+            const dy = (Math.abs(py2.x - targetC.x) + Math.abs(py2.y - targetC.y));
+            return dx - dy;
+          });
+          const previewTargets = adjPre.slice(0, 2);
+          const needCitySlots = Math.max(0, (ownedCities.length + previewTargets.length) - 8);
+          if (needCitySlots > 0) {
+            // Avoid dropping planned end-state cities and those adjacent to today's preview targets
+            const protectedIds = new Set<string>();
+            for (const tgt of previewTargets) {
+              for (const o of ownedCities) {
+                const man = Math.abs((2*o.col + (o.offset?.x?1:0)) - (2*tgt.col + (tgt.offset?.x?1:0))) + Math.abs((2*o.row + (o.offset?.y?1:0)) - (2*tgt.row + (tgt.offset?.y?1:0)));
+                if (man === 2) protectedIds.add(o.id);
+              }
+            }
+            const sortedToDump = [...ownedCities]
+              .filter(t => !protectedIds.has(t.id))
+              .filter(t => !(plannedTarget[t.id]?.alliance === a.name))
+              .sort((aa,bb) => {
+                const da = Math.abs(latticeXY(aa).x - targetC.x) + Math.abs(latticeXY(aa).y - targetC.y);
+                const db = Math.abs(latticeXY(bb).x - targetC.x) + Math.abs(latticeXY(bb).y - targetC.y);
+                return db - da; // drop farthest first
+              });
+            for (let i = 0; i < Math.min(needCitySlots, sortedToDump.length); i++) {
+              const dump = sortedToDump[i];
+              const ev: ActionEvent = { tick: tickAM, tileId: dump.id, alliance: a.name, action: 'release' };
+              simEvents = [...simEvents, ev];
+              report.push(`Plan: ${a.name} release ${dump.coordinates} at Day ${day} AM to free city slot (strict path)`);
+            }
+            simAssignments = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickAM);
+          }
+          // Now actually take up to 2 cities for the AM
+          let takenC = 0;
+          for (const ct of adjPre) {
+            if (takenC >= 2) break;
+            const placed = scheduleCapture(a.name, ct, tickAM);
+            if (placed) {
+              takenC++;
+              reservedByOthers.add(ct.id);
+              simAssignments = buildAssignmentsUpToTick(simEvents, terrUnlocked, placed);
+            }
+          }
+        }
+
+        // PM pass: strongholds toward target (prefer plannedTarget and corridor)
+        simAssignments = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM);
+        const ownedNow = new Set(Object.entries(simAssignments).filter(([,v]) => v.alliance === a.name).map(([k]) => k));
+        let takenS = 0;
+        const shCandBase = terrUnlocked.filter(t => t.tileType === 'stronghold' && !ownedNow.has(t.id) && !reservedByOthers.has(t.id));
+        // Stronghold level pacing: compute max allowed level for this alliance today
+        const cityUnlockedLvl = Math.max(0, Math.min(6, step - 1));
+        const maxAllowedByPriority = (ally: Alliance, tile: Territory): boolean => {
+          const allowed = (()=>{
+            if ((ally.priority ?? 99) <= 2) return Math.min(6, cityUnlockedLvl + 2);
+            if ((ally.priority ?? 99) === 3) {
+              // allow +2 only if not conflicting with higher-priority corridors
+              const px = latticeXY(tile);
+              let conflict = false;
+              for (const higher of allies) {
+                if ((higher.priority ?? 99) >= (ally.priority ?? 99)) continue;
+                const hs = chooseStartForAlliance(higher);
+                const hc = centroidFor(higher);
+                const pen = corridorPenaltyToTarget(px, hs, hc, priorityCorridorWidth(higher.priority));
+                if (pen <= 0.5) { conflict = true; break; }
+              }
+              return conflict ? Math.min(6, cityUnlockedLvl + 1) : Math.min(6, cityUnlockedLvl + 2);
+            }
+            return Math.min(6, cityUnlockedLvl + 1);
+          })();
+          return tile.buildingLevel <= allowed;
+        };
+        // Enforce Day 1: after first Lv1 SH in AM, the PM capture must be an adjacent Lv1 SH
+        const dayIsOne = (day === 1);
+        const ownedTilesNow = Object.entries(simAssignments).filter(([,v]) => v.alliance === a.name).map(([id]) => terrUnlocked.find(t => t.id === id)!).filter(Boolean);
+        const firstSH = ownedTilesNow.find(t => t.tileType === 'stronghold');
+        let shCand = shCandBase;
+        if (dayIsOne && firstSH && ownedTilesNow.length === 1) {
+          const fxy = latticeXY(firstSH);
+          shCand = shCandBase.filter(t => t.buildingLevel === 1 && (Math.abs(latticeXY(t).x - fxy.x) + Math.abs(latticeXY(t).y - fxy.y) === 2));
+        }
+        // Apply pacing filter
+        shCand = shCand.filter(t => maxAllowedByPriority(a, t));
+        const shAdj = shCand.filter(st => {
+          const res = canCapture(st, { mode:'action', step, calendar: season.calendar, territories: terrUnlocked, assignments: simAssignments, selectedAlliance: a.name, currentTick: tickPM, events: simEvents } as const);
+          return res.ok;
+        });
+        const preferSH = (t: Territory) => (plannedTarget[t.id]?.alliance === a.name ? 1 : 0);
+        shAdj.sort((x,y) => {
+          const py = preferSH(y) - preferSH(x);
+          if (py !== 0) return py;
+          const px = latticeXY(x), py2 = latticeXY(y);
+          const pen = corridorPenaltyToTarget(px, start, targetC, width) - corridorPenaltyToTarget(py2, start, targetC, width);
+          if (pen !== 0) return pen;
+          const dx = (Math.abs(px.x - targetC.x) + Math.abs(px.y - targetC.y));
+          const dy = (Math.abs(py2.x - targetC.x) + Math.abs(py2.y - targetC.y));
+          return dx - dy;
+        });
+
+        // Preview next two to free slots if needed
+        const currentAsg = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM);
+        const ownedSH = Object.entries(currentAsg)
+          .filter(([,v]) => v.alliance === a.name)
+          .map(([id]) => terrUnlocked.find(t => t.id === id)!)
+          .filter(t => t && t.tileType === 'stronghold');
+        const previewTargets = shAdj.slice(0, 2);
+        const strongholdCount = ownedSH.length;
+        const needSlots = Math.max(0, (strongholdCount + previewTargets.length) - 8);
+        if (needSlots > 0) {
+          const protectedIds = new Set<string>();
+          for (const tgt of previewTargets) {
+            for (const o of ownedSH) {
+              const man = Math.abs((2*o.col + (o.offset?.x?1:0)) - (2*tgt.col + (tgt.offset?.x?1:0))) + Math.abs((2*o.row + (o.offset?.y?1:0)) - (2*tgt.row + (tgt.offset?.y?1:0)));
+              if (man === 2) protectedIds.add(o.id);
+            }
+          }
+          const sortedToDump = [...ownedSH]
+            .filter(t => !protectedIds.has(t.id))
+            .filter(t => !(plannedTarget[t.id]?.alliance === a.name))
+            .sort((aa,bb) => {
+              const da = Math.abs(latticeXY(aa).x - targetC.x) + Math.abs(latticeXY(aa).y - targetC.y);
+              const db = Math.abs(latticeXY(bb).x - targetC.x) + Math.abs(latticeXY(bb).y - targetC.y);
+              return db - da; // drop farthest first
+            });
+          for (let i = 0; i < Math.min(needSlots, sortedToDump.length); i++) {
+            const dump = sortedToDump[i];
+            const ev: ActionEvent = { tick: tickPM, tileId: dump.id, alliance: a.name, action: 'release' };
+            simEvents = [...simEvents, ev];
+            report.push(`Plan: ${a.name} release ${dump.coordinates} at Day ${day} PM to free slot (strict path)`);
+          }
+        }
+
+        for (const st of shAdj) {
+          if (takenS >= 2) break;
+          const placed = scheduleCapture(a.name, st, tickPM);
+          if (placed) {
+            takenS++;
+            reservedByOthers.add(st.id);
+            simAssignments = buildAssignmentsUpToTick(simEvents, terrUnlocked, placed);
+          }
+        }
+      }
+
+      // Reserve this alliance's planned target tiles to avoid lower priorities trying to take them
+      for (const [tid, v] of Object.entries(plannedTarget)) {
+        if (v.alliance === a.name) reservedByOthers.add(tid);
+      }
+    }
+
+    const futurePlannedStrict = simEvents.filter(e => e.tick >= currentTick);
+    const plannedOnlyFutureStrict = futurePlannedStrict.filter(e => !past.some(p => p.tick === e.tick && p.tileId === e.tileId && p.action === e.action && p.alliance === e.alliance));
+    return { planned: plannedOnlyFutureStrict, report };
+  }
+
   // Day-power model
   const stepDays = season.calendar.stepDays || [3,6,10,13,17,20,28];
   const dayFromTick = (t: Tick) => dayHalfFromTick(t).day;
