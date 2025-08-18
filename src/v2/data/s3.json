@@ -11,73 +11,73 @@
   "strongholds": [
     {
       "coordinates": "A1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "B1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "C1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "D1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "E1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "F1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "G1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "H1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "I1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "J1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "K1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "L1",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -89,7 +89,7 @@
     },
     {
       "coordinates": "A2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -155,7 +155,7 @@
     },
     {
       "coordinates": "L2",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -167,7 +167,7 @@
     },
     {
       "coordinates": "A3",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -233,7 +233,7 @@
     },
     {
       "coordinates": "L3",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -245,7 +245,7 @@
     },
     {
       "coordinates": "A4",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -311,7 +311,7 @@
     },
     {
       "coordinates": "L4",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -323,7 +323,7 @@
     },
     {
       "coordinates": "A5",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -389,7 +389,7 @@
     },
     {
       "coordinates": "L5",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -401,7 +401,7 @@
     },
     {
       "coordinates": "A6",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -467,7 +467,7 @@
     },
     {
       "coordinates": "L6",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -479,7 +479,7 @@
     },
     {
       "coordinates": "A7",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -515,7 +515,7 @@
     },
     {
       "coordinates": "H7",
-      "level": 5,
+      "level": 6,
       "resourceType": "Mithril",
       "resourceValue": 200
     },
@@ -539,7 +539,7 @@
     },
     {
       "coordinates": "L7",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -551,7 +551,7 @@
     },
     {
       "coordinates": "A8",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -587,7 +587,7 @@
     },
     {
       "coordinates": "G8",
-      "level": 5,
+      "level": 6,
       "resourceType": "Mithril",
       "resourceValue": 200
     },
@@ -617,7 +617,7 @@
     },
     {
       "coordinates": "L8",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -629,7 +629,7 @@
     },
     {
       "coordinates": "A9",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -695,7 +695,7 @@
     },
     {
       "coordinates": "L9",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -707,7 +707,7 @@
     },
     {
       "coordinates": "A10",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -773,7 +773,7 @@
     },
     {
       "coordinates": "L10",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -785,7 +785,7 @@
     },
     {
       "coordinates": "A11",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
@@ -851,7 +851,7 @@
     },
     {
       "coordinates": "L11",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
@@ -863,73 +863,73 @@
     },
     {
       "coordinates": "A12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 100
     },
     {
       "coordinates": "B12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "C12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "D12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "E12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "F12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "G12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "H12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "I12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "J12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "K12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
     {
       "coordinates": "L12",
-      "level": 2,
+      "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 120
     },
