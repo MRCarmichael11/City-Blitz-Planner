@@ -12,7 +12,7 @@ import TerritoryDetailsPanel from '@/v2/TerritoryDetailsPanel';
 // applyCalendarUnlocks imported above
 import PlannerControls from '@/v2/PlannerControls';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Menu as MenuIcon, Moon, Sun } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const seasons = { S1, S2, S3, S4 } as const;
@@ -539,11 +539,27 @@ export default function V2() {
               </DropdownMenu.Content>
             </DropdownMenu.Root>
 
-            {/* Theme toggle */}
-            <button className="border rounded px-2 py-1" onClick={()=>{
-              const el = document.documentElement; const isDark = el.classList.toggle('dark');
-              localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            }}>Theme</button>
+            {/* Hamburger (page/account) */}
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="border rounded px-2 py-1 inline-flex items-center gap-1" aria-label="Menu">
+                  <MenuIcon className="w-4 h-4" />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content className="z-50 min-w-[220px] rounded border bg-card p-1 shadow-md">
+                <div className="px-2 py-1 text-xs text-muted-foreground">Appearance</div>
+                <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded inline-flex items-center gap-2" onClick={()=>{
+                  const el = document.documentElement; el.classList.remove('dark'); localStorage.setItem('theme','light');
+                }}>
+                  <Sun className="w-4 h-4" /> Light
+                </button>
+                <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded inline-flex items-center gap-2" onClick={()=>{
+                  const el = document.documentElement; el.classList.add('dark'); localStorage.setItem('theme','dark');
+                }}>
+                  <Moon className="w-4 h-4" /> Dark
+                </button>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
           </div>
         </div>
         <div className="flex-1 min-h-[60vh] flex relative">
