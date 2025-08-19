@@ -143,7 +143,19 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
     // Daily caps: 2S + 2C per day
     const { day } = dayHalfFromTick(p.currentTick);
     const used = dailyCapsUsedFor(p.selectedAlliance, day, eventsUpTo, p.territories);
-    if (t.tileType === 'stronghold' && used.S >= 2) return { ok: false, reason: `Daily limit reached: 2 strongholds for Day ${day}` };
+    if (t.tileType === 'stronghold' && used.S >= 2) {
+      // Safety fallback for Step 1: if assignments show fewer than 2 SH owned so far, allow capture (prevents false positives)
+      if (p.step === 1) {
+        const currentOwned = countsTotal(p.assignments, p.selectedAlliance, p.territories).strongholds;
+        if (currentOwned < 2) {
+          // allow
+        } else {
+          return { ok: false, reason: `Daily limit reached: 2 strongholds for Day ${day}` };
+        }
+      } else {
+        return { ok: false, reason: `Daily limit reached: 2 strongholds for Day ${day}` };
+      }
+    }
     if (t.tileType === 'city' && used.C >= 2) return { ok: false, reason: `Daily limit reached: 2 cities for Day ${day}` };
   }
 

@@ -502,7 +502,19 @@ export default function V2() {
                 if (manualAction === 'capture') {
                   const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                   if (res.ok && selectedAlliance) {
-                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }].sort((a,b)=> a.tick - b.tick));
+                    setEvents(prev => {
+  const next = [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }];
+  // De-duplicate same-tick same-alliance captures on same tile (paranoia)
+  const seen = new Set<string>();
+  const filtered = next.filter(e => {
+    if (e.action !== 'capture') return true;
+    const key = `${e.tick}|${e.alliance}|${e.tileId}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return filtered.sort((a,b)=> a.tick - b.tick);
+});
                     toast({ title: 'Scheduled capture', description: `${t.coordinates} → ${selectedAlliance} at Tick ${currentTick}` });
                   } else {
                     toast({ title: 'Cannot capture', description: res.reason });
@@ -547,7 +559,19 @@ export default function V2() {
                   } else {
                     const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                     if (!res.ok) { toast({ title: 'Cannot capture', description: res.reason }); return; }
-                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }].sort((a,b)=> a.tick - b.tick));
+                    setEvents(prev => {
+  const next = [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }];
+  // De-duplicate same-tick same-alliance captures on same tile (paranoia)
+  const seen = new Set<string>();
+  const filtered = next.filter(e => {
+    if (e.action !== 'capture') return true;
+    const key = `${e.tick}|${e.alliance}|${e.tileId}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return filtered.sort((a,b)=> a.tick - b.tick);
+});
                     toast({ title: 'Captured', description: `${t.coordinates} → ${selectedAlliance}` });
                   }
                 }}
