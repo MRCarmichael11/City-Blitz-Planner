@@ -126,13 +126,17 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
     const eventsUpTo = p.events.filter(e => e.tick <= p.currentTick!);
 
     // Protection check: find last capture tick and add type-specific protection
-    const lastCaptureTick = recaptureAllowedAtTick(t.id, eventsUpTo);
-    if (lastCaptureTick !== null) {
-      const prot = protectionTicksFor(t);
-      const availableTick = (lastCaptureTick + prot) as Tick;
-      if (p.currentTick < availableTick) {
-        const { day, half } = dayHalfFromTick(availableTick);
-        return { ok: false, reason: `Protected: available at Day ${day} ${half}` };
+    // Special-case: During Step 1, do NOT time-gate strongholds (L1/L2 should be free as per +2 rule)
+    const isStep1 = p.step === 1;
+    if (!(t.tileType === 'stronghold' && isStep1)) {
+      const lastCaptureTick = recaptureAllowedAtTick(t.id, eventsUpTo);
+      if (lastCaptureTick !== null) {
+        const prot = protectionTicksFor(t);
+        const availableTick = (lastCaptureTick + prot) as Tick;
+        if (p.currentTick < availableTick) {
+          const { day, half } = dayHalfFromTick(availableTick);
+          return { ok: false, reason: `Protected: available at Day ${day} ${half}` };
+        }
       }
     }
 
@@ -154,7 +158,10 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
   if (t.tileType === 'stronghold') {
     const cityUnlockedLevel = Math.max(0, Math.min(6, p.step - 1));
     const allowedShLevel = Math.min(6, cityUnlockedLevel + 2);
-    if (t.buildingLevel > allowedShLevel) {
+    // In Step 1 specifically, L1 and L2 are ALWAYS allowed with no time gate
+    if (p.step === 1 && t.buildingLevel <= 2) {
+      // pass
+    } else if (t.buildingLevel > allowedShLevel) {
       const neededCityLevel = t.buildingLevel - 2; // must have this city level unlocked
       const neededStep = Math.max(1, Math.min(p.calendar.steps, neededCityLevel + 1));
       const sd = p.calendar.stepDays || [];
