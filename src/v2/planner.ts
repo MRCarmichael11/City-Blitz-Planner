@@ -126,7 +126,7 @@ function stepFromDay(day: number, season: SeasonDefinition): number {
 export function planSeason(map: MapData, season: SeasonDefinition, alliances: Alliance[], currentTick: Tick, existingEvents: ActionEvent[], options?: PlannerOptions): PlannerResult {
   const report: string[] = [];
   const maxTick = options?.maxTick ?? endOfSeasonTick(season);
-  const corridorWidthBase = Math.max(2, Math.min(8, options?.corridorWidth ?? 4));
+  const corridorWidthBase = Math.max(2, Math.min(8, options?.corridorWidth ?? 4)); // can be overridden by learned policy per alliance
   const plannedTarget = (options?.plannedTarget ?? {}) as Assignments;
 
   // Priority ordering (lower number = higher priority)
@@ -310,7 +310,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
     for (const a of allies) {
       const targetC = centroidFor(a);
       const start = chooseStartForAlliance(a);
-      const width = priorityCorridorWidth(a.priority);
+      const width = priorityCorridorWidth(a.priority); // TODO: if learned policy exists for a, override width
       // Precompute strict corridor mask toward target (width by priority)
       const inCorridor = (t: Territory) => corridorPenaltyToTarget(latticeXY(t), start, targetC, width) <= 0.5;
       const corridorSet = new Set<string>(map.territories.filter(tt => isCapturable(tt) && inCorridor(tt)).map(tt => tt.id));

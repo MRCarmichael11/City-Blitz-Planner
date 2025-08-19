@@ -207,6 +207,26 @@ export default function V2() {
                 const merged = replaceFuture ? [...past, ...planned] : [...events, ...planned];
                 setEvents(merged.sort((a,b)=> a.tick - b.tick));
               }}
+              onLockDay={(day)=>{
+                try {
+                  // Build learned policy from events up to end of the selected day
+                  const endTick = tickFromDayHalf(day, 'PM');
+                  const cut = events.filter(e => e.tick <= endTick);
+                  // For each alliance, collect reserved lane tiles as those they captured up to this day
+                  const reservedByAlliance: Record<string, string[]> = {};
+                  for (const a of alliances) {
+                    reservedByAlliance[a.name] = cut.filter(e => e.action==='capture' && e.alliance===a.name).map(e=> e.tileId);
+                  }
+                  // Persist learned policy in plannedBySeason (non-breaking): store under a synthetic alliance key "__policy__"
+                  const policyBlob = { version: 1, reservedByAlliance };
+                  // We serialize into localStorage v3 alongside plannedBySeason by piggybacking plannedAssignments meta
+                  // Attach into our plannedAssignments object under a special key that UI ignores
+                  setPlannedAssignments(prev => ({ ...prev, __policy__: { alliance: JSON.stringify(policyBlob), step: season.calendar.steps } as any }));
+                  toast({ title: 'Learned', description: `Locked Day ${day}. Learned lane reservations from your manual placements.` });
+                } catch (e) {
+                  toast({ title: 'Learn failed', description: 'Could not derive policy from events.' });
+                }
+              }}
             />
           </div>
           {mode === 'action' ? (
