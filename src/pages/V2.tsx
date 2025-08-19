@@ -500,7 +500,7 @@ export default function V2() {
                 toast({ title: 'Select an alliance', description: 'Pick an alliance in the legend to capture.' });
               } else {
                 if (manualAction === 'capture') {
-                  const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events });
+                  const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                   if (res.ok && selectedAlliance) {
                     setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }].sort((a,b)=> a.tick - b.tick));
                     toast({ title: 'Scheduled capture', description: `${t.coordinates} → ${selectedAlliance} at Tick ${currentTick}` });
@@ -545,7 +545,7 @@ export default function V2() {
                     setPlannedAssignments(prev => ({ ...prev, [t.id]: { alliance: selectedAlliance, step: season.calendar.steps } }));
                     toast({ title: 'Planned', description: `${t.coordinates} → ${selectedAlliance}` });
                   } else {
-                    const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events });
+                    const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                     if (!res.ok) { toast({ title: 'Cannot capture', description: res.reason }); return; }
                     setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }].sort((a,b)=> a.tick - b.tick));
                     toast({ title: 'Captured', description: `${t.coordinates} → ${selectedAlliance}` });

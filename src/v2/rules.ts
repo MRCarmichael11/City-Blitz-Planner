@@ -139,13 +139,29 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
     // Daily caps: 2S + 2C per day
     const { day } = dayHalfFromTick(p.currentTick);
     const used = dailyCapsUsedFor(p.selectedAlliance, day, eventsUpTo, p.territories);
-    if (t.tileType === 'stronghold' && used.S >= 2) return { ok: false, reason: 'Daily limit reached: 2 strongholds per day' };
-    if (t.tileType === 'city' && used.C >= 2) return { ok: false, reason: 'Daily limit reached: 2 cities per day' };
+    if (t.tileType === 'stronghold' && used.S >= 2) return { ok: false, reason: `Daily limit reached: 2 strongholds for Day ${day}` };
+    if (t.tileType === 'city' && used.C >= 2) return { ok: false, reason: `Daily limit reached: 2 cities for Day ${day}` };
   }
 
   // Action mode restrictions
   // 1) Unlock state (cities only). Step 1 is a pre-unlock window; cities unlock starting step 2.
   if (!isCityUnlocked(t)) return { ok: false, reason: 'City is locked at this step' };
+
+  // 1.5) Stronghold level gating tied to city unlocks: allowed SH level <= (unlocked city level + 2)
+  // - Step 1 (cityUnlocked=0) → SH up to L2 (no time gate for L1/L2)
+  // - Step 2 (cityUnlocked=1) → SH up to L3
+  // - ... etc., capping at L6
+  if (t.tileType === 'stronghold') {
+    const cityUnlockedLevel = Math.max(0, Math.min(6, p.step - 1));
+    const allowedShLevel = Math.min(6, cityUnlockedLevel + 2);
+    if (t.buildingLevel > allowedShLevel) {
+      const neededCityLevel = t.buildingLevel - 2; // must have this city level unlocked
+      const neededStep = Math.max(1, Math.min(p.calendar.steps, neededCityLevel + 1));
+      const sd = p.calendar.stepDays || [];
+      const availableDay = sd[neededStep - 1] || 1;
+      return { ok: false, reason: `Stronghold L${t.buildingLevel} opens at Day ${availableDay} (after L${neededCityLevel} cities unlock)` };
+    }
+  }
 
   // Capitol rule: Only capturable at final day/tick of the season (last day PM) and final step
   if (t.tileType === 'capitol') {
