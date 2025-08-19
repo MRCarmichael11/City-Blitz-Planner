@@ -122,8 +122,11 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
 
   // v3: Protection timers and daily caps when currentTick/events provided
   if (p.currentTick && p.events) {
+    // Only consider events up to and including the current tick for protection and daily caps
+    const eventsUpTo = p.events.filter(e => e.tick <= p.currentTick!);
+
     // Protection check: find last capture tick and add type-specific protection
-    const lastCaptureTick = recaptureAllowedAtTick(t.id, p.events);
+    const lastCaptureTick = recaptureAllowedAtTick(t.id, eventsUpTo);
     if (lastCaptureTick !== null) {
       const prot = protectionTicksFor(t);
       const availableTick = (lastCaptureTick + prot) as Tick;
@@ -135,7 +138,7 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
 
     // Daily caps: 2S + 2C per day
     const { day } = dayHalfFromTick(p.currentTick);
-    const used = dailyCapsUsedFor(p.selectedAlliance, day, p.events, p.territories);
+    const used = dailyCapsUsedFor(p.selectedAlliance, day, eventsUpTo, p.territories);
     if (t.tileType === 'stronghold' && used.S >= 2) return { ok: false, reason: 'Daily limit reached: 2 strongholds per day' };
     if (t.tileType === 'city' && used.C >= 2) return { ok: false, reason: 'Daily limit reached: 2 cities per day' };
   }

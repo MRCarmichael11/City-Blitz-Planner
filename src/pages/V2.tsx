@@ -502,13 +502,13 @@ export default function V2() {
                 if (manualAction === 'capture') {
                   const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events });
                   if (res.ok && selectedAlliance) {
-                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }]);
+                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }].sort((a,b)=> a.tick - b.tick));
                     toast({ title: 'Scheduled capture', description: `${t.coordinates} → ${selectedAlliance} at Tick ${currentTick}` });
                   } else {
                     toast({ title: 'Cannot capture', description: res.reason });
                   }
                 } else {
-                  setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }]);
+                  setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }].sort((a,b)=> a.tick - b.tick));
                   toast({ title: 'Scheduled release', description: `${t.coordinates} at Tick ${currentTick}` });
                 }
               }
@@ -547,7 +547,7 @@ export default function V2() {
                   } else {
                     const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events });
                     if (!res.ok) { toast({ title: 'Cannot capture', description: res.reason }); return; }
-                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }]);
+                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }].sort((a,b)=> a.tick - b.tick));
                     toast({ title: 'Captured', description: `${t.coordinates} → ${selectedAlliance}` });
                   }
                 }}
@@ -556,7 +556,7 @@ export default function V2() {
                     setPlannedAssignments(prev => { const n = { ...prev }; delete n[t.id]; return n; });
                     toast({ title: 'Unplanned', description: `${t.coordinates}` });
                   } else {
-                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }]);
+                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }].sort((a,b)=> a.tick - b.tick));
                     toast({ title: 'Released', description: `${t.coordinates}` });
                   }
                 }}
