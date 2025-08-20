@@ -275,28 +275,61 @@ export default function V2() {
                     selectedAlliance ? `Click a tile to ${manualAction} for ${selectedAlliance}` : 'Select an alliance in the legend'
                   ) : 'Toggle to schedule by clicking the map'}
                 </div>
-                <button
-                  className="ml-auto border rounded px-2 py-1 text-xs disabled:opacity-50"
-                  disabled={!manualMode || !selectedAlliance}
-                  title="Remove all scheduled events for the selected alliance on this day"
-                  onClick={()=>{
-                    if (!selectedAlliance) return;
-                    const { day } = dayHalfFromTick(currentTick);
-                    const keep = events.filter(e => {
-                      const d = dayHalfFromTick(e.tick).day;
-                      return !(e.alliance === selectedAlliance && d === day);
-                    });
-                    const removed = events.filter(e => {
-                      const d = dayHalfFromTick(e.tick).day;
-                      return (e.alliance === selectedAlliance && d === day);
-                    });
-                    setLastCleared(removed);
-                    setEvents(keep);
-                    toast({ title: 'Cleared today', description: `${removed.length} event(s) removed for ${selectedAlliance} on Day ${day}.` });
-                  }}
-                >
-                  Clear today (selected)
-                </button>
+                <div className="ml-auto flex items-center gap-2">
+                  <button
+                    className="border rounded px-2 py-1 text-xs disabled:opacity-50"
+                    disabled={!manualMode || !selectedAlliance}
+                    title="Admin Undo: refund today's last capture for the selected alliance (also removes a paired release if present)"
+                    onClick={()=>{
+                      if (!selectedAlliance) return;
+                      const { day } = dayHalfFromTick(currentTick);
+                      // Find last capture for this alliance today up to current tick
+                      const todays = events
+                        .filter(e => e.alliance === selectedAlliance && dayHalfFromTick(e.tick).day === day)
+                        .sort((a,b)=> a.tick - b.tick);
+                      const lastCap = [...todays].reverse().find(e => e.action === 'capture' && e.tick <= currentTick);
+                      if (!lastCap) {
+                        toast({ title: 'Nothing to undo', description: `No capture found for ${selectedAlliance} on Day ${day}.` });
+                        return;
+                      }
+                      setEvents(prev => {
+                        // Remove the capture event
+                        let next = prev.filter(e => !(e.alliance === lastCap.alliance && e.action === 'capture' && e.tileId === lastCap.tileId && e.tick === lastCap.tick));
+                        // Also remove the first subsequent release for the same tile/alliance at or after the capture (keeps state consistent)
+                        const idx = next.findIndex(e => e.alliance === lastCap.alliance && e.action === 'release' && e.tileId === lastCap.tileId && e.tick >= lastCap.tick);
+                        if (idx !== -1) {
+                          next = next.slice(0, idx).concat(next.slice(idx+1));
+                        }
+                        return next.sort((a,b)=> a.tick - b.tick);
+                      });
+                      toast({ title: 'Undone', description: `Refunded one city/SH attack for ${selectedAlliance} on Day ${day}.` });
+                    }}
+                  >
+                    Undo last capture (refund)
+                  </button>
+                  <button
+                    className="border rounded px-2 py-1 text-xs disabled:opacity-50"
+                    disabled={!manualMode || !selectedAlliance}
+                    title="Remove all scheduled events for the selected alliance on this day"
+                    onClick={()=>{
+                      if (!selectedAlliance) return;
+                      const { day } = dayHalfFromTick(currentTick);
+                      const keep = events.filter(e => {
+                        const d = dayHalfFromTick(e.tick).day;
+                        return !(e.alliance === selectedAlliance && d === day);
+                      });
+                      const removed = events.filter(e => {
+                        const d = dayHalfFromTick(e.tick).day;
+                        return (e.alliance === selectedAlliance && d === day);
+                      });
+                      setLastCleared(removed);
+                      setEvents(keep);
+                      toast({ title: 'Cleared today', description: `${removed.length} event(s) removed for ${selectedAlliance} on Day ${day}.` });
+                    }}
+                  >
+                    Clear today (selected)
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
