@@ -7,6 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 
+const COLOR_PALETTE = [
+  '#ef4444','#22c55e','#3b82f6','#eab308','#a855f7','#06b6d4','#f97316','#14b8a6','#84cc16','#f43f5e',
+  '#8b5cf6','#0ea5e9','#10b981','#fb7185','#6366f1','#059669','#7c3aed','#f59e0b','#dc2626','#65a30d',
+  '#1d4ed8','#9d174d','#0f766e','#fda4af','#60a5fa','#fbbf24'
+];
+
 interface Props {
   map: MapData;
   assignments: Assignments;
@@ -81,6 +87,21 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
               <div>S/hr {spice}</div>
               <div className="col-span-2">S {terr.filter(t=>t.tileType==='stronghold').length}/8 • C {terr.filter(t=>t.tileType==='city').length}/8</div>
               <div className="col-span-2">Today: S {todayS}/2 • C {todayC}/2</div>
+              <div className="col-span-2 flex items-center gap-2">
+                <span>Color</span>
+                <Select value={alliance.color} onValueChange={(v)=> onUpdateAlliance(alliance.id, { color: v })}>
+                  <SelectTrigger className="h-7 w-36">
+                    <SelectValue placeholder={alliance.color} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COLOR_PALETTE.map(c => (
+                      <SelectItem key={c} value={c}>
+                        <span className="inline-flex items-center gap-2"><span className="inline-block w-3 h-3 rounded" style={{ backgroundColor: c }} />{c}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="col-span-2 flex items-center gap-1">
                 <span>Priority</span>
                 <Input type="number" className="h-7 w-16" value={alliance.priority ?? ''} onChange={(e)=> onUpdateAlliance(alliance.id, { priority: e.target.value === '' ? undefined : Number(e.target.value) })} />
@@ -143,11 +164,7 @@ function labelFor(t: Territory) {
 }
 
 function CreateAllianceInline({ onCreate }: { onCreate: (name: string, color: string, priority?: number) => void }) {
-  const palette = [
-    '#ef4444','#22c55e','#3b82f6','#eab308','#a855f7','#06b6d4','#f97316','#14b8a6','#84cc16','#f43f5e',
-    '#8b5cf6','#0ea5e9','#10b981','#fb7185','#6366f1','#059669','#7c3aed','#f59e0b','#dc2626','#65a30d',
-    '#1d4ed8','#9d174d','#0f766e','#fda4af','#60a5fa','#fbbf24'
-  ];
+  const palette = COLOR_PALETTE;
   let name = '';
   let color = palette[0];
   let priority: number | undefined = undefined;
