@@ -31,6 +31,18 @@ export default function V2() {
   // v3 Action events timeline (persisted)
   const [events, setEvents] = useState<ActionEvent[]>([]);
   const [lastCleared, setLastCleared] = useState<ActionEvent[] | null>(null);
+  // Listen for planner-clear-future and clear future events (auto-plans)
+  useEffect(() => {
+    const handler = () => {
+      const past = events.filter(e => e.tick < currentTick);
+      const future = events.filter(e => e.tick >= currentTick);
+      setLastCleared(future);
+      setEvents(past);
+      toast({ title: 'Cleared planned future', description: `${future.length} event(s) removed from Tick ${currentTick} onward.` });
+    };
+    window.addEventListener('planner-clear-future', handler);
+    return () => window.removeEventListener('planner-clear-future', handler);
+  }, [events, currentTick]);
   // Planning mode: final-day target assignments (persisted)
   const [plannedAssignments, setPlannedAssignments] = useState<Assignments>({});
   const [lastClearedPlan, setLastClearedPlan] = useState<Assignments | null>(null);
@@ -262,6 +274,28 @@ export default function V2() {
                     selectedAlliance ? `Click a tile to ${manualAction} for ${selectedAlliance}` : 'Select an alliance in the legend'
                   ) : 'Toggle to schedule by clicking the map'}
                 </div>
+                <button
+                  className="ml-auto border rounded px-2 py-1 text-xs disabled:opacity-50"
+                  disabled={!manualMode || !selectedAlliance}
+                  title="Remove all scheduled events for the selected alliance on this day"
+                  onClick={()=>{
+                    if (!selectedAlliance) return;
+                    const { day } = dayHalfFromTick(currentTick);
+                    const keep = events.filter(e => {
+                      const d = dayHalfFromTick(e.tick).day;
+                      return !(e.alliance === selectedAlliance && d === day);
+                    });
+                    const removed = events.filter(e => {
+                      const d = dayHalfFromTick(e.tick).day;
+                      return (e.alliance === selectedAlliance && d === day);
+                    });
+                    setLastCleared(removed);
+                    setEvents(keep);
+                    toast({ title: 'Cleared today', description: `${removed.length} event(s) removed for ${selectedAlliance} on Day ${day}.` });
+                  }}
+                >
+                  Clear today (selected)
+                </button>
               </div>
             </div>
           ) : (
@@ -500,7 +534,8 @@ export default function V2() {
                 toast({ title: 'Select an alliance', description: 'Pick an alliance in the legend to capture.' });
               } else {
                 if (manualAction === 'capture') {
-                  const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
+                  // Manual stepper ignores planner reservations: only rules apply
+const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                   if (res.ok && selectedAlliance) {
                     setEvents(prev => {
   const next = [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }];
@@ -557,7 +592,8 @@ export default function V2() {
                     setPlannedAssignments(prev => ({ ...prev, [t.id]: { alliance: selectedAlliance, step: season.calendar.steps } }));
                     toast({ title: 'Planned', description: `${t.coordinates} → ${selectedAlliance}` });
                   } else {
-                    const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
+                    // Manual stepper ignores planner reservations: only rules apply
+const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                     if (!res.ok) { toast({ title: 'Cannot capture', description: res.reason }); return; }
                     setEvents(prev => {
   const next = [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }];

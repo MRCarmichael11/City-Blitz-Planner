@@ -67,6 +67,11 @@ export default function PlannerControls({ map, season, alliances, currentTick, e
         <Button size="sm" onClick={handlePreview}>Preview plan</Button>
         <Button size="sm" variant="secondary" onClick={handleApply}>Apply plan</Button>
         <Button size="sm" variant="outline" onClick={() => onLockDay && onLockDay(dayHalfFromTick(currentTick).day)}>Lock Day (learn)</Button>
+        <Button size="sm" variant="destructive" onClick={() => {
+          // Clear all planned auto-plan reservations/events from current tick forward, but keep manual history
+          const evt = new CustomEvent('planner-clear-future');
+          window.dispatchEvent(evt);
+        }}>Clear planned future</Button>
         <div className="text-xs text-muted-foreground">Planned events: {planned.length}</div>
       </div>
       {report.length > 0 && (
