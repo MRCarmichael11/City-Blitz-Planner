@@ -113,6 +113,11 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
   // Non-capturable tiles
   if (t.tileType === 'trading-post') return { ok: false, reason: 'Trading posts are player-held (PvP) and cannot be captured by alliances' };
 
+  // No-op: cannot capture a tile you already own (prevents wasting daily charges)
+  if (p.assignments[t.id]?.alliance === p.selectedAlliance) {
+    return { ok: false, reason: 'Already owned by this alliance' };
+  }
+
   // Global per-alliance hard caps: 8 strongholds + 8 cities, always enforced (preview/planning included)
   const totals = countsTotal(p.assignments, p.selectedAlliance, p.territories);
   if (t.tileType === 'stronghold' && totals.strongholds >= 8) return { ok: false, reason: 'Alliance cap reached: 8 strongholds total' }; // capitol excluded
