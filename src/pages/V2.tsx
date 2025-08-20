@@ -50,9 +50,10 @@ export default function V2() {
   // Derive calendar step from current day for unlocks and legacy per-step budget
   const derivedStep = useMemo(() => {
     const sd = season.calendar.stepDays || [];
+    // Step = 1 + number of stepDays <= currentDay
     let s = 1;
     for (let i = 0; i < sd.length; i++) {
-      if (currentDay >= sd[i]) s = i + 1;
+      if (currentDay >= sd[i]) s++;
     }
     return Math.max(1, Math.min(s, season.calendar.steps));
   }, [currentDay, season.calendar]);
