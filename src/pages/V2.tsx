@@ -288,12 +288,48 @@ export default function V2() {
                 <div className="font-medium">Action Timeline</div>
                 <div className="text-xs text-muted-foreground">Day {currentDay} {currentHalf} • Tick {currentTick} • Step {derivedStep}{Array.isArray(season.calendar.stepDays) && season.calendar.stepDays[derivedStep-1] ? ` • Day ${season.calendar.stepDays[derivedStep-1]}` : ''}{derivedStep===1 ? ' • Cities locked' : ''}</div>
               </div>
-              <div className="flex items-center gap-3">
-                <input type="range" min={1} max={28} value={currentDay} onChange={(e)=> setCurrentDay(parseInt(e.target.value))} className="flex-1" />
-                <select className="border rounded px-2 py-1 bg-card text-foreground" value={currentHalf} onChange={(e)=> setCurrentHalf(e.target.value as Half)}>
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
+              <div className="flex items-center gap-2">
+                {/* Tick stepper controls */}
+                {(() => {
+                  const lastDay = (season.calendar.stepDays && season.calendar.stepDays.length > 0) ? season.calendar.stepDays[season.calendar.stepDays.length - 1] : 28;
+                  const minTick = 1 as Tick;
+                  const maxTick = (lastDay * 2) as Tick;
+                  const prevTick = () => {
+                    const t = currentTick - 1 as Tick;
+                    if (t < minTick) return;
+                    const { day, half } = dayHalfFromTick(t);
+                    setCurrentDay(day); setCurrentHalf(half);
+                  };
+                  const nextTick = () => {
+                    const t = currentTick + 1 as Tick;
+                    if (t > maxTick) return;
+                    const { day, half } = dayHalfFromTick(t);
+                    setCurrentDay(day); setCurrentHalf(half);
+                  };
+                  return (
+                    <>
+                      <button
+                        className="border rounded px-2 py-1 text-xs disabled:opacity-50"
+                        onClick={prevTick}
+                        disabled={currentTick <= minTick}
+                        title="Step back one tick"
+                      >
+                        «                      </button>
+                      <input type="range" min={1} max={lastDay} value={currentDay} onChange={(e)=> setCurrentDay(parseInt(e.target.value))} className="flex-1" />
+                      <select className="border rounded px-2 py-1 bg-card text-foreground" value={currentHalf} onChange={(e)=> setCurrentHalf(e.target.value as Half)}>
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                      <button
+                        className="border rounded px-2 py-1 text-xs disabled:opacity-50"
+                        onClick={nextTick}
+                        disabled={currentTick >= maxTick}
+                        title="Step forward one tick"
+                      >
+                        »                      </button>
+                    </>
+                  );
+                })()}
               </div>
               {/* Manual stepper controls */}
               <div className="mt-2 flex items-center gap-2">
