@@ -113,7 +113,32 @@ export default function V2() {
       if (raw3) {
         const parsed3 = JSON.parse(raw3);
         if (parsed3.alliances && Array.isArray(parsed3.alliances)) setAlliances(parsed3.alliances);
-        if (parsed3.eventsBySeason && parsed3.eventsBySeason[season.key]) setEvents(parsed3.eventsBySeason[season.key] as ActionEvent[]);
+        let evts: ActionEvent[] | undefined = parsed3.eventsBySeason && parsed3.eventsBySeason[season.key] as ActionEvent[] | undefined;
+        // One-time admin hotfix: restore Amex on C-H12 at Day 8 (undo mistaken drop)
+        if (evts && Array.isArray(evts)) {
+          try {
+            const targetId = 'C-H12';
+            const allianceName = 'Amex';
+            const dayFix = 8;
+            const endTick = tickFromDayHalf(dayFix, 'PM');
+            // Remove any releases for this tile/alliance on Day 8
+            let next = evts.filter(e => !(e.alliance === allianceName && e.tileId === targetId && e.action === 'release' && dayHalfFromTick(e.tick).day === dayFix));
+            // Ensure owned by Amex by end of Day 8
+            const sorted = [...next].sort((a,b)=> a.tick - b.tick);
+            let owner: string | null = null;
+            for (const e of sorted) {
+              if (e.tick > endTick) break;
+              if (e.tileId !== targetId) continue;
+              if (e.action === 'capture') owner = e.alliance;
+              else if (e.action === 'release' && e.alliance === owner) owner = null;
+            }
+            if (owner !== allianceName) {
+              next.push({ tick: endTick, tileId: targetId, alliance: allianceName, action: 'capture' });
+            }
+            evts = next.sort((a,b)=> a.tick - b.tick);
+          } catch { /* ignore fix errors */ }
+        }
+        if (evts) setEvents(evts);
         if (parsed3.plannedBySeason && parsed3.plannedBySeason[season.key]) setPlannedAssignments(parsed3.plannedBySeason[season.key] as Assignments);
         return;
       }
