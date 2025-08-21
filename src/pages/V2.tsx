@@ -279,6 +279,27 @@ export default function V2() {
                   <button
                     className="border rounded px-2 py-1 text-xs disabled:opacity-50"
                     disabled={!manualMode || !selectedAlliance}
+                    title="Undo last action for the selected alliance today (capture or release)"
+                    onClick={()=>{
+                      if (!selectedAlliance) return;
+                      const { day } = dayHalfFromTick(currentTick);
+                      const todays = events
+                        .filter(e => e.alliance === selectedAlliance && dayHalfFromTick(e.tick).day === day && e.tick <= currentTick)
+                        .sort((a,b)=> a.tick - b.tick);
+                      const last = todays[todays.length - 1];
+                      if (!last) {
+                        toast({ title: 'Nothing to undo', description: `No action found for ${selectedAlliance} on Day ${day}.` });
+                        return;
+                      }
+                      setEvents(prev => prev.filter(e => !(e.alliance === last.alliance && e.action === last.action && e.tileId === last.tileId && e.tick === last.tick)).sort((a,b)=> a.tick - b.tick));
+                      toast({ title: 'Undone', description: `Removed last ${last.action} on ${last.tileId} for ${selectedAlliance} (Day ${day}).` });
+                    }}
+                  >
+                    Undo last action
+                  </button>
+                  <button
+                    className="border rounded px-2 py-1 text-xs disabled:opacity-50"
+                    disabled={!manualMode || !selectedAlliance}
                     title="Admin Undo: refund today's last capture for the selected alliance (also removes a paired release if present)"
                     onClick={()=>{
                       if (!selectedAlliance) return;
