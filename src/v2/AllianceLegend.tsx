@@ -72,7 +72,7 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
         <CreateAllianceInline onCreate={onCreateAlliance} />
       </div>
       <div className="px-2 pb-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-        {stats.map(({ alliance, terr, mithril, spice /* todayS, todayC, lastTick, lastLabel */ }) => (
+        {stats.map(({ alliance, terr, mithril, spice, todayS, todayC /* lastTick, lastLabel */ }) => (
           <Card key={alliance.id} className={`p-2 border ${selectedAlliance===alliance.name? 'ring-2 ring-primary': ''}`}>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: alliance.color }} />
@@ -81,9 +81,12 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
               </button>
               <div className="ml-auto text-[10px] text-muted-foreground" title="Holdings count">{terr.length}</div>
             </div>
-            {/* Condensed: only show resource generation */}
+            {/* Condensed core stats */}
             <div className="mt-1 text-[11px] text-muted-foreground">
               M/hr {mithril} • S/hr {spice}
+            </div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">
+              Today: S {todayS}/2 • C {todayC}/2
             </div>
             <div className="mt-2">
               <button className="text-xs underline" onClick={()=> setOpenFor(alliance.name)}>Details</button>
