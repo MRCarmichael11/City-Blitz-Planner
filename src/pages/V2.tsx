@@ -118,23 +118,38 @@ export default function V2() {
         if (evts && Array.isArray(evts)) {
           try {
             const targetId = 'C-H12';
-            const allianceName = 'Amex';
+            // Find actual alliance name for Amex in current data (case-insensitive), fallback to 'Amex'
+            const allianceName = (Array.isArray(parsed3.alliances) ? parsed3.alliances.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase() === 'amex')?.name : undefined) || 'Amex';
             const dayFix = 8;
-            const endTick = tickFromDayHalf(dayFix, 'PM');
-            // Remove any releases for this tile/alliance on Day 8
-            let next = evts.filter(e => !(e.alliance === allianceName && e.tileId === targetId && e.action === 'release' && dayHalfFromTick(e.tick).day === dayFix));
-            // Ensure owned by Amex by end of Day 8
+            const amTick = tickFromDayHalf(dayFix, 'AM');
+            const pmTick = tickFromDayHalf(dayFix, 'PM');
+            // Remove ALL Day 8 events on this tile (captures/releases by any alliance) to ensure continuity
+            let next = evts.filter(e => !(e.tileId === targetId && dayHalfFromTick(e.tick).day === dayFix));
+            // Determine owner right before Day 8 AM
+            const cutoffTick = (amTick - 1) as Tick;
             const sorted = [...next].sort((a,b)=> a.tick - b.tick);
             let owner: string | null = null;
             for (const e of sorted) {
-              if (e.tick > endTick) break;
+              if (e.tick > cutoffTick) break;
               if (e.tileId !== targetId) continue;
               if (e.action === 'capture') owner = e.alliance;
               else if (e.action === 'release' && e.alliance === owner) owner = null;
             }
+            // If not Amex at Day 8 AM, force a capture at Day 8 AM to cover the whole day
             if (owner !== allianceName) {
-              next.push({ tick: endTick, tileId: targetId, alliance: allianceName, action: 'capture' });
+              next.push({ tick: amTick, tileId: targetId, alliance: allianceName, action: 'capture' });
             }
+            // Ensure no Day 8 releases remain and that owner persists through PM
+            // Add PM capture as well to be robust (idempotent for same tick)
+            next.push({ tick: pmTick, tileId: targetId, alliance: allianceName, action: 'capture' });
+            // De-duplicate identical events
+            const seen = new Set<string>();
+            next = next.filter(e => {
+              const key = `${e.tick}|${e.alliance}|${e.tileId}|${e.action}`;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
             evts = next.sort((a,b)=> a.tick - b.tick);
           } catch { /* ignore fix errors */ }
         }
