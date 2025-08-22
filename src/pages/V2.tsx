@@ -39,9 +39,11 @@ const DiscordIcon = () => (
 );
 
 function AuthWidget() {
-  const { user, loading, signInWithEmail, signInWithOAuth, signOut } = useAuth();
+  const { user, loading, signInWithEmail, signInWithOAuth, signOut, updateDisplayName } = useAuth();
   const [email, setEmail] = useState('');
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [displayName, setDisplayName] = useState('');
   
   if (loading) return <div className="text-xs text-muted-foreground">…</div>;
   
@@ -131,12 +133,75 @@ function AuthWidget() {
     );
   }
   
+  const currentDisplayName = user.displayName || user.email || 'Logged in';
+  
   return (
     <div className="flex items-center gap-2 text-xs">
-      <span className="text-muted-foreground">{user.email || 'Logged in'}</span>
-      <button className="border rounded px-2 py-1 inline-flex items-center gap-1 hover:bg-accent" onClick={()=> signOut()}>
-        <LogOut className="w-4 h-4" /> Sign out
-      </button>
+      {editingName ? (
+        <div className="flex items-center gap-2">
+          <input 
+            className="border rounded px-2 py-1 h-6 w-32 bg-card text-foreground text-xs" 
+            placeholder="Display name" 
+            value={displayName} 
+            onChange={(e)=> setDisplayName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                (async () => {
+                  try {
+                    await updateDisplayName(displayName);
+                    setEditingName(false);
+                  } catch (e: any) {
+                    alert(e.message || 'Error updating name');
+                  }
+                })();
+              } else if (e.key === 'Escape') {
+                setEditingName(false);
+                setDisplayName('');
+              }
+            }}
+            autoFocus
+          />
+          <button 
+            className="text-xs px-1 py-0.5 border rounded hover:bg-accent"
+            onClick={async () => {
+              try {
+                await updateDisplayName(displayName);
+                setEditingName(false);
+              } catch (e: any) {
+                alert(e.message || 'Error updating name');  
+              }
+            }}
+          >
+            ✓
+          </button>
+          <button 
+            className="text-xs px-1 py-0.5 border rounded hover:bg-accent"
+            onClick={() => {
+              setEditingName(false);
+              setDisplayName('');
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      ) : (
+        <>
+          <button 
+            className="text-muted-foreground hover:text-foreground cursor-pointer"
+            onClick={() => {
+              setDisplayName(user.displayName || '');
+              setEditingName(true);
+            }}
+            title="Click to edit display name"
+          >
+            {currentDisplayName}
+          </button>
+          <button className="border rounded px-2 py-1 inline-flex items-center gap-1 hover:bg-accent" onClick={()=> signOut()}>
+            <LogOut className="w-4 h-4" /> Sign out
+          </button>
+        </>
+      )}
     </div>
   );
 }
