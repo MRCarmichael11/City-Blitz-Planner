@@ -12,13 +12,38 @@ import TerritoryDetailsPanel from '@/v2/TerritoryDetailsPanel';
 // applyCalendarUnlocks imported above
 import PlannerControls from '@/v2/PlannerControls';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { ChevronDown, Moon, Sun } from 'lucide-react';
+import { ChevronDown, Moon, Sun, LogIn, LogOut } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const seasons = { S1, S2, S3, S4 } as const;
 
 type SeasonKey = keyof typeof seasons;
+
+function AuthWidget() {
+  const { useAuth } = require('@/hooks/useAuth') as typeof import('@/hooks/useAuth');
+  const { user, loading, signInWithEmail, signOut } = useAuth();
+  const [email, setEmail] = useState('');
+  if (loading) return <div className="text-xs text-muted-foreground">…</div>;
+  if (!user) {
+    return (
+      <div className="flex items-center gap-2">
+        <input className="border rounded px-2 py-1 h-8 w-48 bg-card text-foreground text-xs" placeholder="Email to sign in" value={email} onChange={(e)=> setEmail(e.target.value)} />
+        <button className="border rounded px-2 py-1 text-xs inline-flex items-center gap-1" onClick={async ()=>{ try { await signInWithEmail(email); alert('Check your email for a login link.'); } catch (e: any) { alert(e.message || 'Sign-in error'); } }}>
+          <LogIn className="w-4 h-4" /> Sign in
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      <span className="text-muted-foreground">{user.email || 'Logged in'}</span>
+      <button className="border rounded px-2 py-1 inline-flex items-center gap-1" onClick={()=> signOut()}>
+        <LogOut className="w-4 h-4" /> Sign out
+      </button>
+    </div>
+  );
+}
 
 export default function V2() {
   const [seasonKey, setSeasonKey] = useState<SeasonKey>('S3');
@@ -247,13 +272,14 @@ export default function V2() {
       <header className="border-b bg-card/60">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="font-bold">City Blitz Planner</div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <select className="border rounded px-2 py-1 bg-card text-foreground" value={seasonKey} onChange={(e) => { setSeasonKey(e.target.value as SeasonKey); setCurrentDay(1); setCurrentHalf('AM'); }}>
               <option value="S1">Season 1</option>
               <option value="S2">Season 2</option>
               <option value="S3">Season 3</option>
               <option value="S4">Season 4</option>
             </select>
+            <AuthWidget />
           </div>
         </div>
       </header>
