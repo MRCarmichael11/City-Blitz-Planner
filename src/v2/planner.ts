@@ -1,4 +1,4 @@
-import { ActionEvent, Alliance, MapData, SeasonDefinition, Territory, Tick, dayHalfFromTick, tickFromDayHalf, applyCalendarUnlocks } from './domain';
+import { ActionEvent, Alliance, MapData, SeasonDefinition, Territory, Tick, dayHalfFromTick, tickFromDayHalf, applyCalendarUnlocks, LearnedPolicy } from './domain';
 import { Assignments, canCapture, hasAdjacentOwned, countsTotal } from './rules';
 
 export interface PlannerOptions {
@@ -9,6 +9,8 @@ export interface PlannerOptions {
   plannedTarget?: Assignments; // final-day planned assignments to bias toward
   // When true, planner will strongly prefer planned target tiles over non-target tiles
   strictToTarget?: boolean;
+  // Learned policy from user-demonstrated manual expansion
+  learnedPolicy?: LearnedPolicy;
 }
 
 export interface PlannerResult {
@@ -128,6 +130,16 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
   const maxTick = options?.maxTick ?? endOfSeasonTick(season);
   const corridorWidthBase = Math.max(2, Math.min(8, options?.corridorWidth ?? 4)); // can be overridden by learned policy per alliance
   const plannedTarget = (options?.plannedTarget ?? {}) as Assignments;
+  const learnedPolicy = options?.learnedPolicy;
+  
+  // Extract learned reservations if available
+  const learnedReservations = new Set<string>();
+  if (learnedPolicy?.reservedByAlliance) {
+    Object.values(learnedPolicy.reservedByAlliance).forEach(tiles => {
+      tiles.forEach(tileId => learnedReservations.add(tileId));
+    });
+    report.push(`Learned Policy: Using ${learnedReservations.size} reserved tiles from demonstrated play`);
+  }
 
   // Priority ordering (lower number = higher priority)
   const allies = [...alliances].sort((a, b) => (a.priority ?? Number.POSITIVE_INFINITY) - (b.priority ?? Number.POSITIVE_INFINITY));
@@ -310,7 +322,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
     for (const a of allies) {
       const targetC = centroidFor(a);
       const start = chooseStartForAlliance(a);
-      const width = priorityCorridorWidth(a.priority); // TODO: if learned policy exists for a, override width
+      const width = getCorridorWidth(a, learnedPolicy); // Use learned policy if available, otherwise fall back to priority-based width
       // Precompute strict corridor mask toward target (width by priority)
       const inCorridor = (t: Territory) => corridorPenaltyToTarget(latticeXY(t), start, targetC, width) <= 0.5;
       const corridorSet = new Set<string>(map.territories.filter(tt => isCapturable(tt) && inCorridor(tt)).map(tt => tt.id));
@@ -455,7 +467,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
                 if ((higher.priority ?? 99) >= (ally.priority ?? 99)) continue;
                 const hs = chooseStartForAlliance(higher);
                 const hc = centroidFor(higher);
-                const pen = corridorPenaltyToTarget(px, hs, hc, priorityCorridorWidth(higher.priority));
+                const pen = corridorPenaltyToTarget(px, hs, hc, getCorridorWidth(higher, learnedPolicy));
                 if (pen <= 0.5) { conflict = true; break; }
               }
               return conflict ? Math.min(6, cityUnlockedLvl + 1) : Math.min(6, cityUnlockedLvl + 2);
@@ -643,6 +655,21 @@ const allowedStrongholdLevelAt = (_day: number) => 6;
     if (priority === 3) return corridorWidthBase;
     return Math.max(2, corridorWidthBase - 1);
   }
+  
+  // Get corridor width with learned policy override
+  function getCorridorWidth(alliance: Alliance, policy?: LearnedPolicy): number {
+    // Check if we have learned corridor width for this alliance
+    if (policy?.corridorWidthByAlliance?.[alliance.name]) {
+      return policy.corridorWidthByAlliance[alliance.name];
+    }
+    // Fall back to priority-based width
+    return priorityCorridorWidth(alliance.priority);
+  }
+  
+  // Check if a tile is in the learned reserved set for an alliance
+  function isLearnedReserved(tileId: string, allianceName: string, policy?: LearnedPolicy): boolean {
+    return policy?.reservedByAlliance?.[allianceName]?.includes(tileId) ?? false;
+  }
   function centerBias(priority?: number) {
     if (priority === 1) return 2.0;
     if (priority === 2) return 1.5;
@@ -653,10 +680,11 @@ const allowedStrongholdLevelAt = (_day: number) => 6;
     const p = latticeXY(t);
     const base = -manhattan(p, capXY) * centerBias(a.priority);
     const start = startsMap[a.name] ?? null;
-    const width = priorityCorridorWidth(a.priority);
+    const width = getCorridorWidth(a, learnedPolicy);
     const pen = corridorPenalty(p, start, width);
     let avoidPen = 0;
     if ((a.priority ?? 99) > 2) {
+      // For avoidance penalties, we still use the raw priority widths since these are about avoiding other alliances
       if (insideCorridor(p, p1Start, priorityCorridorWidth(1))) avoidPen += 50;
       if (insideCorridor(p, p2Start, priorityCorridorWidth(2))) avoidPen += 30;
     }
@@ -667,17 +695,25 @@ const allowedStrongholdLevelAt = (_day: number) => 6;
       if (planned.alliance === a.name) targetBias += 1800;
       else targetBias -= 1800;
     }
-    return base - pen - avoidPen + targetBias;
+    
+    // Add strong bias for learned reserved tiles
+    let learnedBias = 0;
+    if (isLearnedReserved(t.id, a.name, learnedPolicy)) {
+      learnedBias += 2000; // Higher than planned target bias to prioritize demonstrated lanes
+    }
+    
+    return base - pen - avoidPen + targetBias + learnedBias;
   }
   function scoreStronghold(t: Territory, preferredLevel: number, a: Alliance, startsMap: Record<string, Territory | null>, p1Start: Territory | null, p2Start: Territory | null) {
     const p = latticeXY(t);
     const levelScore = (t.buildingLevel === preferredLevel) ? 1000 : (t.buildingLevel === preferredLevel - 1 ? 500 : 0);
     const base = levelScore - manhattan(p, capXY) * centerBias(a.priority);
     const start = startsMap[a.name] ?? null;
-    const width = priorityCorridorWidth(a.priority);
+    const width = getCorridorWidth(a, learnedPolicy);
     const pen = corridorPenalty(p, start, width);
     let avoidPen = 0;
     if ((a.priority ?? 99) > 2) {
+      // For avoidance penalties, we still use the raw priority widths since these are about avoiding other alliances
       if (insideCorridor(p, p1Start, priorityCorridorWidth(1))) avoidPen += 50;
       if (insideCorridor(p, p2Start, priorityCorridorWidth(2))) avoidPen += 30;
     }
@@ -688,7 +724,14 @@ const allowedStrongholdLevelAt = (_day: number) => 6;
       if (planned.alliance === a.name) targetBias += 1800;
       else targetBias -= 1800;
     }
-    return base - pen - avoidPen + targetBias;
+    
+    // Add strong bias for learned reserved tiles
+    let learnedBias = 0;
+    if (isLearnedReserved(t.id, a.name, learnedPolicy)) {
+      learnedBias += 2000; // Higher than planned target bias to prioritize demonstrated lanes
+    }
+    
+    return base - pen - avoidPen + targetBias + learnedBias;
   }
 
   // Day-by-day greedy scheduling

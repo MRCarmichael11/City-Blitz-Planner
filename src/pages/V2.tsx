@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { buildMapData, applyCalendarUnlocks, type Half, type Tick, type ActionEvent, type Alliance, tickFromDayHalf, dayHalfFromTick } from '@/v2/domain';
+import { buildMapData, applyCalendarUnlocks, type Half, type Tick, type ActionEvent, type Alliance, type LearnedPolicy, tickFromDayHalf, dayHalfFromTick } from '@/v2/domain';
 import { S1, S2, S3, S4 } from '@/v2/seasons';
 // Action timeline-driven planner (Season stepper removed)
 import AllianceLegend from '@/v2/AllianceLegend';
@@ -500,6 +500,22 @@ export default function V2() {
     return () => clearInterval(id);
   }, [autoPlay, autoMs, mode, season.calendar]);
 
+  // Extract learned policy from plannedAssignments
+  const learnedPolicy: LearnedPolicy | undefined = useMemo(() => {
+    const policyEntry = plannedAssignments['__policy__'];
+    if (!policyEntry?.alliance) return undefined;
+    
+    try {
+      const parsed = JSON.parse(policyEntry.alliance);
+      if (parsed.version === 1 && parsed.reservedByAlliance) {
+        return parsed as LearnedPolicy;
+      }
+    } catch {
+      // Invalid policy data, ignore
+    }
+    return undefined;
+  }, [plannedAssignments]);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/60">
@@ -795,6 +811,7 @@ export default function V2() {
                         currentTick={currentTick}
                         existingEvents={events}
                         plannedTarget={plannedAssignments}
+                        learnedPolicy={learnedPolicy}
                         replaceFutureDefault={true}
                         onUpdateAlliance={(id, patch) => {
                           setAlliances(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a));
