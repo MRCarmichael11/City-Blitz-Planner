@@ -39,16 +39,9 @@ export function useAuth() {
 
   const signInWithOAuth = async (provider: 'google' | 'github' | 'discord') => {
     if (!supabase) throw new Error('Supabase not configured');
-    // Force production URL to avoid localhost redirect issues
-    const redirectTo = window.location.hostname === 'localhost' 
-      ? 'http://localhost:3000' 
-      : 'https://www.lastwarguru.com';
-    
     const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo
-      }
+      provider
+      // Let Supabase use the Site URL from dashboard settings
     });
     if (error) throw error;
   };
