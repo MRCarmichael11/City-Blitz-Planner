@@ -28,9 +28,14 @@ export async function createSharedMap(
   title: string, 
   payload: V3Payload
 ): Promise<{ shareId: string; success: boolean }> {
-  if (!supabase) return { shareId: '', success: false };
+  if (!supabase) {
+    console.error('Supabase not configured');
+    return { shareId: '', success: false };
+  }
   
   const shareId = generateShareId();
+  
+  console.log('Creating shared map:', { userId, season, title, shareId });
   
   const { error } = await supabase
     .from('shared_maps')
@@ -48,12 +53,18 @@ export async function createSharedMap(
     return { shareId: '', success: false };
   }
   
+  console.log('Shared map created successfully:', shareId);
   return { shareId, success: true };
 }
 
 // Get shared map by share ID (public access)
 export async function getSharedMap(shareId: string): Promise<SharedMapWithData | null> {
-  if (!supabase) return null;
+  if (!supabase) {
+    console.error('Supabase not configured for getSharedMap');
+    return null;
+  }
+  
+  console.log('Fetching shared map:', shareId);
   
   const { data, error } = await supabase
     .from('shared_maps')
@@ -68,11 +79,15 @@ export async function getSharedMap(shareId: string): Promise<SharedMapWithData |
     .single();
     
   if (error) {
-    if (error.code === 'PGRST116') return null; // Not found
+    if (error.code === 'PGRST116') {
+      console.log('Shared map not found:', shareId);
+      return null; // Not found
+    }
     console.error('Error fetching shared map:', error);
     return null;
   }
   
+  console.log('Shared map found:', data);
   return {
     ...data,
     owner_display_name: data.profiles?.display_name || 'Unknown'
