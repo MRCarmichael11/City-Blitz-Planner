@@ -37,10 +37,21 @@ export function useAuth() {
     if (error) throw error;
   };
 
+  const signInWithOAuth = async (provider: 'google' | 'github' | 'discord') => {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+    if (error) throw error;
+  };
+
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
   };
 
-  return { user, loading, signInWithEmail, signOut };
+  return { user, loading, signInWithEmail, signInWithOAuth, signOut };
 }
