@@ -68,12 +68,7 @@ export async function getSharedMap(shareId: string): Promise<SharedMapWithData |
   
   const { data, error } = await supabase
     .from('shared_maps')
-    .select(`
-      *,
-      profiles:owner_user_id (
-        display_name
-      )
-    `)
+    .select('*')
     .eq('share_id', shareId)
     .eq('is_active', true)
     .single();
@@ -88,9 +83,10 @@ export async function getSharedMap(shareId: string): Promise<SharedMapWithData |
   }
   
   console.log('Shared map found:', data);
+  
   return {
     ...data,
-    owner_display_name: data.profiles?.display_name || 'Unknown'
+    owner_display_name: 'Map Owner' // Simple fallback for now
   };
 }
 
