@@ -128,6 +128,8 @@ export default function V2() {
   const displayStep = mode === 'planning' ? season.calendar.steps : derivedStep;
   const map = { ...baseMap, territories: applyCalendarUnlocks(baseMap.territories, season.calendar, displayStep) };
   const { toast } = useToast();
+  // Auth state for Account menu controls
+  const { user: authUser } = useAuth();
 
   // Persistence (v3)
   const STORAGE_KEY_V3 = 'lastwar-v3';
@@ -335,6 +337,65 @@ export default function V2() {
               <option value="S3">Season 3</option>
               <option value="S4">Season 4</option>
             </select>
+            {/* Account menu */}
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="border rounded px-2 py-1 inline-flex items-center gap-1 disabled:opacity-50" disabled={!authUser || !supabase}>Account <ChevronDown className="w-4 h-4" /></button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content className="z-50 min-w-[260px] rounded border bg-card p-1 shadow-md">
+                {!authUser || !supabase ? (
+                  <div className="px-2 py-1 text-xs text-muted-foreground">Sign in to use account features.</div>
+                ) : (
+                  <>
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={async ()=>{
+                      if (!authUser) return;
+                      const payload = { version: 3, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+                      try {
+                        const { saveUserSeasonData } = await import('@/services/userData');
+                        const ok = await saveUserSeasonData(authUser.id, season.key, payload);
+                        toast({ title: ok ? 'Saved to account' : 'Save failed', description: ok ? `Season ${season.key} data saved to server.` : 'Could not save to server.' });
+                      } catch {
+                        toast({ title: 'Save failed', description: 'Unexpected error while saving.' });
+                      }
+                    }}>Save now</button>
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={async ()=>{
+                      if (!authUser) return;
+                      const proceed = window.confirm(`Overwrite local ${season.key} data with server copy? This cannot be undone.`);
+                      if (!proceed) return;
+                      try {
+                        const { getUserSeasonData } = await import('@/services/userData');
+                        const remote = await getUserSeasonData(authUser.id, season.key);
+                        if (!remote) { toast({ title: 'No server data', description: `No saved data found for ${season.key}.` }); return; }
+                        if (Array.isArray(remote.alliances)) setAlliances(remote.alliances);
+                        if (remote.eventsBySeason && remote.eventsBySeason[season.key]) setEvents(remote.eventsBySeason[season.key]); else setEvents([]);
+                        if (remote.plannedBySeason && remote.plannedBySeason[season.key]) setPlannedAssignments(remote.plannedBySeason[season.key]); else setPlannedAssignments({});
+                        toast({ title: 'Reloaded from server', description: `Applied ${season.key} data from your account.` });
+                      } catch {
+                        toast({ title: 'Reload failed', description: 'Could not fetch from server.' });
+                      }
+                    }}>Reload from server</button>
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={async ()=>{
+                      try {
+                        let payload: any = null;
+                        if (authUser) {
+                          const { getUserSeasonData } = await import('@/services/userData');
+                          payload = await getUserSeasonData(authUser.id, season.key);
+                        }
+                        if (!payload) {
+                          payload = { version: 3, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+                        }
+                        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob); const a = document.createElement('a');
+                        a.href = url; a.download = `lastwar-v3-account-${season.key}.json`; a.click(); URL.revokeObjectURL(url);
+                        toast({ title: 'Exported', description: `Downloaded ${season.key} account data.` });
+                      } catch {
+                        toast({ title: 'Export failed', description: 'Could not export account data.' });
+                      }
+                    }}>Export account data</button>
+                  </>
+                )}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
             <AuthWidget />
           </div>
         </div>
