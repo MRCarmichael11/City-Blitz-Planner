@@ -15,13 +15,14 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronDown, Moon, Sun, LogIn, LogOut } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/services/supabaseClient';
 
 const seasons = { S1, S2, S3, S4 } as const;
 
 type SeasonKey = keyof typeof seasons;
 
 function AuthWidget() {
-  const { useAuth } = require('@/hooks/useAuth') as typeof import('@/hooks/useAuth');
   const { user, loading, signInWithEmail, signOut } = useAuth();
   const [email, setEmail] = useState('');
   if (loading) return <div className="text-xs text-muted-foreground">…</div>;
@@ -131,10 +132,10 @@ export default function V2() {
   // Persistence (v3)
   const STORAGE_KEY_V3 = 'lastwar-v3';
 
-  // Load once on mount
+  // Load once on mount (localStorage first), then optionally override with Supabase if signed in
   useEffect(() => {
+    // Load v3 from localStorage
     try {
-      // Prefer v3
       const raw3 = localStorage.getItem(STORAGE_KEY_V3);
       if (raw3) {
         const parsed3 = JSON.parse(raw3);
@@ -144,14 +145,11 @@ export default function V2() {
         if (evts && Array.isArray(evts)) {
           try {
             const targetId = 'C-H12';
-            // Find actual alliance name for Amex in current data (case-insensitive), fallback to 'Amex'
             const allianceName = (Array.isArray(parsed3.alliances) ? parsed3.alliances.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase() === 'amex')?.name : undefined) || 'Amex';
             const dayFix = 8;
             const amTick = tickFromDayHalf(dayFix, 'AM');
             const pmTick = tickFromDayHalf(dayFix, 'PM');
-            // Remove ALL Day 8 events on this tile (captures/releases by any alliance) to ensure continuity
             let next = evts.filter(e => !(e.tileId === targetId && dayHalfFromTick(e.tick).day === dayFix));
-            // Determine owner right before Day 8 AM
             const cutoffTick = (amTick - 1) as Tick;
             const sorted = [...next].sort((a,b)=> a.tick - b.tick);
             let owner: string | null = null;
@@ -161,14 +159,10 @@ export default function V2() {
               if (e.action === 'capture') owner = e.alliance;
               else if (e.action === 'release' && e.alliance === owner) owner = null;
             }
-            // If not Amex at Day 8 AM, force a capture at Day 8 AM to cover the whole day
             if (owner !== allianceName) {
               next.push({ tick: amTick, tileId: targetId, alliance: allianceName, action: 'capture' });
             }
-            // Ensure no Day 8 releases remain and that owner persists through PM
-            // Add PM capture as well to be robust (idempotent for same tick)
             next.push({ tick: pmTick, tileId: targetId, alliance: allianceName, action: 'capture' });
-            // De-duplicate identical events
             const seen = new Set<string>();
             next = next.filter(e => {
               const key = `${e.tick}|${e.alliance}|${e.tileId}|${e.action}`;
@@ -181,32 +175,39 @@ export default function V2() {
         }
         if (evts) setEvents(evts);
         if (parsed3.plannedBySeason && parsed3.plannedBySeason[season.key]) setPlannedAssignments(parsed3.plannedBySeason[season.key] as Assignments);
-        return;
       }
-      // Fallback: v2 migration -> synthesize capture events at Day 1 AM
+    } catch { /* noop */ }
+
+    // Fallback v2 -> synthesize capture events at Day 1 AM
+    try {
       const raw2 = localStorage.getItem('lastwar-v2');
       if (raw2) {
         const parsed2 = JSON.parse(raw2);
-        if (parsed2.alliances && Array.isArray(parsed2.alliances)) setAlliances(parsed2.alliances);
+        if (parsed2.alliances && Array.isArray(parsed2.alliances)) 
+          setAlliances((prev)=> prev.length? prev : parsed2.alliances);
         const steps = parsed2.stepsBySeason?.[season.key] as Record<number, Assignments> | undefined;
         if (steps) {
           const captures: ActionEvent[] = [];
           const tick1 = tickFromDayHalf(1, 'AM');
           const merged: Assignments = {};
-          Object.values(steps).forEach(as => { Object.assign(merged, as); });
-          Object.entries(merged).forEach(([tileId, a]) => {
+          Object.values(steps).forEach((as: Assignments) => { Object.assign(merged, as); });
+          for (const [tileId, a] of (Object.entries(merged) as Array<[string, import('@/v2/rules').Assignment]>)) {
             if (a.alliance) captures.push({ tick: tick1, tileId, alliance: a.alliance, action: 'capture' });
-          });
-          setEvents(captures);
+          }
+          if (captures.length && events.length === 0) setEvents(captures);
         }
       }
-      // Also support v1 legacy
+    } catch { /* noop */ }
+
+    // Fallback v1 legacy
+    try {
       const raw1 = localStorage.getItem('lastwar-v1');
       if (raw1) {
         const parsed1 = JSON.parse(raw1);
-        if (parsed1.alliances && Array.isArray(parsed1.alliances)) setAlliances(parsed1.alliances);
+        if (parsed1.alliances && Array.isArray(parsed1.alliances)) 
+          setAlliances((prev)=> prev.length? prev : parsed1.alliances);
         const as = parsed1.assignmentsBySeason?.[season.key] as Assignments | undefined;
-        if (as) {
+        if (as && events.length === 0) {
           const captures: ActionEvent[] = [];
           const tick1 = tickFromDayHalf(1, 'AM');
           for (const [tileId, a] of (Object.entries(as) as Array<[string, import('@/v2/rules').Assignment]>)) {
@@ -215,13 +216,27 @@ export default function V2() {
           setEvents(captures);
         }
       }
-    } catch {
-      /* noop */
+    } catch { /* noop */ }
+
+    // After local load/migrations, try Supabase override if signed in
+    if (supabase) {
+      supabase.auth.getSession().then(({ data }) => {
+        const uid = data.session?.user?.id;
+        if (!uid) return;
+        import('@/services/userData').then(({ getUserSeasonData }) => {
+          getUserSeasonData(uid, season.key).then(remote => {
+            if (!remote) return;
+            if (Array.isArray(remote.alliances)) setAlliances(remote.alliances);
+            if (remote.eventsBySeason && remote.eventsBySeason[season.key]) setEvents(remote.eventsBySeason[season.key]);
+            if (remote.plannedBySeason && remote.plannedBySeason[season.key]) setPlannedAssignments(remote.plannedBySeason[season.key]);
+          }).catch(()=>{});
+        });
+      }).catch(()=>{});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [season.key]);
 
-  // Save on changes as v3 (including planned end-state)
+  // Save on changes as v3 (including planned end-state) locally and, if signed in, to Supabase
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_V3);
@@ -235,6 +250,18 @@ export default function V2() {
       localStorage.setItem(STORAGE_KEY_V3, JSON.stringify(parsed));
     } catch {
       /* noop */
+    }
+
+    // Also sync to Supabase if logged in
+    if (supabase) {
+      supabase.auth.getSession().then(({ data }) => {
+        const uid = data.session?.user?.id;
+        if (!uid) return;
+        import('@/services/userData').then(({ saveUserSeasonData }) => {
+          const payload = { version: 3, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+          saveUserSeasonData(uid, season.key, payload).catch(() => {});
+        });
+      }).catch(()=>{});
     }
   }, [alliances, events, plannedAssignments, season.key]);
 
