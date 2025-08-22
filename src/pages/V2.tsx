@@ -393,7 +393,7 @@ export default function V2() {
             {mode === 'action' && (
               <div className="flex items-center gap-2 ml-2">
                 <button className="border rounded px-2 py-1 text-xs" title="Play/Pause autoplay" onClick={()=> setAutoPlay(v=> !v)}>{autoPlay? 'Pause' : 'Play'}</button>
-                <select className="border rounded px-2 py-1 text-xs" value={autoMs} onChange={(e)=> setAutoMs(parseInt(e.target.value))}>
+                <select className="border rounded px-2 py-1 bg-card text-foreground text-xs" value={autoMs} onChange={(e)=> setAutoMs(parseInt(e.target.value))}>
                   <option value={400}>0.4s/tick</option>
                   <option value={600}>0.6s/tick</option>
                   <option value={800}>0.8s/tick</option>
