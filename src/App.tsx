@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import NotFound from "./pages/NotFound";
 import { lazy, Suspense } from 'react';
 const CityBlitz = lazy(() => import('./pages/V2')); // rename later if desired
+const SharedMapViewer = lazy(() => import('./pages/SharedMapViewer'));
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Suspense fallback={<div>Loading...</div>}><CityBlitz /></Suspense>} />
+          <Route path="/shared/:shareId" element={<Suspense fallback={<div>Loading shared map...</div>}><SharedMapViewer /></Suspense>} />
           {/* Legacy route removed; single-page app is City Blitz Planner */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

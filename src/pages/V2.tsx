@@ -291,6 +291,11 @@ export default function V2() {
   // Auth state for Account menu controls
   const { user: authUser } = useAuth();
 
+  // Shared Maps state
+  const [sharedMaps, setSharedMaps] = useState<import('@/services/sharedMaps').SharedMap[]>([]);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareTitle, setShareTitle] = useState('');
+
   // Persistence (v3)
   const STORAGE_KEY_V3 = 'lastwar-v3';
 
@@ -388,12 +393,21 @@ export default function V2() {
       supabase.auth.getSession().then(({ data }) => {
         const uid = data.session?.user?.id;
         if (!uid) return;
+        
+        // Load user data
         import('@/services/userData').then(({ getUserSeasonData }) => {
           getUserSeasonData(uid, season.key).then(remote => {
             if (!remote) return;
             if (Array.isArray(remote.alliances)) setAlliances(remote.alliances);
             if (remote.eventsBySeason && remote.eventsBySeason[season.key]) setEvents(remote.eventsBySeason[season.key]);
             if (remote.plannedBySeason && remote.plannedBySeason[season.key]) setPlannedAssignments(remote.plannedBySeason[season.key]);
+          }).catch(()=>{});
+        });
+        
+        // Load shared maps
+        import('@/services/sharedMaps').then(({ getUserSharedMaps }) => {
+          getUserSharedMaps(uid).then(maps => {
+            setSharedMaps(maps);
           }).catch(()=>{});
         });
       }).catch(()=>{});
@@ -552,6 +566,62 @@ export default function V2() {
                         toast({ title: 'Export failed', description: 'Could not export account data.' });
                       }
                     }}>Export account data</button>
+                    
+                    {/* Share Map section */}
+                    <div className="border-t my-1 pt-1">
+                      <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={() => {
+                        setShareTitle(`${season.key} Server Coordination`);
+                        setShowShareDialog(true);
+                      }}>Share Map...</button>
+                      
+                      {sharedMaps.length > 0 && (
+                        <div className="mt-1">
+                          <div className="px-2 py-1 text-xs text-muted-foreground">Active Shared Maps:</div>
+                          {sharedMaps.map(map => (
+                            <div key={map.share_id} className="px-2 py-1 text-xs bg-accent/50 rounded m-1 flex justify-between items-center">
+                              <div>
+                                <div className="font-medium">{map.title}</div>
+                                <div className="text-muted-foreground">/{map.share_id}</div>
+                              </div>
+                              <div className="flex gap-1">
+                                <button 
+                                  className="px-1 py-0.5 bg-primary text-primary-foreground rounded text-xs"
+                                  onClick={() => {
+                                    const url = `${window.location.origin}/shared/${map.share_id}`;
+                                    navigator.clipboard.writeText(url);
+                                    toast({ title: 'Copied!', description: 'Share link copied to clipboard.' });
+                                  }}
+                                  title="Copy share link"
+                                >
+                                  Copy
+                                </button>
+                                <button 
+                                  className="px-1 py-0.5 bg-destructive text-destructive-foreground rounded text-xs"
+                                  onClick={async () => {
+                                    if (!window.confirm('Deactivate this shared map? Alliance leaders will lose access.')) return;
+                                    try {
+                                      const { deactivateSharedMap } = await import('@/services/sharedMaps');
+                                      const ok = await deactivateSharedMap(map.share_id, authUser.id);
+                                      if (ok) {
+                                        setSharedMaps(prev => prev.filter(m => m.share_id !== map.share_id));
+                                        toast({ title: 'Deactivated', description: 'Shared map removed.' });
+                                      } else {
+                                        toast({ title: 'Failed', description: 'Could not deactivate map.' });
+                                      }
+                                    } catch {
+                                      toast({ title: 'Error', description: 'Failed to deactivate map.' });
+                                    }
+                                  }}
+                                  title="Deactivate share"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </DropdownMenu.Content>
@@ -1041,6 +1111,75 @@ export default function V2() {
         {/* Bottom legend */}
         <AllianceLegend map={map} assignments={mode === 'planning' ? plannedAssignments : derivedAssignments} selectedAlliance={selectedAlliance} onSelectAlliance={setSelectedAlliance} onCreateAlliance={handleCreateAlliance} onRemoveAlliance={handleRemoveAlliance} onUpdateAlliance={(id, patch)=> setAlliances(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a))} events={events} currentTick={currentTick} />
       </main>
+
+      {/* Share Map Dialog */}
+      {showShareDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border rounded-lg p-6 w-96 max-w-[90vw]">
+            <h2 className="text-lg font-semibold mb-4">Share Map for Server Coordination</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Create a read-only link that alliance leaders can use to view your coordinated battle plan. They won't be able to edit anything.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Share Title</label>
+                <input
+                  className="w-full border rounded px-3 py-2 bg-background text-foreground"
+                  placeholder="e.g., S3 Server Coordination Plan"
+                  value={shareTitle}
+                  onChange={(e) => setShareTitle(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <button
+                  className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90"
+                  onClick={async () => {
+                    if (!authUser || !shareTitle.trim()) return;
+                    
+                    try {
+                      const payload = { version: 3, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+                      const { createSharedMap } = await import('@/services/sharedMaps');
+                      const result = await createSharedMap(authUser.id, season.key, shareTitle.trim(), payload);
+                      
+                      if (result.success) {
+                        // Reload shared maps
+                        const { getUserSharedMaps } = await import('@/services/sharedMaps');
+                        const maps = await getUserSharedMaps(authUser.id);
+                        setSharedMaps(maps);
+                        
+                        // Copy link to clipboard
+                        const url = `${window.location.origin}/shared/${result.shareId}`;
+                        navigator.clipboard.writeText(url);
+                        
+                        setShowShareDialog(false);
+                        toast({ 
+                          title: 'Map Shared!', 
+                          description: `Share link copied to clipboard. Alliance leaders can now view your plan.` 
+                        });
+                      } else {
+                        toast({ title: 'Failed to share', description: 'Could not create shared map.' });
+                      }
+                    } catch {
+                      toast({ title: 'Error', description: 'Failed to create share link.' });
+                    }
+                  }}
+                  disabled={!shareTitle.trim()}
+                >
+                  Create Share Link
+                </button>
+                <button
+                  className="px-4 py-2 border rounded hover:bg-accent"
+                  onClick={() => setShowShareDialog(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
