@@ -141,8 +141,10 @@ export default function V2() {
         const parsed3 = JSON.parse(raw3);
         if (parsed3.alliances && Array.isArray(parsed3.alliances)) setAlliances(parsed3.alliances);
         let evts: ActionEvent[] | undefined = parsed3.eventsBySeason && parsed3.eventsBySeason[season.key] as ActionEvent[] | undefined;
-        // One-time admin hotfix: restore Amex on C-H12 at Day 8 (undo mistaken drop)
-        if (evts && Array.isArray(evts)) {
+        // One-time migration: Day 8 Amex on C-H12 fix
+        const MIG_KEY = 'v3_migration_amex_h12_day8';
+        const shouldMigrate = !localStorage.getItem(MIG_KEY);
+        if (shouldMigrate && evts && Array.isArray(evts)) {
           try {
             const targetId = 'C-H12';
             const allianceName = (Array.isArray(parsed3.alliances) ? parsed3.alliances.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase() === 'amex')?.name : undefined) || 'Amex';
@@ -171,6 +173,7 @@ export default function V2() {
               return true;
             });
             evts = next.sort((a,b)=> a.tick - b.tick);
+            localStorage.setItem(MIG_KEY, '1');
           } catch { /* ignore fix errors */ }
         }
         if (evts) setEvents(evts);
@@ -293,6 +296,32 @@ export default function V2() {
 
   // Planner Sheet state
   const [plannerOpen, setPlannerOpen] = useState(false);
+  // Autoplay state
+  const [autoPlay, setAutoPlay] = useState(false);
+  const [autoMs, setAutoMs] = useState(600);
+  useEffect(() => {
+    if (!autoPlay || mode !== 'action') return;
+    const lastDayLocal = (season.calendar.stepDays && season.calendar.stepDays.length > 0) ? season.calendar.stepDays[season.calendar.stepDays.length - 1] : 28;
+    const maxTickLocal = (lastDayLocal * 2) as Tick;
+    const id = setInterval(() => {
+      setCurrentHalf(h => {
+        const nextHalf = h === 'AM' ? 'PM' : 'AM';
+        if (h === 'AM') return nextHalf;
+        // PM -> advance day
+        setCurrentDay(d => {
+          const nextDay = d + 1;
+          const nextTick = tickFromDayHalf(nextDay, 'AM');
+          if (nextTick > maxTickLocal) {
+            setAutoPlay(false);
+            return d; // stop at end
+          }
+          return nextDay;
+        });
+        return nextHalf;
+      });
+    }, Math.max(200, autoMs));
+    return () => clearInterval(id);
+  }, [autoPlay, autoMs, mode, season.calendar]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -331,7 +360,7 @@ export default function V2() {
             </button>
           </div>
 
-          {/* Tick controls */}
+          {/* Tick controls + Autoplay */}
           <div className="flex items-center gap-2 min-w-[280px] flex-1">
             <button
               className="border rounded px-2 py-1 text-xs disabled:opacity-50"
@@ -361,6 +390,17 @@ export default function V2() {
                 <>Planning • Step {season.calendar.steps} • Capitol available</>
               )}
             </div>
+            {mode === 'action' && (
+              <div className="flex items-center gap-2 ml-2">
+                <button className="border rounded px-2 py-1 text-xs" title="Play/Pause autoplay" onClick={()=> setAutoPlay(v=> !v)}>{autoPlay? 'Pause' : 'Play'}</button>
+                <select className="border rounded px-2 py-1 text-xs" value={autoMs} onChange={(e)=> setAutoMs(parseInt(e.target.value))}>
+                  <option value={400}>0.4s/tick</option>
+                  <option value={600}>0.6s/tick</option>
+                  <option value={800}>0.8s/tick</option>
+                  <option value={1000}>1.0s/tick</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Manual stepper quick controls */}
@@ -448,11 +488,11 @@ export default function V2() {
                 {/* Open Planner sheet */}
                 <Sheet open={plannerOpen} onOpenChange={setPlannerOpen}>
                   <SheetTrigger asChild>
-                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded">Planner…</button>
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded">Planner… <span className="ml-1 text-[10px] text-yellow-600 dark:text-yellow-400">Experimental</span></button>
                   </SheetTrigger>
                   <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
                     <SheetHeader>
-                      <SheetTitle>Planner</SheetTitle>
+                      <SheetTitle>Planner <span className="ml-2 text-xs text-yellow-600 dark:text-yellow-400">Experimental</span></SheetTitle>
                     </SheetHeader>
                     <div className="mt-2">
                       <PlannerControls
