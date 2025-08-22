@@ -23,9 +23,14 @@ export function buildSeasonFromDataset(ds: SeasonDataset): SeasonDefinition {
     }
     // Step 7 unlocks Capitol by default
     out.cityUnlocks[7] = [ds.capitol.coordinates];
-    // Merge any explicit overrides
+    // Merge any explicit overrides by UNION (never demote level-based unlocks)
     if (ds.calendar && ds.calendar.cityUnlocks) {
-      for (const [k, v] of Object.entries(ds.calendar.cityUnlocks)) out.cityUnlocks[Number(k)] = v;
+      for (const [k, v] of Object.entries(ds.calendar.cityUnlocks)) {
+        const stepIdx = Number(k);
+        const base = new Set(out.cityUnlocks[stepIdx] || []);
+        for (const coord of v) base.add(coord);
+        out.cityUnlocks[stepIdx] = Array.from(base);
+      }
     }
     return out;
   })();

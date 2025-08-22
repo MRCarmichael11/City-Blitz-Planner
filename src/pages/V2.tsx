@@ -12,12 +12,39 @@ import TerritoryDetailsPanel from '@/v2/TerritoryDetailsPanel';
 // applyCalendarUnlocks imported above
 import PlannerControls from '@/v2/PlannerControls';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { ChevronDown, Menu as MenuIcon, Moon, Sun } from 'lucide-react';
+import { ChevronDown, Moon, Sun, LogIn, LogOut } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/services/supabaseClient';
 
 const seasons = { S1, S2, S3, S4 } as const;
 
 type SeasonKey = keyof typeof seasons;
+
+function AuthWidget() {
+  const { user, loading, signInWithEmail, signOut } = useAuth();
+  const [email, setEmail] = useState('');
+  if (loading) return <div className="text-xs text-muted-foreground">…</div>;
+  if (!user) {
+    return (
+      <div className="flex items-center gap-2">
+        <input className="border rounded px-2 py-1 h-8 w-48 bg-card text-foreground text-xs" placeholder="Email to sign in" value={email} onChange={(e)=> setEmail(e.target.value)} />
+        <button className="border rounded px-2 py-1 text-xs inline-flex items-center gap-1" onClick={async ()=>{ try { await signInWithEmail(email); alert('Check your email for a login link.'); } catch (e: any) { alert(e.message || 'Sign-in error'); } }}>
+          <LogIn className="w-4 h-4" /> Sign in
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      <span className="text-muted-foreground">{user.email || 'Logged in'}</span>
+      <button className="border rounded px-2 py-1 inline-flex items-center gap-1" onClick={()=> signOut()}>
+        <LogOut className="w-4 h-4" /> Sign out
+      </button>
+    </div>
+  );
+}
 
 export default function V2() {
   const [seasonKey, setSeasonKey] = useState<SeasonKey>('S3');
@@ -31,6 +58,18 @@ export default function V2() {
   // v3 Action events timeline (persisted)
   const [events, setEvents] = useState<ActionEvent[]>([]);
   const [lastCleared, setLastCleared] = useState<ActionEvent[] | null>(null);
+  // Listen for planner-clear-future and clear future events (auto-plans)
+  useEffect(() => {
+    const handler = () => {
+      const past = events.filter(e => e.tick < currentTick);
+      const future = events.filter(e => e.tick >= currentTick);
+      setLastCleared(future);
+      setEvents(past);
+      toast({ title: 'Cleared planned future', description: `${future.length} event(s) removed from Tick ${currentTick} onward.` });
+    };
+    window.addEventListener('planner-clear-future', handler);
+    return () => window.removeEventListener('planner-clear-future', handler);
+  }, [events, currentTick]);
   // Planning mode: final-day target assignments (persisted)
   const [plannedAssignments, setPlannedAssignments] = useState<Assignments>({});
   const [lastClearedPlan, setLastClearedPlan] = useState<Assignments | null>(null);
@@ -38,9 +77,10 @@ export default function V2() {
   // Derive calendar step from current day for unlocks and legacy per-step budget
   const derivedStep = useMemo(() => {
     const sd = season.calendar.stepDays || [];
+    // Step = 1 + number of stepDays <= currentDay
     let s = 1;
     for (let i = 0; i < sd.length; i++) {
-      if (currentDay >= sd[i]) s = i + 1;
+      if (currentDay >= sd[i]) s++;
     }
     return Math.max(1, Math.min(s, season.calendar.steps));
   }, [currentDay, season.calendar]);
@@ -70,6 +110,9 @@ export default function V2() {
   }, [events, currentTick, season.calendar]);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [selectedTerritory, setSelectedTerritory] = useState<import('@/v2/domain').Territory | null>(null);
+  // Manual stepper state
+  const [manualMode, setManualMode] = useState<boolean>(false);
+  const [manualAction, setManualAction] = useState<'capture' | 'release'>('capture');
 
   const [alliances, setAlliances] = useState<Alliance[]>([]);
   const baseMap = useMemo(() => buildMapData(season, alliances), [season, alliances]);
@@ -89,42 +132,82 @@ export default function V2() {
   // Persistence (v3)
   const STORAGE_KEY_V3 = 'lastwar-v3';
 
-  // Load once on mount
+  // Load once on mount (localStorage first), then optionally override with Supabase if signed in
   useEffect(() => {
+    // Load v3 from localStorage
     try {
-      // Prefer v3
       const raw3 = localStorage.getItem(STORAGE_KEY_V3);
       if (raw3) {
         const parsed3 = JSON.parse(raw3);
         if (parsed3.alliances && Array.isArray(parsed3.alliances)) setAlliances(parsed3.alliances);
-        if (parsed3.eventsBySeason && parsed3.eventsBySeason[season.key]) setEvents(parsed3.eventsBySeason[season.key] as ActionEvent[]);
+        let evts: ActionEvent[] | undefined = parsed3.eventsBySeason && parsed3.eventsBySeason[season.key] as ActionEvent[] | undefined;
+        // One-time admin hotfix: restore Amex on C-H12 at Day 8 (undo mistaken drop)
+        if (evts && Array.isArray(evts)) {
+          try {
+            const targetId = 'C-H12';
+            const allianceName = (Array.isArray(parsed3.alliances) ? parsed3.alliances.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase() === 'amex')?.name : undefined) || 'Amex';
+            const dayFix = 8;
+            const amTick = tickFromDayHalf(dayFix, 'AM');
+            const pmTick = tickFromDayHalf(dayFix, 'PM');
+            let next = evts.filter(e => !(e.tileId === targetId && dayHalfFromTick(e.tick).day === dayFix));
+            const cutoffTick = (amTick - 1) as Tick;
+            const sorted = [...next].sort((a,b)=> a.tick - b.tick);
+            let owner: string | null = null;
+            for (const e of sorted) {
+              if (e.tick > cutoffTick) break;
+              if (e.tileId !== targetId) continue;
+              if (e.action === 'capture') owner = e.alliance;
+              else if (e.action === 'release' && e.alliance === owner) owner = null;
+            }
+            if (owner !== allianceName) {
+              next.push({ tick: amTick, tileId: targetId, alliance: allianceName, action: 'capture' });
+            }
+            next.push({ tick: pmTick, tileId: targetId, alliance: allianceName, action: 'capture' });
+            const seen = new Set<string>();
+            next = next.filter(e => {
+              const key = `${e.tick}|${e.alliance}|${e.tileId}|${e.action}`;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+            evts = next.sort((a,b)=> a.tick - b.tick);
+          } catch { /* ignore fix errors */ }
+        }
+        if (evts) setEvents(evts);
         if (parsed3.plannedBySeason && parsed3.plannedBySeason[season.key]) setPlannedAssignments(parsed3.plannedBySeason[season.key] as Assignments);
-        return;
       }
-      // Fallback: v2 migration -> synthesize capture events at Day 1 AM
+    } catch { /* noop */ }
+
+    // Fallback v2 -> synthesize capture events at Day 1 AM
+    try {
       const raw2 = localStorage.getItem('lastwar-v2');
       if (raw2) {
         const parsed2 = JSON.parse(raw2);
-        if (parsed2.alliances && Array.isArray(parsed2.alliances)) setAlliances(parsed2.alliances);
+        if (parsed2.alliances && Array.isArray(parsed2.alliances)) 
+          setAlliances((prev)=> prev.length? prev : parsed2.alliances);
         const steps = parsed2.stepsBySeason?.[season.key] as Record<number, Assignments> | undefined;
         if (steps) {
           const captures: ActionEvent[] = [];
           const tick1 = tickFromDayHalf(1, 'AM');
           const merged: Assignments = {};
-          Object.values(steps).forEach(as => { Object.assign(merged, as); });
-          Object.entries(merged).forEach(([tileId, a]) => {
+          Object.values(steps).forEach((as: Assignments) => { Object.assign(merged, as); });
+          for (const [tileId, a] of (Object.entries(merged) as Array<[string, import('@/v2/rules').Assignment]>)) {
             if (a.alliance) captures.push({ tick: tick1, tileId, alliance: a.alliance, action: 'capture' });
-          });
-          setEvents(captures);
+          }
+          if (captures.length && events.length === 0) setEvents(captures);
         }
       }
-      // Also support v1 legacy
+    } catch { /* noop */ }
+
+    // Fallback v1 legacy
+    try {
       const raw1 = localStorage.getItem('lastwar-v1');
       if (raw1) {
         const parsed1 = JSON.parse(raw1);
-        if (parsed1.alliances && Array.isArray(parsed1.alliances)) setAlliances(parsed1.alliances);
+        if (parsed1.alliances && Array.isArray(parsed1.alliances)) 
+          setAlliances((prev)=> prev.length? prev : parsed1.alliances);
         const as = parsed1.assignmentsBySeason?.[season.key] as Assignments | undefined;
-        if (as) {
+        if (as && events.length === 0) {
           const captures: ActionEvent[] = [];
           const tick1 = tickFromDayHalf(1, 'AM');
           for (const [tileId, a] of (Object.entries(as) as Array<[string, import('@/v2/rules').Assignment]>)) {
@@ -133,13 +216,27 @@ export default function V2() {
           setEvents(captures);
         }
       }
-    } catch {
-      /* noop */
+    } catch { /* noop */ }
+
+    // After local load/migrations, try Supabase override if signed in
+    if (supabase) {
+      supabase.auth.getSession().then(({ data }) => {
+        const uid = data.session?.user?.id;
+        if (!uid) return;
+        import('@/services/userData').then(({ getUserSeasonData }) => {
+          getUserSeasonData(uid, season.key).then(remote => {
+            if (!remote) return;
+            if (Array.isArray(remote.alliances)) setAlliances(remote.alliances);
+            if (remote.eventsBySeason && remote.eventsBySeason[season.key]) setEvents(remote.eventsBySeason[season.key]);
+            if (remote.plannedBySeason && remote.plannedBySeason[season.key]) setPlannedAssignments(remote.plannedBySeason[season.key]);
+          }).catch(()=>{});
+        });
+      }).catch(()=>{});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [season.key]);
 
-  // Save on changes as v3 (including planned end-state)
+  // Save on changes as v3 (including planned end-state) locally and, if signed in, to Supabase
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_V3);
@@ -154,6 +251,18 @@ export default function V2() {
     } catch {
       /* noop */
     }
+
+    // Also sync to Supabase if logged in
+    if (supabase) {
+      supabase.auth.getSession().then(({ data }) => {
+        const uid = data.session?.user?.id;
+        if (!uid) return;
+        import('@/services/userData').then(({ saveUserSeasonData }) => {
+          const payload = { version: 3, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+          saveUserSeasonData(uid, season.key, payload).catch(() => {});
+        });
+      }).catch(()=>{});
+    }
   }, [alliances, events, plannedAssignments, season.key]);
 
   const handleCreateAlliance = (name: string, color: string, priority?: number) => {
@@ -165,95 +274,112 @@ export default function V2() {
     // Note: events are not retroactively edited; tiles will display without color if their alliance no longer exists.
   };
 
+  // Toolbar helpers
+  const lastDay = (season.calendar.stepDays && season.calendar.stepDays.length > 0) ? season.calendar.stepDays[season.calendar.stepDays.length - 1] : 28;
+  const minTick = 1 as Tick;
+  const maxTick = (lastDay * 2) as Tick;
+  const prevTick = () => {
+    const t = currentTick - 1 as Tick;
+    if (t < minTick) return;
+    const { day, half } = dayHalfFromTick(t);
+    setCurrentDay(day); setCurrentHalf(half);
+  };
+  const nextTick = () => {
+    const t = currentTick + 1 as Tick;
+    if (t > maxTick) return;
+    const { day, half } = dayHalfFromTick(t);
+    setCurrentDay(day); setCurrentHalf(half);
+  };
+
+  // Planner Sheet state
+  const [plannerOpen, setPlannerOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/60">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="font-bold">City Blitz Planner</div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <select className="border rounded px-2 py-1 bg-card text-foreground" value={seasonKey} onChange={(e) => { setSeasonKey(e.target.value as SeasonKey); setCurrentDay(1); setCurrentHalf('AM'); }}>
               <option value="S1">Season 1</option>
               <option value="S2">Season 2</option>
               <option value="S3">Season 3</option>
               <option value="S4">Season 4</option>
             </select>
+            <AuthWidget />
           </div>
         </div>
       </header>
       <main className="container mx-auto px-4 py-4 flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          {/* Action Timeline Controls */}
-          <div className="flex-1 min-w-[420px] border rounded bg-card/60 p-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="font-medium">Planner</div>
-            </div>
-            <PlannerControls
-              map={map}
-              season={season}
-              alliances={alliances}
-              currentTick={currentTick}
-              existingEvents={events}
-              plannedTarget={plannedAssignments}
-              replaceFutureDefault={true}
-              onUpdateAlliance={(id, patch) => {
-                setAlliances(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a));
-              }}
-              onApplyPlan={(planned, replaceFuture) => {
-                const past = events.filter(e => e.tick < currentTick);
-                const future = events.filter(e => e.tick >= currentTick);
-                const merged = replaceFuture ? [...past, ...planned] : [...events, ...planned];
-                setEvents(merged.sort((a,b)=> a.tick - b.tick));
-              }}
-            />
+        {/* Compact toolbar */}
+        <div className="w-full border rounded bg-card/60 p-2 flex flex-wrap items-center gap-2">
+          {/* Mode toggle pill */}
+          <div className="inline-flex rounded-full border overflow-hidden">
+            <button
+              className={`px-3 py-1 text-xs ${mode==='planning' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
+              onClick={()=> setMode('planning')}
+              title="Plan your final-day end-state"
+            >
+              Planning
+            </button>
+            <button
+              className={`px-3 py-1 text-xs ${mode==='action' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
+              onClick={()=> setMode('action')}
+              title="Schedule day-by-day actions"
+            >
+              Action
+            </button>
           </div>
-          {mode === 'action' ? (
-            <div className="flex-1 min-w-[420px] border rounded bg-card/60 p-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="font-medium">Action Timeline</div>
-                <div className="text-xs text-muted-foreground">Day {currentDay} {currentHalf} • Tick {currentTick} • Step {derivedStep}{Array.isArray(season.calendar.stepDays) && season.calendar.stepDays[derivedStep-1] ? ` • Day ${season.calendar.stepDays[derivedStep-1]}` : ''}{derivedStep===1 ? ' • Cities locked' : ''}</div>
-              </div>
-              <div className="flex items-center gap-3">
-                <input type="range" min={1} max={28} value={currentDay} onChange={(e)=> setCurrentDay(parseInt(e.target.value))} className="flex-1" />
-                <select className="border rounded px-2 py-1 bg-card text-foreground" value={currentHalf} onChange={(e)=> setCurrentHalf(e.target.value as Half)}>
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
-              </div>
+
+          {/* Tick controls */}
+          <div className="flex items-center gap-2 min-w-[280px] flex-1">
+            <button
+              className="border rounded px-2 py-1 text-xs disabled:opacity-50"
+              onClick={prevTick}
+              disabled={currentTick <= minTick}
+              title="Step back one tick"
+            >
+              «
+            </button>
+            <input type="range" min={1} max={lastDay} value={currentDay} onChange={(e)=> setCurrentDay(parseInt(e.target.value))} className="flex-1" />
+            <select className="border rounded px-2 py-1 bg-card text-foreground" value={currentHalf} onChange={(e)=> setCurrentHalf(e.target.value as Half)}>
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+            <button
+              className="border rounded px-2 py-1 text-xs disabled:opacity-50"
+              onClick={nextTick}
+              disabled={currentTick >= maxTick}
+              title="Step forward one tick"
+            >
+              »
+            </button>
+            <div className="text-xs text-muted-foreground whitespace-nowrap">
+              {mode === 'action' ? (
+                <>Day {currentDay} {currentHalf} • Tick {currentTick} • Step {derivedStep}{Array.isArray(season.calendar.stepDays) && season.calendar.stepDays[derivedStep-1] ? ` • Day ${season.calendar.stepDays[derivedStep-1]}` : ''}{derivedStep===1 ? ' • Cities locked' : ''}</>
+              ) : (
+                <>Planning • Step {season.calendar.steps} • Capitol available</>
+              )}
             </div>
-          ) : (
-            <div className="flex-1 min-w-[420px] border rounded bg-card/60 p-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="font-medium">Planning (Final Day)</div>
-                <div className="text-xs text-muted-foreground">Capitol available • Step {season.calendar.steps}</div>
-              </div>
-              <div className="text-xs text-muted-foreground">Set the final-day end-state per alliance. This plan is saved separately and used as the target for Action planning.</div>
-            </div>
-          )}
-          <div className="ml-auto flex items-center gap-2 flex-wrap justify-end">
+          </div>
 
+          {/* Manual stepper quick controls */}
+          <div className="flex items-center gap-2 ml-auto">
+            <label className="flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={manualMode} onChange={() => setManualMode(v => !v)} />
+              Manual stepper
+            </label>
+            <select
+              className="border rounded px-2 py-1 bg-card text-foreground text-xs disabled:opacity-50"
+              disabled={!manualMode}
+              value={manualAction}
+              onChange={(e)=> setManualAction(e.target.value as 'capture' | 'release')}
+            >
+              <option value="capture">Capture</option>
+              <option value="release">Release</option>
+            </select>
 
-
-
-
-            {/* Mode toggle pill */}
-            <div className="inline-flex rounded-full border overflow-hidden">
-              <button
-                className={`px-3 py-1 text-xs ${mode==='planning' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                onClick={()=> setMode('planning')}
-                title="Plan your final-day end-state"
-              >
-                Planning
-              </button>
-              <button
-                className={`px-3 py-1 text-xs ${mode==='action' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                onClick={()=> setMode('action')}
-                title="Schedule day-by-day actions"
-              >
-                Action
-              </button>
-            </div>
-
-            {/* Compact menus replacing inline controls */}
+            {/* Data menu */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button className="border rounded px-2 py-1 inline-flex items-center gap-1">Data <ChevronDown className="w-4 h-4" /></button>
@@ -313,11 +439,63 @@ export default function V2() {
               </DropdownMenu.Content>
             </DropdownMenu.Root>
 
+            {/* Actions menu */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button className="border rounded px-2 py-1 inline-flex items-center gap-1">Actions <ChevronDown className="w-4 h-4" /></button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="z-50 min-w-[260px] rounded border bg-card p-1 shadow-md">
+                {/* Open Planner sheet */}
+                <Sheet open={plannerOpen} onOpenChange={setPlannerOpen}>
+                  <SheetTrigger asChild>
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded">Planner…</button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
+                    <SheetHeader>
+                      <SheetTitle>Planner</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-2">
+                      <PlannerControls
+                        map={map}
+                        season={season}
+                        alliances={alliances}
+                        currentTick={currentTick}
+                        existingEvents={events}
+                        plannedTarget={plannedAssignments}
+                        replaceFutureDefault={true}
+                        onUpdateAlliance={(id, patch) => {
+                          setAlliances(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a));
+                        }}
+                        onApplyPlan={(planned, replaceFuture) => {
+                          const past = events.filter(e => e.tick < currentTick);
+                          const future = events.filter(e => e.tick >= currentTick);
+                          const merged = replaceFuture ? [...past, ...planned] : [...events, ...planned];
+                          setEvents(merged.sort((a,b)=> a.tick - b.tick));
+                        }}
+                        onLockDay={(day)=>{
+                          try {
+                            // Build learned policy from events up to end of the selected day
+                            const endTick = tickFromDayHalf(day, 'PM');
+                            const cut = events.filter(e => e.tick <= endTick);
+                            // For each alliance, collect reserved lane tiles as those they captured up to this day
+                            const reservedByAlliance: Record<string, string[]> = {};
+                            for (const a of alliances) {
+                              reservedByAlliance[a.name] = cut.filter(e => e.action==='capture' && e.alliance===a.name).map(e=> e.tileId);
+                            }
+                            // Persist learned policy in plannedBySeason (non-breaking): store under a synthetic alliance key "__policy__"
+                            const policyBlob = { version: 1, reservedByAlliance };
+                            // Attach into our plannedAssignments object under a special key that UI ignores
+                            setPlannedAssignments(prev => ({ ...prev, __policy__: { alliance: JSON.stringify(policyBlob), step: season.calendar.steps } as any }));
+                            toast({ title: 'Learned', description: `Locked Day ${day}. Learned lane reservations from your manual placements.` });
+                          } catch (e) {
+                            toast({ title: 'Learn failed', description: 'Could not derive policy from events.' });
+                          }
+                        }}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+
                 {mode === 'action' ? (
                   <div className="p-1">
                     <AlertDialog>
@@ -365,6 +543,58 @@ export default function V2() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+
+                    {/* Manual stepper safety tools moved here */}
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!manualMode || !selectedAlliance} title="Undo last action for the selected alliance today" onClick={()=>{
+                      if (!selectedAlliance) return;
+                      const { day } = dayHalfFromTick(currentTick);
+                      const todays = events
+                        .filter(e => e.alliance === selectedAlliance && dayHalfFromTick(e.tick).day === day && e.tick <= currentTick)
+                        .sort((a,b)=> a.tick - b.tick);
+                      const last = todays[todays.length - 1];
+                      if (!last) {
+                        toast({ title: 'Nothing to undo', description: `No action found for ${selectedAlliance} on Day ${day}.` });
+                        return;
+                      }
+                      setEvents(prev => prev.filter(e => !(e.alliance === last.alliance && e.action === last.action && e.tileId === last.tileId && e.tick === last.tick)).sort((a,b)=> a.tick - b.tick));
+                      toast({ title: 'Undone', description: `Removed last ${last.action} on ${last.tileId} for ${selectedAlliance} (Day ${day}).` });
+                    }}>Undo last action (today)</button>
+
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!manualMode || !selectedAlliance} title="Refund today's last capture for the selected alliance" onClick={()=>{
+                      if (!selectedAlliance) return;
+                      const { day } = dayHalfFromTick(currentTick);
+                      const todays = events
+                        .filter(e => e.alliance === selectedAlliance && dayHalfFromTick(e.tick).day === day)
+                        .sort((a,b)=> a.tick - b.tick);
+                      const lastCap = [...todays].reverse().find(e => e.action === 'capture' && e.tick <= currentTick);
+                      if (!lastCap) {
+                        toast({ title: 'Nothing to undo', description: `No capture found for ${selectedAlliance} on Day ${day}.` });
+                        return;
+                      }
+                      setEvents(prev => {
+                        let next = prev.filter(e => !(e.alliance === lastCap.alliance && e.action === 'capture' && e.tileId === lastCap.tileId && e.tick === lastCap.tick));
+                        const idx = next.findIndex(e => e.alliance === lastCap.alliance && e.action === 'release' && e.tileId === lastCap.tileId && e.tick >= lastCap.tick);
+                        if (idx !== -1) next = next.slice(0, idx).concat(next.slice(idx+1));
+                        return next.sort((a,b)=> a.tick - b.tick);
+                      });
+                      toast({ title: 'Undone', description: `Refunded one city/SH attack for ${selectedAlliance} on Day ${day}.` });
+                    }}>Undo last capture (refund)</button>
+
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!manualMode || !selectedAlliance} title="Remove all scheduled events for the selected alliance on this day" onClick={()=>{
+                      if (!selectedAlliance) return;
+                      const { day } = dayHalfFromTick(currentTick);
+                      const keep = events.filter(e => {
+                        const d = dayHalfFromTick(e.tick).day;
+                        return !(e.alliance === selectedAlliance && d === day);
+                      });
+                      const removed = events.filter(e => {
+                        const d = dayHalfFromTick(e.tick).day;
+                        return (e.alliance === selectedAlliance && d === day);
+                      });
+                      setLastCleared(removed);
+                      setEvents(keep);
+                      toast({ title: 'Cleared today', description: `${removed.length} event(s) removed for ${selectedAlliance} on Day ${day}.` });
+                    }}>Clear today (selected)</button>
 
                     <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!lastCleared || lastCleared.length===0} onClick={() => {
                       if (!lastCleared || lastCleared.length===0) return;
@@ -418,12 +648,10 @@ export default function V2() {
               </DropdownMenu.Content>
             </DropdownMenu.Root>
 
-            {/* Hamburger (page/account) */}
+            {/* Theme menu */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="border rounded px-2 py-1 inline-flex items-center gap-1" aria-label="Menu">
-                  <MenuIcon className="w-4 h-4" />
-                </button>
+                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">Theme <ChevronDown className="w-4 h-4" /></button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="z-50 min-w-[220px] rounded border bg-card p-1 shadow-md">
                 <div className="px-2 py-1 text-xs text-muted-foreground">Appearance</div>
@@ -441,6 +669,8 @@ export default function V2() {
             </DropdownMenu.Root>
           </div>
         </div>
+
+        {/* Map + Details */}
         <div className="flex-1 min-h-[60vh] flex relative">
           <MapCanvas map={map} selectedAlliance={selectedAlliance} assignments={mode === 'planning' ? plannedAssignments : derivedAssignments} selectedId={selectedTerritory?.id ?? null} onSelectTerritory={(t)=>{
             if (t.tileType === 'trading-post') {
@@ -450,6 +680,39 @@ export default function V2() {
             }
             // Open details
             setSelectedTerritory(t); setDetailsOpen(true);
+            // Manual stepper in Action mode: schedule event on click
+            if (mode === 'action' && manualMode) {
+              if (!selectedAlliance && manualAction === 'capture') {
+                toast({ title: 'Select an alliance', description: 'Pick an alliance in the legend to capture.' });
+              } else {
+                if (manualAction === 'capture') {
+                  // Manual stepper ignores planner reservations: only rules apply
+                  const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
+                  if (res.ok && selectedAlliance) {
+                    setEvents(prev => {
+                      const next = [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }];
+                      // De-duplicate same-tick same-alliance captures on same tile (paranoia)
+                      const seen = new Set<string>();
+                      const filtered = next.filter(e => {
+                        if (e.action !== 'capture') return true;
+                        const key = `${e.tick}|${e.alliance}|${e.tileId}`;
+                        if (seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
+                      });
+                      return filtered.sort((a,b)=> a.tick - b.tick);
+                    });
+                    toast({ title: 'Scheduled capture', description: `${t.coordinates} → ${selectedAlliance} at Tick ${currentTick}` });
+                  } else {
+                    toast({ title: 'Cannot capture', description: res.reason });
+                  }
+                } else {
+                  setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }].sort((a,b)=> a.tick - b.tick));
+                  toast({ title: 'Scheduled release', description: `${t.coordinates} at Tick ${currentTick}` });
+                }
+              }
+              return;
+            }
             // Fast-assign in Planning mode when an alliance is selected and capture is allowed
             if (mode === 'planning' && selectedAlliance) {
               const already = plannedAssignments[t.id]?.alliance === selectedAlliance;
@@ -481,9 +744,22 @@ export default function V2() {
                     setPlannedAssignments(prev => ({ ...prev, [t.id]: { alliance: selectedAlliance, step: season.calendar.steps } }));
                     toast({ title: 'Planned', description: `${t.coordinates} → ${selectedAlliance}` });
                   } else {
-                    const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events });
+                    // Manual stepper ignores planner reservations: only rules apply
+                    const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                     if (!res.ok) { toast({ title: 'Cannot capture', description: res.reason }); return; }
-                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }]);
+                    setEvents(prev => {
+                      const next = [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }];
+                      // De-duplicate same-tick same-alliance captures on same tile (paranoia)
+                      const seen = new Set<string>();
+                      const filtered = next.filter(e => {
+                        if (e.action !== 'capture') return true;
+                        const key = `${e.tick}|${e.alliance}|${e.tileId}`;
+                        if (seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
+                      });
+                      return filtered.sort((a,b)=> a.tick - b.tick);
+                    });
                     toast({ title: 'Captured', description: `${t.coordinates} → ${selectedAlliance}` });
                   }
                 }}
@@ -492,7 +768,7 @@ export default function V2() {
                     setPlannedAssignments(prev => { const n = { ...prev }; delete n[t.id]; return n; });
                     toast({ title: 'Unplanned', description: `${t.coordinates}` });
                   } else {
-                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }]);
+                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }].sort((a,b)=> a.tick - b.tick));
                     toast({ title: 'Released', description: `${t.coordinates}` });
                   }
                 }}
@@ -503,8 +779,6 @@ export default function V2() {
         </div>
         {/* Bottom legend */}
         <AllianceLegend map={map} assignments={mode === 'planning' ? plannedAssignments : derivedAssignments} selectedAlliance={selectedAlliance} onSelectAlliance={setSelectedAlliance} onCreateAlliance={handleCreateAlliance} onRemoveAlliance={handleRemoveAlliance} onUpdateAlliance={(id, patch)=> setAlliances(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a))} events={events} currentTick={currentTick} />
-
-
       </main>
     </div>
   );

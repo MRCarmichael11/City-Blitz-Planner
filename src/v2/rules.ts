@@ -113,6 +113,11 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
   // Non-capturable tiles
   if (t.tileType === 'trading-post') return { ok: false, reason: 'Trading posts are player-held (PvP) and cannot be captured by alliances' };
 
+  // No-op: cannot capture a tile you already own (prevents wasting daily charges)
+  if (p.assignments[t.id]?.alliance === p.selectedAlliance) {
+    return { ok: false, reason: 'Already owned by this alliance' };
+  }
+
   // Global per-alliance hard caps: 8 strongholds + 8 cities, always enforced (preview/planning included)
   const totals = countsTotal(p.assignments, p.selectedAlliance, p.territories);
   if (t.tileType === 'stronghold' && totals.strongholds >= 8) return { ok: false, reason: 'Alliance cap reached: 8 strongholds total' }; // capitol excluded
@@ -122,27 +127,65 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
 
   // v3: Protection timers and daily caps when currentTick/events provided
   if (p.currentTick && p.events) {
+    // Only consider events up to and including the current tick for protection and daily caps
+    const eventsUpTo = p.events.filter(e => e.tick <= p.currentTick!);
+
     // Protection check: find last capture tick and add type-specific protection
-    const lastCaptureTick = recaptureAllowedAtTick(t.id, p.events);
-    if (lastCaptureTick !== null) {
-      const prot = protectionTicksFor(t);
-      const availableTick = (lastCaptureTick + prot) as Tick;
-      if (p.currentTick < availableTick) {
-        const { day, half } = dayHalfFromTick(availableTick);
-        return { ok: false, reason: `Protected: available at Day ${day} ${half}` };
+    // Special-case: During Step 1, do NOT time-gate strongholds (L1/L2 should be free as per +2 rule)
+    const isStep1 = p.step === 1;
+    if (!(t.tileType === 'stronghold' && isStep1)) {
+      const lastCaptureTick = recaptureAllowedAtTick(t.id, eventsUpTo);
+      if (lastCaptureTick !== null) {
+        const prot = protectionTicksFor(t);
+        const availableTick = (lastCaptureTick + prot) as Tick;
+        if (p.currentTick < availableTick) {
+          const { day, half } = dayHalfFromTick(availableTick);
+          return { ok: false, reason: `Protected: available at Day ${day} ${half}` };
+        }
       }
     }
 
     // Daily caps: 2S + 2C per day
     const { day } = dayHalfFromTick(p.currentTick);
-    const used = dailyCapsUsedFor(p.selectedAlliance, day, p.events, p.territories);
-    if (t.tileType === 'stronghold' && used.S >= 2) return { ok: false, reason: 'Daily limit reached: 2 strongholds per day' };
-    if (t.tileType === 'city' && used.C >= 2) return { ok: false, reason: 'Daily limit reached: 2 cities per day' };
+    const used = dailyCapsUsedFor(p.selectedAlliance, day, eventsUpTo, p.territories);
+    if (t.tileType === 'stronghold' && used.S >= 2) {
+      // Safety fallback for Step 1: if assignments show fewer than 2 SH owned so far, allow capture (prevents false positives)
+      if (p.step === 1) {
+        const currentOwned = countsTotal(p.assignments, p.selectedAlliance, p.territories).strongholds;
+        if (currentOwned < 2) {
+          // allow
+        } else {
+          return { ok: false, reason: `Daily limit reached: 2 strongholds for Day ${day}` };
+        }
+      } else {
+        return { ok: false, reason: `Daily limit reached: 2 strongholds for Day ${day}` };
+      }
+    }
+    if (t.tileType === 'city' && used.C >= 2) return { ok: false, reason: `Daily limit reached: 2 cities for Day ${day}` };
   }
 
   // Action mode restrictions
   // 1) Unlock state (cities only). Step 1 is a pre-unlock window; cities unlock starting step 2.
   if (!isCityUnlocked(t)) return { ok: false, reason: 'City is locked at this step' };
+
+  // 1.5) Stronghold level gating tied to city unlocks: allowed SH level <= (unlocked city level + 2)
+  // - Step 1 (cityUnlocked=0) → SH up to L2 (no time gate for L1/L2)
+  // - Step 2 (cityUnlocked=1) → SH up to L3
+  // - ... etc., capping at L6
+  if (t.tileType === 'stronghold') {
+    const cityUnlockedLevel = Math.max(0, Math.min(6, p.step - 1));
+    const allowedShLevel = Math.min(6, cityUnlockedLevel + 2);
+    // In Step 1 specifically, L1 and L2 are ALWAYS allowed with no time gate
+    if (p.step === 1 && t.buildingLevel <= 2) {
+      // pass
+    } else if (t.buildingLevel > allowedShLevel) {
+      const neededCityLevel = t.buildingLevel - 2; // must have this city level unlocked
+      const neededStep = Math.max(1, Math.min(p.calendar.steps, neededCityLevel + 1));
+      const sd = p.calendar.stepDays || [];
+      const availableDay = sd[neededStep - 1] || 1;
+      return { ok: false, reason: `Stronghold L${t.buildingLevel} opens at Day ${availableDay} (after L${neededCityLevel} cities unlock)` };
+    }
+  }
 
   // Capitol rule: Only capturable at final day/tick of the season (last day PM) and final step
   if (t.tileType === 'capitol') {

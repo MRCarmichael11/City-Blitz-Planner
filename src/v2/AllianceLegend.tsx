@@ -7,6 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 
+const COLOR_PALETTE = [
+  '#ef4444','#22c55e','#3b82f6','#eab308','#a855f7','#06b6d4','#f97316','#14b8a6','#84cc16','#f43f5e',
+  '#8b5cf6','#0ea5e9','#10b981','#fb7185','#6366f1','#059669','#7c3aed','#f59e0b','#dc2626','#65a30d',
+  '#1d4ed8','#9d174d','#0f766e','#fda4af','#60a5fa','#fbbf24'
+];
+
 interface Props {
   map: MapData;
   assignments: Assignments;
@@ -35,17 +41,15 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
       if (t.resourceType === 'Mithril') rec.mithril += t.resourceValue;
       if (t.resourceType === 'Spice') rec.spice += t.resourceValue;
     }
-    // daily caps used and last action label per alliance
+    // daily caps used and last event label per alliance
     for (const e of events) {
       const rec = byName.get(e.alliance);
       if (!rec) continue;
-      // Track last event per alliance
       if (rec.lastTick === null || e.tick > rec.lastTick) {
         const dhalf = dayHalfFromTick(e.tick);
         rec.lastTick = e.tick;
         rec.lastLabel = `Day ${dhalf.day} ${dhalf.half}`;
       }
-      // Daily capture counts for today only
       const d = dayHalfFromTick(e.tick).day;
       if (d !== day || e.action !== 'capture') continue;
       const t = map.territories.find(tt => tt.id === e.tileId);
@@ -59,6 +63,8 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
     return arr;
   }, [map.alliances, map.territories, assignments, events, currentTick]);
 
+  const selected = openFor ? stats.find(s => s.alliance.name === openFor) : null;
+
   return (
     <div className="mt-3 border rounded bg-card/60">
       <div className="p-2 flex items-center gap-2">
@@ -66,28 +72,21 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
         <CreateAllianceInline onCreate={onCreateAlliance} />
       </div>
       <div className="px-2 pb-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-        {stats.map(({ alliance, terr, mithril, spice, todayS, todayC, lastTick, lastLabel }) => (
+        {stats.map(({ alliance, terr, mithril, spice, todayS, todayC /* lastTick, lastLabel */ }) => (
           <Card key={alliance.id} className={`p-2 border ${selectedAlliance===alliance.name? 'ring-2 ring-primary': ''}`}>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: alliance.color }} />
               <button className="text-sm font-medium truncate" title="Filter by alliance" onClick={()=> onSelectAlliance(selectedAlliance===alliance.name? null : alliance.name)}>
                 {alliance.name}
               </button>
-              <div className="ml-auto text-[10px] text-muted-foreground">{terr.length}</div>
-              <button className="text-[10px] underline ml-2" onClick={()=> onRemoveAlliance(alliance.id)}>Remove</button>
+              <div className="ml-auto text-[10px] text-muted-foreground" title="Holdings count">{terr.length}</div>
             </div>
-            <div className="mt-1 grid grid-cols-2 gap-1 text-[10px] text-muted-foreground">
-              <div>M/hr {mithril}</div>
-              <div>S/hr {spice}</div>
-              <div className="col-span-2">S {terr.filter(t=>t.tileType==='stronghold').length}/8 • C {terr.filter(t=>t.tileType==='city').length}/8</div>
-              <div className="col-span-2">Today: S {todayS}/2 • C {todayC}/2</div>
-              <div className="col-span-2 flex items-center gap-1">
-                <span>Priority</span>
-                <Input type="number" className="h-7 w-16" value={alliance.priority ?? ''} onChange={(e)=> onUpdateAlliance(alliance.id, { priority: e.target.value === '' ? undefined : Number(e.target.value) })} />
-              </div>
-              {lastLabel && (
-                <div className="col-span-2">Last: {lastLabel} • Tick {lastTick}</div>
-              )}
+            {/* Condensed core stats */}
+            <div className="mt-1 text-[11px] text-muted-foreground">
+              M/hr {mithril} • S/hr {spice}
+            </div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">
+              Today: S {todayS}/2 • C {todayC}/2
             </div>
             <div className="mt-2">
               <button className="text-xs underline" onClick={()=> setOpenFor(alliance.name)}>Details</button>
@@ -96,11 +95,18 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
         ))}
       </div>
 
-
       <Sheet open={!!openFor} onOpenChange={(v)=>{ if (!v) setOpenFor(null); }}>
         <SheetContent side="bottom" className="h-[70vh] overflow-y-auto">
-          {openFor && (
-            <AllianceDetails name={openFor} map={map} assignments={assignments} />
+          {selected && (
+            <AllianceDetails
+              alliance={selected.alliance}
+              map={map}
+              assignments={assignments}
+              lastLabel={selected.lastLabel}
+              lastTick={selected.lastTick}
+              onUpdateAlliance={onUpdateAlliance}
+              onRemoveAlliance={onRemoveAlliance}
+            />
           )}
         </SheetContent>
       </Sheet>
@@ -108,7 +114,8 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
   );
 }
 
-function AllianceDetails({ name, map, assignments }: { name: string; map: MapData; assignments: Assignments }) {
+function AllianceDetails({ alliance, map, assignments, lastLabel, lastTick, onUpdateAlliance, onRemoveAlliance }: { alliance: Alliance; map: MapData; assignments: Assignments; lastLabel: string | null; lastTick: number | null; onUpdateAlliance: (id: string, patch: Partial<Alliance>) => void; onRemoveAlliance: (id: string) => void; }) {
+  const name = alliance.name;
   const items = useMemo(()=> map.territories.filter(t => assignments[t.id]?.alliance === name), [map.territories, assignments, name]);
   const totals = useMemo(()=> {
     let m=0,s=0; items.forEach(t=>{ if (t.resourceType==='Mithril') m+=t.resourceValue; if (t.resourceType==='Spice') s+=t.resourceValue; });
@@ -117,11 +124,41 @@ function AllianceDetails({ name, map, assignments }: { name: string; map: MapDat
   return (
     <div>
       <SheetHeader>
-        <SheetTitle>{name}</SheetTitle>
+        <SheetTitle className="flex items-center gap-2">
+          <span className="inline-block w-3 h-3 rounded" style={{ backgroundColor: alliance.color }} />
+          {name}
+        </SheetTitle>
         <SheetDescription>
-          Holdings: {items.length} • M/hr {totals.m} • S/hr {totals.s}
+          Holdings: {items.length} • M/hr {totals.m} • S/hr {totals.s}{lastLabel ? ` • Last: ${lastLabel} (Tick ${lastTick})` : ''}
         </SheetDescription>
       </SheetHeader>
+
+      {/* Editable fields moved here to reduce card clutter */}
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Color</span>
+          <Select value={alliance.color} onValueChange={(v)=> onUpdateAlliance(alliance.id, { color: v })}>
+            <SelectTrigger className="h-8 w-40">
+              <SelectValue placeholder={alliance.color} />
+            </SelectTrigger>
+            <SelectContent>
+              {COLOR_PALETTE.map(c => (
+                <SelectItem key={c} value={c}>
+                  <span className="inline-flex items-center gap-2"><span className="inline-block w-3 h-3 rounded" style={{ backgroundColor: c }} />{c}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Priority</span>
+          <Input type="number" className="h-8 w-24" value={alliance.priority ?? ''} onChange={(e)=> onUpdateAlliance(alliance.id, { priority: e.target.value === '' ? undefined : Number(e.target.value) })} />
+        </div>
+        <div className="flex justify-end">
+          <Button variant="destructive" onClick={()=> onRemoveAlliance(alliance.id)}>Remove alliance</Button>
+        </div>
+      </div>
+
       <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
         {items.map(t => (
           <Card key={t.id} className="p-2">
@@ -134,7 +171,6 @@ function AllianceDetails({ name, map, assignments }: { name: string; map: MapDat
   );
 }
 
-
 function labelFor(t: Territory) {
   if (t.tileType === 'stronghold') return `S${t.buildingLevel}`;
   if (t.tileType === 'trading-post') return `TP${t.buildingLevel}`;
@@ -143,11 +179,7 @@ function labelFor(t: Territory) {
 }
 
 function CreateAllianceInline({ onCreate }: { onCreate: (name: string, color: string, priority?: number) => void }) {
-  const palette = [
-    '#ef4444','#22c55e','#3b82f6','#eab308','#a855f7','#06b6d4','#f97316','#14b8a6','#84cc16','#f43f5e',
-    '#8b5cf6','#0ea5e9','#10b981','#fb7185','#6366f1','#059669','#7c3aed','#f59e0b','#dc2626','#65a30d',
-    '#1d4ed8','#9d174d','#0f766e','#fda4af','#60a5fa','#fbbf24'
-  ];
+  const palette = COLOR_PALETTE;
   let name = '';
   let color = palette[0];
   let priority: number | undefined = undefined;

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { ActionEvent, Alliance, MapData, SeasonDefinition, Tick } from './domain';
+import { dayHalfFromTick } from './domain';
 import type { Assignments } from './rules';
 import { planSeason } from './planner';
 import { Card } from '@/components/ui/card';
@@ -16,9 +17,10 @@ interface Props {
   replaceFutureDefault?: boolean;
   onUpdateAlliance: (id: string, patch: Partial<Alliance>) => void;
   onApplyPlan: (planned: ActionEvent[], replaceFuture: boolean) => void;
+  onLockDay?: (day: number) => void;
 }
 
-export default function PlannerControls({ map, season, alliances, currentTick, existingEvents, plannedTarget, replaceFutureDefault = true, onUpdateAlliance, onApplyPlan }: Props) {
+export default function PlannerControls({ map, season, alliances, currentTick, existingEvents, plannedTarget, replaceFutureDefault = true, onUpdateAlliance, onApplyPlan, onLockDay }: Props) {
   const [replaceFuture, setReplaceFuture] = useState<boolean>(replaceFutureDefault);
   const [report, setReport] = useState<string[]>([]);
   const [planned, setPlanned] = useState<ActionEvent[]>([]);
@@ -64,6 +66,12 @@ export default function PlannerControls({ map, season, alliances, currentTick, e
       <div className="mt-2 flex items-center gap-2">
         <Button size="sm" onClick={handlePreview}>Preview plan</Button>
         <Button size="sm" variant="secondary" onClick={handleApply}>Apply plan</Button>
+        <Button size="sm" variant="outline" onClick={() => onLockDay && onLockDay(dayHalfFromTick(currentTick).day)}>Lock Day (learn)</Button>
+        <Button size="sm" variant="destructive" onClick={() => {
+          // Clear all planned auto-plan reservations/events from current tick forward, but keep manual history
+          const evt = new CustomEvent('planner-clear-future');
+          window.dispatchEvent(evt);
+        }}>Clear planned future</Button>
         <div className="text-xs text-muted-foreground">Planned events: {planned.length}</div>
       </div>
       {report.length > 0 && (

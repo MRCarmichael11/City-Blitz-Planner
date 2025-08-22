@@ -38,6 +38,17 @@ export interface ActionEvent {
   action: 'capture' | 'release';
 }
 
+// Learned policy from user-driven manual days
+export interface LearnedPolicy {
+  version: 1;
+  // Tiles to reserve for each alliance (e.g., lanes/corridors demonstrated)
+  reservedByAlliance: Record<string, string[]>;
+  // Preferred start side inferred from earliest placements
+  startSideByAlliance?: Record<string, 'N' | 'S' | 'E' | 'W'>;
+  // Optional learned corridor width per alliance
+  corridorWidthByAlliance?: Record<string, number>;
+}
+
 export function tickFromDayHalf(day: number, half: Half): Tick {
   const d = Math.max(1, Math.floor(day));
   return (d - 1) * 2 + (half === 'AM' ? 1 : 2);
