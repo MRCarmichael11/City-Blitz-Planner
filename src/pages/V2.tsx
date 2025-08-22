@@ -12,7 +12,7 @@ import TerritoryDetailsPanel from '@/v2/TerritoryDetailsPanel';
 // applyCalendarUnlocks imported above
 import PlannerControls from '@/v2/PlannerControls';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { ChevronDown, Moon, Sun, LogIn, LogOut, Github } from 'lucide-react';
+import { ChevronDown, Moon, Sun, LogIn, LogOut } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
@@ -62,19 +62,7 @@ function AuthWidget() {
         >
           <GoogleIcon /> Google
         </button>
-        <button 
-          className="border rounded px-3 py-1 text-xs inline-flex items-center gap-2 hover:bg-accent" 
-          onClick={async ()=>{ 
-            try { 
-              await signInWithOAuth('github'); 
-            } catch (e: any) { 
-              alert(e.message || 'GitHub sign-in error'); 
-            } 
-          }}
-          title="Sign in with GitHub"
-        >
-          <Github className="w-4 h-4" /> GitHub
-        </button>
+
         <button 
           className="border rounded px-3 py-1 text-xs inline-flex items-center gap-2 hover:bg-accent" 
           onClick={async ()=>{ 
