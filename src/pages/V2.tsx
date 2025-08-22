@@ -295,6 +295,7 @@ export default function V2() {
   const [sharedMaps, setSharedMaps] = useState<import('@/services/sharedMaps').SharedMap[]>([]);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareTitle, setShareTitle] = useState('');
+  const [generatedShareLink, setGeneratedShareLink] = useState<string | null>(null);
 
   // Persistence (v3)
   const STORAGE_KEY_V3 = 'lastwar-v3';
@@ -571,6 +572,7 @@ export default function V2() {
                     <div className="border-t my-1 pt-1">
                       <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={() => {
                         setShareTitle(`${season.key} Server Coordination`);
+                        setGeneratedShareLink(null);
                         setShowShareDialog(true);
                       }}>Share Map...</button>
                       
@@ -1132,6 +1134,32 @@ export default function V2() {
                 />
               </div>
               
+              {generatedShareLink && (
+                <div className="bg-accent/50 border rounded p-3">
+                  <label className="block text-sm font-medium mb-2">Share Link (copied to clipboard):</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      className="flex-1 bg-background border rounded px-2 py-1 text-xs font-mono"
+                      value={generatedShareLink}
+                      readOnly
+                      onClick={(e) => e.currentTarget.select()}
+                    />
+                    <button
+                      className="px-2 py-1 bg-primary text-primary-foreground rounded text-xs"
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedShareLink);
+                        toast({ title: 'Copied!', description: 'Share link copied to clipboard again.' });
+                      }}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Send this link to alliance leaders. They can view your plan without signing in.
+                  </p>
+                </div>
+              )}
+              
               <div className="flex gap-2 pt-4">
                 <button
                   className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90"
@@ -1149,14 +1177,14 @@ export default function V2() {
                         const maps = await getUserSharedMaps(authUser.id);
                         setSharedMaps(maps);
                         
-                        // Copy link to clipboard
+                        // Copy link to clipboard and show in dialog
                         const url = `${window.location.origin}/shared/${result.shareId}`;
                         navigator.clipboard.writeText(url);
+                        setGeneratedShareLink(url);
                         
-                        setShowShareDialog(false);
                         toast({ 
                           title: 'Map Shared!', 
-                          description: `Share link copied to clipboard. Alliance leaders can now view your plan.` 
+                          description: `Share link copied to clipboard and displayed below.` 
                         });
                       } else {
                         toast({ title: 'Failed to share', description: 'Could not create shared map.' });
@@ -1171,9 +1199,12 @@ export default function V2() {
                 </button>
                 <button
                   className="px-4 py-2 border rounded hover:bg-accent"
-                  onClick={() => setShowShareDialog(false)}
+                  onClick={() => {
+                    setShowShareDialog(false);
+                    setGeneratedShareLink(null);
+                  }}
                 >
-                  Cancel
+                  {generatedShareLink ? 'Done' : 'Cancel'}
                 </button>
               </div>
             </div>
