@@ -140,6 +140,8 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
     });
     report.push(`Learned Policy: Using ${learnedReservations.size} reserved tiles from demonstrated play`);
   }
+  
+  report.push(`🤖 Planner: Starting with ${alliances.length} alliances, current day ${dayHalfFromTick(currentTick).day}`);
 
   // Priority ordering (lower number = higher priority)
   const allies = [...alliances].sort((a, b) => (a.priority ?? Number.POSITIVE_INFINITY) - (b.priority ?? Number.POSITIVE_INFINITY));
@@ -199,36 +201,10 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
       const owned = Object.entries(simAssignments).filter(([,v]) => v.alliance === a.name).map(([id]) => map.territories.find(t => t.id === id)!).filter(Boolean);
       const ownedSH = owned.find(t => t.tileType === 'stronghold');
       if (ownedSH) return ownedSH;
-      // Otherwise, pick edge based on final-day footprint direction (toward centroid vs map center)
-      const c = centroidFor(a);
-      const dx = c.x - capXY.x; const dy = c.y - capXY.y;
-      const absx = Math.abs(dx), absy = Math.abs(dy);
-      let side: 'N'|'S'|'E'|'W' = 'W';
-      if (absx >= absy) side = dx < 0 ? 'W' : 'E'; else side = dy < 0 ? 'N' : 'S';
-      const edges = map.territories.filter(t => isEdgeStronghold(t, map.gridSize.rows, map.gridSize.cols));
-      // Prefer Lv1 SH on the chosen side line first, with at least one adjacent Lv1 neighbor for Day 1 PM
-      const sideFilter = (t: Territory) => {
-        if (side === 'W') return t.col === 1;
-        if (side === 'E') return t.col === map.gridSize.cols;
-        if (side === 'N') return t.row === 1;
-        return t.row === map.gridSize.rows;
-      };
-      const edgeOnSide = edges.filter(sideFilter);
-      const allLv1 = map.territories.filter(tt => tt.tileType === 'stronghold' && tt.buildingLevel === 1);
-      const hasLv1Neighbor = (t: Territory) => allLv1.some(nn => nn.id !== t.id && (Math.abs(latticeXY(nn).x - latticeXY(t).x) + Math.abs(latticeXY(nn).y - latticeXY(t).y) === 2));
-      const scoreNearest = (list: Territory[], requireNeighbor = false) => {
-        let best: Territory | null = null; let bestScore = Infinity;
-        for (const t of list) {
-          if (requireNeighbor && !hasLv1Neighbor(t)) continue;
-          const p = latticeXY(t);
-          const d = Math.abs(p.x - c.x) + Math.abs(p.y - c.y);
-          if (d < bestScore) { bestScore = d; best = t; }
-        }
-        return best;
-      };
-      const lvl1OnSide = edgeOnSide.filter(t => t.buildingLevel === 1);
-      const pick = scoreNearest(lvl1OnSide, true) || scoreNearest(lvl1OnSide) || scoreNearest(edgeOnSide, true) || scoreNearest(edgeOnSide) || scoreNearest(edges);
-      return pick ?? starts[a.name] ?? null;
+      
+      // USE THE PRE-COMPUTED START from pickStarts to avoid collisions
+      // This prevents multiple alliances from choosing the same start position
+      return starts[a.name] ?? null;
     }
 
     function corridorPenaltyToTarget(p: {x:number;y:number}, start: Territory | null, target: {x:number;y:number}, width: number) {
@@ -444,7 +420,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
             if (placed) {
               takenC++;
               reservedByOthers.add(ct.id);
-              simAssignments = buildAssignmentsUpToTick(simEvents, terrUnlocked, placed);
+              simAssignments = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickAM);
             }
           }
         }
@@ -584,7 +560,7 @@ export function planSeason(map: MapData, season: SeasonDefinition, alliances: Al
           if (placed) {
             takenS++;
             reservedByOthers.add(st.id);
-            simAssignments = buildAssignmentsUpToTick(simEvents, terrUnlocked, placed);
+            simAssignments = buildAssignmentsUpToTick(simEvents, terrUnlocked, tickPM);
           }
         }
       }

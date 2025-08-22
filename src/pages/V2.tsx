@@ -508,6 +508,7 @@ export default function V2() {
     try {
       const parsed = JSON.parse(policyEntry.alliance);
       if (parsed.version === 1 && parsed.reservedByAlliance) {
+
         return parsed as LearnedPolicy;
       }
     } catch {
