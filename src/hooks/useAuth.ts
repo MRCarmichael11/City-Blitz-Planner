@@ -37,10 +37,25 @@ export function useAuth() {
     if (error) throw error;
   };
 
+  const signInWithOAuth = async (provider: 'google' | 'github' | 'discord') => {
+    if (!supabase) throw new Error('Supabase not configured');
+    console.log('OAuth Debug - Current URL:', window.location.href);
+    console.log('OAuth Debug - Provider:', provider);
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider
+      // Let Supabase use the Site URL from dashboard settings
+    });
+    if (error) {
+      console.error('OAuth Error:', error);
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
   };
 
-  return { user, loading, signInWithEmail, signOut };
+  return { user, loading, signInWithEmail, signInWithOAuth, signOut };
 }
