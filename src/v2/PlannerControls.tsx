@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { ActionEvent, Alliance, MapData, SeasonDefinition, Tick } from './domain';
+import type { ActionEvent, Alliance, MapData, SeasonDefinition, Tick, LearnedPolicy } from './domain';
 import { dayHalfFromTick } from './domain';
 import type { Assignments } from './rules';
 import { planSeason } from './planner';
@@ -14,13 +14,14 @@ interface Props {
   currentTick: Tick;
   existingEvents: ActionEvent[];
   plannedTarget?: Assignments;
+  learnedPolicy?: LearnedPolicy;
   replaceFutureDefault?: boolean;
   onUpdateAlliance: (id: string, patch: Partial<Alliance>) => void;
   onApplyPlan: (planned: ActionEvent[], replaceFuture: boolean) => void;
   onLockDay?: (day: number) => void;
 }
 
-export default function PlannerControls({ map, season, alliances, currentTick, existingEvents, plannedTarget, replaceFutureDefault = true, onUpdateAlliance, onApplyPlan, onLockDay }: Props) {
+export default function PlannerControls({ map, season, alliances, currentTick, existingEvents, plannedTarget, learnedPolicy, replaceFutureDefault = true, onUpdateAlliance, onApplyPlan, onLockDay }: Props) {
   const [replaceFuture, setReplaceFuture] = useState<boolean>(replaceFutureDefault);
   const [report, setReport] = useState<string[]>([]);
   const [planned, setPlanned] = useState<ActionEvent[]>([]);
@@ -30,7 +31,12 @@ export default function PlannerControls({ map, season, alliances, currentTick, e
   }, [alliances]);
 
   const handlePreview = () => {
-    const { planned, report } = planSeason(map, season, alliances, currentTick, existingEvents, { replaceFuture, plannedTarget, strictToTarget: true });
+    const { planned, report } = planSeason(map, season, alliances, currentTick, existingEvents, { 
+      replaceFuture, 
+      plannedTarget, 
+      strictToTarget: true,
+      learnedPolicy 
+    });
     setPlanned(planned);
     setReport(report);
   };
@@ -49,6 +55,15 @@ export default function PlannerControls({ map, season, alliances, currentTick, e
           Replace future events from current tick
         </label>
       </div>
+      
+      {learnedPolicy && (
+        <div className="mb-3 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs">
+          <div className="font-medium text-green-800 dark:text-green-200">🧠 Learned Policy Active</div>
+          <div className="text-green-700 dark:text-green-300 mt-1">
+            Using demonstrated lanes from {Object.keys(learnedPolicy.reservedByAlliance || {}).length} alliance(s) with {Object.values(learnedPolicy.reservedByAlliance || {}).flat().length} reserved tiles
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
         {prioritized.map((a) => (
           <div key={a.id} className="text-xs">
