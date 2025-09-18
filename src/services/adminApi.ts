@@ -13,6 +13,18 @@ export async function listServers(orgId: string): Promise<Server[]> {
   return data as Server[];
 }
 
+export async function createOrg(name: string, season: string): Promise<Org> {
+  const { data, error } = await (supabase as any).from('orgs').insert({ name, season, created_by: (await (supabase as any).auth.getUser()).data.user?.id || null }).select('*').single();
+  if (error) throw error;
+  return data as Org;
+}
+
+export async function getOrgById(orgId: string): Promise<Org | null> {
+  const { data, error } = await (supabase as any).from('orgs').select('*').eq('id', orgId).maybeSingle();
+  if (error) throw error;
+  return data as Org | null;
+}
+
 export async function createServer(orgId: string, name: string): Promise<Server> {
   const { data, error } = await (supabase as any).from('servers').insert({ org_id: orgId, name }).select('*').single();
   if (error) throw error;
