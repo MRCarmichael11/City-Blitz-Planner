@@ -8,6 +8,8 @@ import NotFound from "./pages/NotFound";
 import { lazy, Suspense } from 'react';
 const CityBlitz = lazy(() => import('./pages/V2')); // rename later if desired
 const SharedMapViewer = lazy(() => import('./pages/SharedMapViewer'));
+const FactionStrike = lazy(() => import('./features/strike/FactionStrikePage'));
+const OrgAdmin = lazy(() => import('./features/admin/OrgAdminPage'));
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Suspense fallback={<div>Loading...</div>}><CityBlitz /></Suspense>} />
           <Route path="/shared/:shareId" element={<Suspense fallback={<div>Loading shared map...</div>}><SharedMapViewer /></Suspense>} />
+          <Route path="/faction-strike-planner" element={<Suspense fallback={<div>Loading strike planner...</div>}><FactionStrike /></Suspense>} />
+          <Route path="/admin/org/:orgId" element={<Suspense fallback={<div>Loading admin...</div>}><OrgAdmin /></Suspense>} />
           {/* Legacy route removed; single-page app is City Blitz Planner */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
