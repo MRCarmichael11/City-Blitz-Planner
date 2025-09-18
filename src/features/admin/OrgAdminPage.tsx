@@ -41,6 +41,9 @@ export default function OrgAdminPage() {
         </div>
       </div>
       {orgError && <div className="text-xs text-red-600">{orgError}</div>}
+      <div className="text-xs text-muted-foreground">
+        DB not initialized? Open Supabase SQL editor and run schema file: <a className="underline" href="/supabase-schema.sql" download>supabase-schema.sql</a>
+      </div>
       <div className="flex gap-2">
         <button className={`px-3 py-1 border rounded ${step===1? 'bg-primary text-primary-foreground':''}`} onClick={()=> setStep(1)}>Servers & Factions</button>
         <button className={`px-3 py-1 border rounded ${step===2? 'bg-primary text-primary-foreground':''}`} onClick={()=> setStep(2)}>Alliances</button>
