@@ -13,6 +13,7 @@ import TerritoryDetailsPanel from '@/v2/TerritoryDetailsPanel';
 import PlannerControls from '@/v2/PlannerControls';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronDown, Moon, Sun, LogIn, LogOut } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
@@ -529,7 +530,10 @@ export default function V2() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/60">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-2">
-          <div className="font-bold">City Blitz Planner</div>
+          <div className="font-bold flex items-center gap-3">
+            <span>City Blitz Planner</span>
+            <Link to="/faction-strike-planner" className="text-xs border rounded px-2 py-1 hover:bg-accent" title="Open Faction Strike Planner">Strike Planner</Link>
+          </div>
           <div className="flex items-center gap-3">
             <select className="border rounded px-2 py-1 bg-card text-foreground" value={seasonKey} onChange={(e) => { setSeasonKey(e.target.value as SeasonKey); setCurrentDay(1); setCurrentHalf('AM'); }}>
               <option value="S1">Season 1</option>
