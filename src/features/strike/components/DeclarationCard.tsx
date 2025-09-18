@@ -23,7 +23,7 @@ export default function DeclarationCard() {
             <div className="text-xs">Locked B{r.locked_bracket_attacker}↔B{r.locked_bracket_target}</div>
           )}
           <div className="mt-2">
-            <LockModal />
+            <LockModal orgId={orgId} declarationId={r.id} />
           </div>
         </div>
       ))}
