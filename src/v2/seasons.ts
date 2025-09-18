@@ -51,7 +51,6 @@ function simpleCities(rows: number, cols: number): Territory[] {
 // S3 is dataset-driven (generated from community sheet)
 // Using static import to avoid top-level await in build output
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 import s3DataJson from './data/s3.json' assert { type: 'json' };
 export const S3: SeasonDefinition = buildSeasonFromDataset(s3DataJson as import('./dataLoader').SeasonDataset);
 

@@ -56,8 +56,9 @@ function AuthWidget() {
           onClick={async ()=>{ 
             try { 
               await signInWithOAuth('google'); 
-            } catch (e: any) { 
-              alert(e.message || 'Google sign-in error'); 
+            } catch (e: unknown) { 
+              const msg = e instanceof Error ? e.message : 'Google sign-in error'; 
+              alert(msg); 
             } 
           }}
           title="Sign in with Google"
@@ -70,8 +71,9 @@ function AuthWidget() {
           onClick={async ()=>{ 
             try { 
               await signInWithOAuth('discord'); 
-            } catch (e: any) { 
-              alert(e.message || 'Discord sign-in error'); 
+            } catch (e: unknown) { 
+              const msg = e instanceof Error ? e.message : 'Discord sign-in error'; 
+              alert(msg); 
             } 
           }}
           title="Sign in with Discord"
@@ -105,8 +107,9 @@ function AuthWidget() {
                       alert('Check your email for a login link.'); 
                       setShowEmailForm(false);
                       setEmail('');
-                    } catch (e: any) { 
-                      alert(e.message || 'Sign-in error'); 
+                    } catch (e: unknown) { 
+                      const msg = e instanceof Error ? e.message : 'Sign-in error'; 
+                      alert(msg); 
                     }
                   })();
                 }
@@ -120,8 +123,9 @@ function AuthWidget() {
                   alert('Check your email for a login link.'); 
                   setShowEmailForm(false);
                   setEmail('');
-                } catch (e: any) { 
-                  alert(e.message || 'Sign-in error'); 
+                } catch (e: unknown) { 
+                  const msg = e instanceof Error ? e.message : 'Sign-in error'; 
+                  alert(msg); 
                 } 
               }}
             >
@@ -151,8 +155,9 @@ function AuthWidget() {
                   try {
                     await updateDisplayName(displayName);
                     setEditingName(false);
-                  } catch (e: any) {
-                    alert(e.message || 'Error updating name');
+                  } catch (e: unknown) {
+                    const msg = e instanceof Error ? e.message : 'Error updating name';
+                    alert(msg);
                   }
                 })();
               } else if (e.key === 'Escape') {
@@ -168,8 +173,9 @@ function AuthWidget() {
               try {
                 await updateDisplayName(displayName);
                 setEditingName(false);
-              } catch (e: any) {
-                alert(e.message || 'Error updating name');  
+              } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : 'Error updating name';  
+                alert(msg);
               }
             }}
           >
@@ -315,7 +321,9 @@ export default function V2() {
         if (shouldMigrate && evts && Array.isArray(evts)) {
           try {
             const targetId = 'C-H12';
-            const allianceName = (Array.isArray(parsed3.alliances) ? parsed3.alliances.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase() === 'amex')?.name : undefined) || 'Amex';
+            const allianceName = (Array.isArray(parsed3.alliances)
+              ? (parsed3.alliances as Array<{ name?: string }>).find((a) => typeof a?.name === 'string' && a.name.toLowerCase() === 'amex')?.name
+              : undefined) || 'Amex';
             const dayFix = 8;
             const amTick = tickFromDayHalf(dayFix, 'AM');
             const pmTick = tickFromDayHalf(dayFix, 'PM');
@@ -498,7 +506,7 @@ export default function V2() {
       });
     }, Math.max(200, autoMs));
     return () => clearInterval(id);
-  }, [autoPlay, autoMs, mode, season.calendar]);
+  }, [autoPlay, autoMs, mode, season.calendar, toast]);
 
   // Extract learned policy from plannedAssignments
   const learnedPolicy: LearnedPolicy | undefined = useMemo(() => {
@@ -568,7 +576,7 @@ export default function V2() {
                     }}>Reload from server</button>
                     <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={async ()=>{
                       try {
-                        let payload: any = null;
+                        let payload: import('@/services/userData').V3Payload | null = null;
                         if (authUser) {
                           const { getUserSeasonData } = await import('@/services/userData');
                           payload = await getUserSeasonData(authUser.id, season.key);
@@ -836,7 +844,7 @@ export default function V2() {
                             // Persist learned policy in plannedBySeason (non-breaking): store under a synthetic alliance key "__policy__"
                             const policyBlob = { version: 1, reservedByAlliance };
                             // Attach into our plannedAssignments object under a special key that UI ignores
-                            setPlannedAssignments(prev => ({ ...prev, __policy__: { alliance: JSON.stringify(policyBlob), step: season.calendar.steps } as any }));
+                            setPlannedAssignments(prev => ({ ...prev, __policy__: { alliance: JSON.stringify(policyBlob), step: season.calendar.steps } as unknown as Assignments[typeof season['calendar']['steps']] }));
                             toast({ title: 'Learned', description: `Locked Day ${day}. Learned lane reservations from your manual placements.` });
                           } catch (e) {
                             toast({ title: 'Learn failed', description: 'Could not derive policy from events.' });

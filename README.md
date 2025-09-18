@@ -22,6 +22,13 @@ Local Development
    - npm run build
    - npm run preview
 
+Environment
+- Create a `.env` file in the project root (see `.env.example`).
+- Required variables:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+- Without these, auth and account features are disabled automatically.
+
 Folder Highlights
 - src/v2/*: domain types, rules, seasons, data loader, map canvas, alliance legend, details panel
 - src/pages/V2.tsx: City Blitz Planner page (default route)
