@@ -29,13 +29,13 @@ export default function OrgAdminPage() {
         <div className="flex items-center gap-2">
           <input className="border rounded px-2 py-1 text-sm w-[320px] bg-background text-foreground" placeholder="Org ID (uuid)" value={orgId} onChange={(e)=> setOrgId(e.target.value)} />
           <button className="px-2 py-1 border rounded text-sm" onClick={async ()=>{
-            try { setOrgError(null); const found = await getOrgById(orgId.trim()); if (!found) { setOrgError('Org not found'); return; } localStorage.setItem('current_org', found.id); alert('Org loaded'); }
+            try { setOrgError(null); const id = orgId.trim(); if (!/^[0-9a-fA-F-]{36}$/.test(id)) { setOrgError('Enter a valid UUID'); return; } const found = await getOrgById(id); if (!found) { setOrgError('Org not found'); return; } localStorage.setItem('current_org', found.id); alert('Org loaded'); }
             catch (e: any) { setOrgError(e.message || 'Failed to load org'); }
           }}>Load Org</button>
           <input className="border rounded px-2 py-1 text-sm w-[200px] bg-background text-foreground" placeholder="New org name" value={orgName} onChange={(e)=> setOrgName(e.target.value)} />
           <input className="border rounded px-2 py-1 text-sm w-[80px] bg-background text-foreground" placeholder="Season" value={orgSeason} onChange={(e)=> setOrgSeason(e.target.value)} />
           <button className="px-2 py-1 border rounded text-sm" onClick={async ()=>{
-            try { setOrgError(null); const created = await createOrg(orgName.trim() || 'Org', orgSeason.trim() || 'S'); setOrgId(created.id); localStorage.setItem('current_org', created.id); alert('Org created'); }
+            try { setOrgError(null); const created = await createOrg(orgName.trim() || 'Org', orgSeason.trim() || 'S'); setOrgId(created.id); localStorage.setItem('current_org', created.id); alert(`Org created: ${created.id}`); }
             catch (e: any) { setOrgError(e.message || 'Failed to create org'); }
           }}>Create Org</button>
         </div>
