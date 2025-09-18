@@ -10,6 +10,7 @@ export default function StepAlliances() {
   const [alliances, setAlliances] = useState<Array<{ id: string; tag: string; name: string }>>([]);
   const [tag, setTag] = useState('');
   const [name, setName] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orgId) return;
@@ -26,18 +27,19 @@ export default function StepAlliances() {
     <div className="space-y-3">
       <h2 className="font-semibold">Step 2 — Alliances</h2>
       <div className="flex gap-2 items-center">
-        <select className="border rounded px-2 py-1 text-sm" value={serverId} onChange={e=> setServerId(e.target.value)}>
+        <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={serverId} onChange={e=> setServerId(e.target.value)}>
           {servers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        <select className="border rounded px-2 py-1 text-sm" value={factionId} onChange={e=> setFactionId(e.target.value)}>
+        <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={factionId} onChange={e=> setFactionId(e.target.value)}>
           {factions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
-        <input className="border rounded px-2 py-1 text-sm" placeholder="Tag" value={tag} onChange={e=> setTag(e.target.value)} />
-        <input className="border rounded px-2 py-1 text-sm" placeholder="Name" value={name} onChange={e=> setName(e.target.value)} />
-        <button className="px-2 py-1 border rounded text-sm" disabled={!tag.trim() || !name.trim() || !serverId || !factionId} onClick={async ()=>{
-          try { const a = await createAlliance({ orgId, serverId, factionId, tag: tag.trim(), name: name.trim() }); setAlliances(prev=> [a as any, ...prev]); setTag(''); setName(''); } catch {}
+        <input className="border rounded px-2 py-1 text-sm bg-background text-foreground" placeholder="Tag" value={tag} onChange={e=> setTag(e.target.value)} />
+        <input className="border rounded px-2 py-1 text-sm bg-background text-foreground" placeholder="Name" value={name} onChange={e=> setName(e.target.value)} />
+        <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!tag.trim() || !name.trim() || !serverId || !factionId} onClick={async ()=>{
+          try { setError(null); const a = await createAlliance({ orgId, serverId, factionId, tag: tag.trim(), name: name.trim() }); setAlliances(prev=> [a as any, ...prev]); setTag(''); setName(''); } catch (e: any) { setError(e.message || 'Failed to add alliance'); }
         }}>Add Alliance</button>
       </div>
+      {error && <div className="text-xs text-red-600">{error}</div>}
 
       <div className="border rounded p-3">
         <div className="text-sm font-medium mb-2">Alliances</div>

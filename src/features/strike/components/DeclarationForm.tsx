@@ -34,31 +34,31 @@ export default function DeclarationForm() {
     <div className="border rounded p-3 space-y-3">
       <h3 className="font-semibold">New Declaration</h3>
       <div className="grid md:grid-cols-2 gap-2">
-        <select className="border rounded px-2 py-1 text-sm" value={attackerId} onChange={e=> setAttackerId(e.target.value)}>
+        <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={attackerId} onChange={e=> setAttackerId(e.target.value)}>
           <option value="">Attacking alliance…</option>
           {attackerAlliances.map((a:any)=> <option key={a.id} value={a.id}>{a.tag} — {a.name} {a.rank_int? `(B${a.rank_int<=10?1:a.rank_int<=20?2:3})`:''}</option>)}
         </select>
         <div className="flex gap-2">
-          <select className="border rounded px-2 py-1 text-sm" value={factionId} onChange={e=> setFactionId(e.target.value)}>
+          <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={factionId} onChange={e=> setFactionId(e.target.value)}>
             <option value="">Target faction…</option>
             {factions.map(f=> <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
-          <select className="border rounded px-2 py-1 text-sm" value={targetId} onChange={e=> setTargetId(e.target.value)} disabled={!factionId}>
+          <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={targetId} onChange={e=> setTargetId(e.target.value)} disabled={!factionId}>
             <option value="">Target alliance…</option>
             {targetAlliances.map((a:any)=> <option key={a.id} value={a.id}>{a.tag} — {a.name} {a.rank_int? `(B${a.rank_int<=10?1:a.rank_int<=20?2:3})`:''}</option>)}
           </select>
         </div>
-        <input className="border rounded px-2 py-1 text-sm" type="datetime-local" value={start} onChange={e=> setStart(e.target.value)} />
-        <input className="border rounded px-2 py-1 text-sm" type="datetime-local" value={end} onChange={e=> setEnd(e.target.value)} />
-        <select className="border rounded px-2 py-1 text-sm" value={vis} onChange={e=> setVis(e.target.value as any)}>
+        <input className="border rounded px-2 py-1 text-sm bg-background text-foreground" type="datetime-local" value={start} onChange={e=> setStart(e.target.value)} />
+        <input className="border rounded px-2 py-1 text-sm bg-background text-foreground" type="datetime-local" value={end} onChange={e=> setEnd(e.target.value)} />
+        <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={vis} onChange={e=> setVis(e.target.value as any)}>
           <option value="faction">Faction</option>
           <option value="public">Public</option>
         </select>
-        <input className="border rounded px-2 py-1 text-sm" type="number" placeholder="Max participants" value={maxP as any} onChange={e=> setMaxP(e.target.value ? parseInt(e.target.value,10) : '')} />
+        <input className="border rounded px-2 py-1 text-sm bg-background text-foreground" type="number" placeholder="Max participants" value={maxP as any} onChange={e=> setMaxP(e.target.value ? parseInt(e.target.value,10) : '')} />
       </div>
       {parity && <div className="text-xs text-yellow-700">{parity}</div>}
       <div className="flex gap-2">
-        <button className="px-2 py-1 border rounded text-sm" disabled={!orgId || !attackerId || !targetId || !start || !end} onClick={async ()=>{
+        <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!orgId || !attackerId || !targetId || !start || !end} onClick={async ()=>{
           try {
             const { error } = await (supabase as any).from('declarations').insert({
               org_id: orgId,

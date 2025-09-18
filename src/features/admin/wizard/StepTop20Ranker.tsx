@@ -16,7 +16,7 @@ export default function StepTop20Ranker() {
       <h2 className="font-semibold">Step 3 — Top-20 Ranker</h2>
       <p className="text-sm text-muted-foreground">Drag to order 1..20 per faction. Others remain unranked (Bracket 3).</p>
       <div className="flex items-center gap-2">
-        <select className="border rounded px-2 py-1 text-sm" value={factionId} onChange={e=> setFactionId(e.target.value)}>
+        <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={factionId} onChange={e=> setFactionId(e.target.value)}>
           {factions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
       </div>
@@ -34,7 +34,7 @@ export default function StepTop20Ranker() {
                 <div className={`w-8 text-center rounded ${b===1?'bg-green-600 text-white': b===2?'bg-blue-600 text-white':'bg-muted'}`}>{a.rank_int ?? '-'}</div>
                 <div className="w-24 font-mono">{a.tag}</div>
                 <div className="flex-1">{a.name}</div>
-                <input className="w-16 border rounded px-1 py-0.5 text-xs" placeholder="rank" defaultValue={a.rank_int ?? ''} onBlur={async (e)=>{
+                <input className="w-16 border rounded px-1 py-0.5 text-xs bg-background text-foreground" placeholder="rank" defaultValue={a.rank_int ?? ''} onBlur={async (e)=>{
                   const v = e.currentTarget.value.trim();
                   const n = v ? parseInt(v, 10) : null;
                   try { await setAllianceRank(a.id, orgId, n); e.currentTarget.value = n?.toString() ?? ''; } catch {}
