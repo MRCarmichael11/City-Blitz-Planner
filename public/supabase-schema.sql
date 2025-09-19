@@ -96,8 +96,12 @@ create table if not exists invites (
   org_id uuid not null references orgs(id) on delete cascade,
   role text not null check (role in ('org_admin','server_admin','faction_leader','alliance_leader','member','viewer')),
   token text not null unique,
-  expires_at timestamptz not null
+  expires_at timestamptz not null,
+  alliance_id uuid references alliances(id)
 );
+
+-- Backfill/ensure column exists even if table existed before
+alter table invites add column if not exists alliance_id uuid references alliances(id);
 
 create unique index if not exists ux_locked_target
   on declarations (org_id, target_alliance_id, tstzrange(start, "end"))

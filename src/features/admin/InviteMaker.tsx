@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createInvite, listInvites } from '@/services/inviteApi';
+import { useEffect as useEffectReact } from 'react';
+import { listAlliances } from '@/services/adminApi';
 
 export default function InviteMaker() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
@@ -9,7 +11,10 @@ export default function InviteMaker() {
   const [generating, setGenerating] = useState(false);
   const [lastUrl, setLastUrl] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
+  const [alliances, setAlliances] = useState<Array<{ id: string; tag: string }>>([]);
+  const [allianceId, setAllianceId] = useState<string>('');
   useEffect(()=> { if (!orgId) return; listInvites(orgId).then(setInvites).catch(()=>{}); }, [orgId]);
+  useEffectReact(()=> { if (!orgId) return; listAlliances(orgId).then(a => setAlliances(a.map((x:any)=> ({ id: x.id, tag: x.tag })))).catch(()=>{}); }, [orgId]);
   return (
     <div className="space-y-2">
       <h3 className="font-semibold">Invite Maker</h3>
@@ -23,10 +28,16 @@ export default function InviteMaker() {
             <option>member</option>
             <option>viewer</option>
           </select>
+          {(role==='alliance_leader' || role==='member' || role==='viewer') && (
+            <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={allianceId} onChange={e=> setAllianceId(e.target.value)}>
+              <option value="">Alliance…</option>
+              {alliances.map(a => <option key={a.id} value={a.id}>{a.tag}</option>)}
+            </select>
+          )}
           <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!orgId || generating} onClick={async ()=>{
             try {
               setMsg(null); setGenerating(true);
-              const row = await createInvite(orgId, role);
+              const row = await createInvite(orgId, role, (role==='alliance_leader'||role==='member'||role==='viewer') ? allianceId || undefined : undefined);
               const url = `${base}/invite?token=${encodeURIComponent(row.token)}`;
               setLastUrl(url);
               setInvites(prev=> [row, ...prev]);
