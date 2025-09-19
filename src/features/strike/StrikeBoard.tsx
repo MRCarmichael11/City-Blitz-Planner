@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/services/supabaseClient';
 import { listAlliances } from '@/services/adminApi';
 import { getMembership, can } from '@/lib/rbac';
+import { getBracket } from '@/lib/brackets';
 
 type Faction = { id: string; name: string };
 type Alliance = { id: string; tag: string; name: string; rank_int: number | null };
@@ -17,6 +18,10 @@ export default function StrikeBoard() {
   const [attackerId, setAttackerId] = useState<string>('');
   const [interest, setInterest] = useState<Record<string, { count: number; tags: string[] }>>({});
   const [canReset, setCanReset] = useState<boolean>(false);
+  const attackerBracket = useMemo(() => {
+    const a = attackerAlliances.find(x => x.id === attackerId);
+    return getBracket(a?.rank_int ?? null);
+  }, [attackerAlliances, attackerId]);
 
   useEffect(() => {
     const saved = Number(localStorage.getItem('offense_step') || '1');
@@ -201,8 +206,14 @@ export default function StrikeBoard() {
             </tr>
           </thead>
           <tbody>
-            {top20.map(a => {
+            {/* Bracket 1 */}
+            <tr className="bg-primary/10">
+              <td className="px-2 py-1 font-medium" colSpan={4}>Bracket 1 (1–10)</td>
+            </tr>
+            {top20.filter(a => (a.rank_int ?? 99) <= 10).map(a => {
               const meta = interest[a.id] || { count: 0, tags: [] };
+              const b = getBracket(a.rank_int ?? null);
+              const parityOk = attackerBracket === b && attackerBracket !== 3;
               return (
                 <tr key={a.id} className="border-t">
                   <td className="px-2 py-1">{a.rank_int ?? ''}</td>
@@ -216,7 +227,33 @@ export default function StrikeBoard() {
                     ) : <span className="text-xs text-muted-foreground">None</span>}
                   </td>
                   <td className="px-2 py-1">
-                    <button className="px-2 py-1 border rounded text-xs disabled:opacity-50" disabled={!attackerId} onClick={()=> handleInterested(a.id)}>Interested</button>
+                    <button className="px-2 py-1 border rounded text-xs disabled:opacity-50" disabled={!attackerId || !parityOk} onClick={()=> handleInterested(a.id)} title={parityOk? 'Mark interest' : 'Bracket mismatch'}>Interested</button>
+                  </td>
+                </tr>
+              );
+            })}
+            {/* Bracket 2 */}
+            <tr className="bg-secondary/10">
+              <td className="px-2 py-1 font-medium" colSpan={4}>Bracket 2 (11–20)</td>
+            </tr>
+            {top20.filter(a => (a.rank_int ?? 0) > 10).map(a => {
+              const meta = interest[a.id] || { count: 0, tags: [] };
+              const b = getBracket(a.rank_int ?? null);
+              const parityOk = attackerBracket === b && attackerBracket !== 3;
+              return (
+                <tr key={a.id} className="border-t">
+                  <td className="px-2 py-1">{a.rank_int ?? ''}</td>
+                  <td className="px-2 py-1 font-mono">{a.tag}</td>
+                  <td className="px-2 py-1">
+                    {meta.count>0 ? (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <span className="text-xs border rounded px-1">{meta.count}</span>
+                        {meta.tags.map((t, i)=> <span key={i} className="text-xs border rounded px-1">{t}</span>)}
+                      </div>
+                    ) : <span className="text-xs text-muted-foreground">None</span>}
+                  </td>
+                  <td className="px-2 py-1">
+                    <button className="px-2 py-1 border rounded text-xs disabled:opacity-50" disabled={!attackerId || !parityOk} onClick={()=> handleInterested(a.id)} title={parityOk? 'Mark interest' : 'Bracket mismatch'}>Interested</button>
                   </td>
                 </tr>
               );
