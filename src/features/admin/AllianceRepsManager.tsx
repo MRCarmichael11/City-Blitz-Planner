@@ -18,18 +18,18 @@ export default function AllianceRepsManager() {
       <p className="text-sm text-muted-foreground">Assign per-alliance reps (leader/member/viewer).</p>
       <div className="border rounded p-3 space-y-2">
         <div className="flex items-center gap-2">
-          <select className="border rounded px-2 py-1 text-sm" value={allianceId} onChange={e=> setAllianceId(e.target.value)}>
+          <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={allianceId} onChange={e=> setAllianceId(e.target.value)}>
             {alliances.map(a => <option key={a.id} value={a.id}>{a.tag} — {a.name}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <input className="border rounded px-2 py-1 text-sm w-[320px]" placeholder="User ID (uuid)" value={userId} onChange={e=> setUserId(e.target.value)} />
-          <select className="border rounded px-2 py-1 text-sm" value={role} onChange={e=> setRole(e.target.value as any)}>
+          <input className="border rounded px-2 py-1 text-sm w-[320px] bg-background text-foreground" placeholder="User ID (uuid)" value={userId} onChange={e=> setUserId(e.target.value)} />
+          <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={role} onChange={e=> setRole(e.target.value as any)}>
             <option value="alliance_leader">alliance_leader</option>
             <option value="member">member</option>
             <option value="viewer">viewer</option>
           </select>
-          <button className="px-2 py-1 border rounded text-sm" disabled={!orgId || !allianceId || !userId.trim()} onClick={async ()=>{
+          <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!orgId || !allianceId || !userId.trim()} onClick={async ()=>{
             try { await upsertRep(orgId, allianceId, userId.trim(), role); const rows = await listReps(orgId, allianceId); setReps(rows); setUserId(''); } catch {}
           }}>Add / Update Rep</button>
         </div>

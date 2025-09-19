@@ -13,14 +13,14 @@ export default function InviteMaker() {
       <p className="text-sm text-muted-foreground">Issue org-scoped invites for roles (server_admin, faction_leader, alliance_leader, member, viewer).</p>
       <div className="border rounded p-3 space-y-2">
         <div className="flex items-center gap-2">
-          <select className="border rounded px-2 py-1 text-sm" value={role} onChange={e=> setRole(e.target.value)}>
+          <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={role} onChange={e=> setRole(e.target.value)}>
             <option>server_admin</option>
             <option>faction_leader</option>
             <option>alliance_leader</option>
             <option>member</option>
             <option>viewer</option>
           </select>
-          <button className="px-2 py-1 border rounded text-sm" disabled={!orgId} onClick={async ()=>{
+          <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!orgId} onClick={async ()=>{
             try { const row = await createInvite(orgId, role); const url = `${base}/invite?token=${encodeURIComponent(row.token)}`; await navigator.clipboard.writeText(url); setInvites(prev=> [row, ...prev]); alert('Invite link copied to clipboard'); } catch {}
           }}>Create Invite</button>
         </div>
