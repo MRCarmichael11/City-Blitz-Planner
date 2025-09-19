@@ -10,6 +10,7 @@ const CityBlitz = lazy(() => import('./pages/V2')); // rename later if desired
 const SharedMapViewer = lazy(() => import('./pages/SharedMapViewer'));
 const FactionStrike = lazy(() => import('./features/strike/FactionStrikePage'));
 const OrgAdmin = lazy(() => import('./features/admin/OrgAdminPage'));
+const InvitePage = lazy(() => import('./pages/invite'));
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/shared/:shareId" element={<Suspense fallback={<div>Loading shared map...</div>}><SharedMapViewer /></Suspense>} />
           <Route path="/faction-strike-planner" element={<Suspense fallback={<div>Loading strike planner...</div>}><FactionStrike /></Suspense>} />
           <Route path="/admin/org/:orgId" element={<Suspense fallback={<div>Loading admin...</div>}><OrgAdmin /></Suspense>} />
+          <Route path="/invite" element={<Suspense fallback={<div>Loading invite...</div>}><InvitePage /></Suspense>} />
           {/* Legacy route removed; single-page app is City Blitz Planner */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

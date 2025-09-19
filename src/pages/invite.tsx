@@ -14,8 +14,15 @@ export default function InvitePage() {
         const res = await acceptInvite(token);
         localStorage.setItem('current_org', res.org_id);
         setStatus(`Joined org as ${res.role}. Redirecting…`);
-        setTimeout(() => navigate('/faction-strike-planner'), 1000);
+        setTimeout(() => navigate('/faction-strike-planner'), 300);
       } catch (e: any) {
+        if ((e?.message || '').toLowerCase().includes('not signed in')) {
+          setStatus('Please sign in to accept the invite…');
+          // trigger OAuth flow to preserve URL
+          const { supabase } = await import('@/services/supabaseClient');
+          (supabase as any).auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+          return;
+        }
         setStatus(e.message || 'Invalid invite');
       }
     })();
