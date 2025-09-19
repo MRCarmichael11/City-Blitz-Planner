@@ -90,6 +90,15 @@ create table if not exists declaration_participants (
   unique (declaration_id, alliance_id)
 );
 
+-- Invite tokens (auto-add users to org)
+create table if not exists invites (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references orgs(id) on delete cascade,
+  role text not null check (role in ('org_admin','server_admin','faction_leader','alliance_leader','member','viewer')),
+  token text not null unique,
+  expires_at timestamptz not null
+);
+
 create unique index if not exists ux_locked_target
   on declarations (org_id, target_alliance_id, tstzrange(start, "end"))
   where status = 'locked';
