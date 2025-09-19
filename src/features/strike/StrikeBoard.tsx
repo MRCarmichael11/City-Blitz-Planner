@@ -57,12 +57,12 @@ export default function StrikeBoard() {
     // determine opponent faction (assumes two factions per org)
     const other = (factions || []).find(f => f.id !== factionId);
     setOpponentFactionId(other?.id || '');
-    // load Top-20 targets for selected faction
+    // load Top-20 targets for enemy faction (other)
     (supabase as any)
       .from('alliances')
       .select('id,tag,name,rank_int')
       .eq('org_id', orgId)
-      .eq('faction_id', factionId)
+      .eq('faction_id', other?.id || '')
       .not('rank_int','is',null)
       .lte('rank_int',20)
       .order('rank_int', { ascending: true })
@@ -176,9 +176,12 @@ export default function StrikeBoard() {
             <button key={n} className={`px-3 py-1 text-xs ${offense===n?'bg-primary text-primary-foreground':'hover:bg-accent'}`} onClick={()=> setOffense(n as 1|2|3|4)}>Offense {n}</button>
           ))}
         </div>
-        <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={factionId} onChange={e=> setFactionId(e.target.value)}>
-          {factions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-        </select>
+        <div className="text-xs border rounded px-2 py-1 bg-accent/40">
+          My Faction: <strong>{(factions.find(f=> f.id===factionId)?.name) || '—'}</strong>
+        </div>
+        <div className="text-xs border rounded px-2 py-1 bg-accent/40">
+          Targeting: <strong>{(factions.find(f=> f.id===opponentFactionId)?.name) || '—'}</strong>
+        </div>
         <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={attackerId} onChange={e=> setAttackerId(e.target.value)}>
           <option value="">Attacker alliance…</option>
           {attackerAlliances.map(a => <option key={a.id} value={a.id}>{a.tag}</option>)}
