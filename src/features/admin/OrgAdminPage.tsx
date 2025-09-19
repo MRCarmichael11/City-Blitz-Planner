@@ -6,6 +6,7 @@ import StepTop20Ranker from './wizard/StepTop20Ranker';
 import InviteMaker from './InviteMaker';
 import AllianceRepsManager from './AllianceRepsManager';
 import { createOrgWithSlug, getOrgById, getOrgBySlug, listUserOrgs } from '@/services/adminApi';
+import ToolSwitcher from '@/components/ToolSwitcher';
 
 export default function OrgAdminPage() {
   const params = useParams();
@@ -34,7 +35,10 @@ export default function OrgAdminPage() {
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Org Admin</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold">Org Admin</h1>
+          <ToolSwitcher />
+        </div>
         <div className="flex items-center gap-2">
           <input className="border rounded px-2 py-1 text-sm w-[200px] bg-background text-foreground" placeholder="Org ID (uuid)" value={orgId} onChange={(e)=> setOrgId(e.target.value)} />
           <button className="px-2 py-1 border rounded text-sm" onClick={async ()=>{
