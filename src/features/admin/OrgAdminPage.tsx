@@ -34,34 +34,38 @@ export default function OrgAdminPage() {
 
   return (
     <div className="container mx-auto p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold">Org Admin</h1>
-          <ToolSwitcher />
-        </div>
-        <div className="flex items-center gap-2">
-          <input className="border rounded px-2 py-1 text-sm w-[200px] bg-background text-foreground" placeholder="Org ID (uuid)" value={orgId} onChange={(e)=> setOrgId(e.target.value)} />
-          <button className="px-2 py-1 border rounded text-sm" onClick={async ()=>{
-            try { setOrgError(null); const id = orgId.trim(); if (!/^[0-9a-fA-F-]{36}$/.test(id)) { setOrgError('Enter a valid UUID'); return; } const found = await getOrgById(id); if (!found) { setOrgError('Org not found'); return; } localStorage.setItem('current_org', found.id); alert('Org loaded'); }
-            catch (e: any) { setOrgError(e.message || 'Failed to load org'); }
-          }}>Load Org</button>
-          <input className="border rounded px-2 py-1 text-sm w-[160px] bg-background text-foreground" placeholder="or Slug (e.g., anubis3)" value={orgSlug} onChange={(e)=> setOrgSlug(e.target.value)} />
-          <button className="px-2 py-1 border rounded text-sm" onClick={async ()=>{
-            try { setOrgError(null); const slug = orgSlug.trim(); if (!slug) { setOrgError('Enter a slug'); return; } const found = await getOrgBySlug(slug); if (!found) { setOrgError('Slug not found'); return; } localStorage.setItem('current_org', found.id); setOrgId(found.id); alert(`Org loaded: ${found.slug || found.id}`); }
-            catch (e: any) { setOrgError(e.message || 'Failed to load by slug'); }
-          }}>Load by Slug</button>
-          <input className="border rounded px-2 py-1 text-sm w-[200px] bg-background text-foreground" placeholder="New org name" value={orgName} onChange={(e)=> setOrgName(e.target.value)} />
-          <input className="border rounded px-2 py-1 text-sm w-[80px] bg-background text-foreground" placeholder="Season" value={orgSeason} onChange={(e)=> setOrgSeason(e.target.value)} />
-          <input className="border rounded px-2 py-1 text-sm w-[120px] bg-background text-foreground" placeholder="Slug (optional)" value={orgSlug} onChange={(e)=> setOrgSlug(e.target.value)} />
-          <button className="px-2 py-1 border rounded text-sm" onClick={async ()=>{
-            try { setOrgError(null); const created = await createOrgWithSlug(orgName.trim() || 'Org', orgSeason.trim() || 'S', orgSlug.trim() || undefined); setOrgId(created.id); localStorage.setItem('current_org', created.id); alert(`Org created: ${created.slug || created.id}`); setOrgs(prev=> [{ id: created.id, name: created.name, season: created.season, slug: created.slug }, ...prev]); }
-            catch (e: any) { setOrgError(e.message || 'Failed to create org'); }
-          }}>Create Org</button>
-        </div>
+      <div className="flex items-center justify-between border-b bg-card/60 px-2 py-2 rounded">
+        <div className="font-semibold">Org Admin</div>
+        <ToolSwitcher />
       </div>
       {orgError && <div className="text-xs text-red-600">{orgError}</div>}
       <div className="text-xs text-muted-foreground">
         DB not initialized? Open Supabase SQL editor and run schema file: <a className="underline" href="/supabase-schema.sql" download>supabase-schema.sql</a>
+      </div>
+      {/* Compact org controls below header for a cleaner look */}
+      <div className="border rounded bg-card/60 p-2">
+        <div className="text-xs font-medium mb-1">Organization</div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <input className="border rounded px-2 py-1 bg-background text-foreground w-[200px]" placeholder="Org ID (uuid)" value={orgId} onChange={(e)=> setOrgId(e.target.value)} />
+          <button className="px-2 py-1 border rounded disabled:opacity-50" onClick={async ()=>{
+            try { setOrgError(null); const id = orgId.trim(); if (!/^[0-9a-fA-F-]{36}$/.test(id)) { setOrgError('Enter a valid UUID'); return; } const found = await getOrgById(id); if (!found) { setOrgError('Org not found'); return; } localStorage.setItem('current_org', found.id); alert('Org loaded'); }
+            catch (e: any) { setOrgError(e.message || 'Failed to load org'); }
+          }}>Load</button>
+          <span className="text-muted-foreground">or</span>
+          <input className="border rounded px-2 py-1 bg-background text-foreground w-[140px]" placeholder="Slug (e.g., anubis3)" value={orgSlug} onChange={(e)=> setOrgSlug(e.target.value)} />
+          <button className="px-2 py-1 border rounded disabled:opacity-50" onClick={async ()=>{
+            try { setOrgError(null); const slug = orgSlug.trim(); if (!slug) { setOrgError('Enter a slug'); return; } const found = await getOrgBySlug(slug); if (!found) { setOrgError('Slug not found'); return; } localStorage.setItem('current_org', found.id); setOrgId(found.id); alert(`Org loaded: ${found.slug || found.id}`); }
+            catch (e: any) { setOrgError(e.message || 'Failed to load by slug'); }
+          }}>Load by Slug</button>
+          <span className="text-muted-foreground">•</span>
+          <input className="border rounded px-2 py-1 bg-background text-foreground w-[160px]" placeholder="New org name" value={orgName} onChange={(e)=> setOrgName(e.target.value)} />
+          <input className="border rounded px-2 py-1 bg-background text-foreground w-[64px]" placeholder="Season" value={orgSeason} onChange={(e)=> setOrgSeason(e.target.value)} />
+          <input className="border rounded px-2 py-1 bg-background text-foreground w-[120px]" placeholder="Slug (optional)" value={orgSlug} onChange={(e)=> setOrgSlug(e.target.value)} />
+          <button className="px-2 py-1 border rounded disabled:opacity-50" onClick={async ()=>{
+            try { setOrgError(null); const created = await createOrgWithSlug(orgName.trim() || 'Org', orgSeason.trim() || 'S', orgSlug.trim() || undefined); setOrgId(created.id); localStorage.setItem('current_org', created.id); alert(`Org created: ${created.slug || created.id}`); setOrgs(prev=> [{ id: created.id, name: created.name, season: created.season, slug: created.slug }, ...prev]); }
+            catch (e: any) { setOrgError(e.message || 'Failed to create org'); }
+          }}>Create</button>
+        </div>
       </div>
       {orgs.length > 0 && (
         <div className="border rounded p-2 text-sm">
