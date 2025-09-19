@@ -70,18 +70,18 @@ export default function StrikeBoard() {
       .catch(()=>{});
   }, [orgId, factionId, factions]);
 
-  // Load attacker alliances from the opponent faction
+  // Load attacker alliances from my faction (Anubis)
   useEffect(() => {
-    if (!orgId || !opponentFactionId) { setAttackerAlliances([]); setAttackerId(''); return; }
+    if (!orgId || !factionId) { setAttackerAlliances([]); setAttackerId(''); return; }
     (supabase as any)
       .from('alliances')
       .select('id,tag,name,rank_int')
       .eq('org_id', orgId)
-      .eq('faction_id', opponentFactionId)
+      .eq('faction_id', factionId)
       .order('tag', { ascending: true })
       .then(({ data }: any) => { setAttackerAlliances(data || []); setAttackerId(''); })
       .catch(()=>{});
-  }, [orgId, opponentFactionId]);
+  }, [orgId, factionId]);
 
   useEffect(() => {
     if (!orgId || top20.length === 0) { setInterest({}); return; }
