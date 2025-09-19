@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/services/supabaseClient';
 import { listAlliances } from '@/services/adminApi';
+import { getMembership, can } from '@/lib/rbac';
 
 type Faction = { id: string; name: string };
 type Alliance = { id: string; tag: string; name: string; rank_int: number | null };
@@ -14,6 +15,7 @@ export default function StrikeBoard() {
   const [attackerAlliances, setAttackerAlliances] = useState<Alliance[]>([]);
   const [attackerId, setAttackerId] = useState<string>('');
   const [interest, setInterest] = useState<Record<string, { count: number; tags: string[] }>>({});
+  const [canReset, setCanReset] = useState<boolean>(false);
 
   useEffect(() => {
     const saved = Number(localStorage.getItem('offense_step') || '1');
@@ -28,6 +30,22 @@ export default function StrikeBoard() {
       if (data && data[0] && !factionId) setFactionId(data[0].id);
     }).catch(()=>{});
     listAlliances(orgId).then(setAttackerAlliances).catch(()=>{});
+    (async () => {
+      try {
+        const { data: userRes } = await (supabase as any).auth.getUser();
+        const uid = userRes?.user?.id;
+        const mem = uid ? await getMembership(orgId, uid) : null;
+        let allowed = false;
+        if (mem && can.adminOrg(mem.role)) allowed = true;
+        if (!allowed && uid) {
+          const { data: org } = await (supabase as any).from('orgs').select('created_by').eq('id', orgId).maybeSingle();
+          if (org?.created_by === uid) allowed = true;
+        }
+        setCanReset(!!allowed);
+      } catch {
+        setCanReset(false);
+      }
+    })();
   }, [orgId]);
 
   useEffect(() => {
@@ -111,6 +129,24 @@ export default function StrikeBoard() {
     setInterest(prev => ({ ...prev, [targetAllianceId]: { count: ids.length, tags: (attackers||[]).map((x:any)=> x.tag).slice(0,4) } }));
   };
 
+  const handleResetOffense = async () => {
+    if (!canReset) return;
+    if (!confirm(`Reset offense ${offense}? This clears proposed interest for this offense.`)) return;
+    const note = `offense:${offense}`;
+    try {
+      await (supabase as any)
+        .from('declarations')
+        .delete()
+        .eq('org_id', orgId)
+        .eq('status','proposed')
+        .eq('notes', note);
+      setInterest({});
+      setOffense(prev => (prev < 4 ? (prev + 1) as 1|2|3|4 : 1));
+    } catch {
+      alert('Reset failed');
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
@@ -126,6 +162,9 @@ export default function StrikeBoard() {
           <option value="">Attacker alliance…</option>
           {attackerAlliances.map(a => <option key={a.id} value={a.id}>{a.tag}</option>)}
         </select>
+        <button className="ml-auto px-3 py-1 border rounded text-xs disabled:opacity-50" disabled={!canReset} onClick={handleResetOffense} title={canReset? 'Clears all proposed interest for this offense and steps to next' : 'Only org admin/creator can reset'}>
+          Reset offense {offense}
+        </button>
       </div>
       <div className="border rounded overflow-hidden">
         <table className="w-full text-sm">
