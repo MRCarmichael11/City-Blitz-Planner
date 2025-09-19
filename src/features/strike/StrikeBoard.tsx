@@ -9,7 +9,6 @@ type Alliance = { id: string; tag: string; name: string; rank_int: number | null
 
 export default function StrikeBoard() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
-  const [offense, setOffense] = useState<1|2|3|4>(1);
   const [factions, setFactions] = useState<Faction[]>([]);
   const [factionId, setFactionId] = useState<string>('');
   const [opponentFactionId, setOpponentFactionId] = useState<string>('');
@@ -22,12 +21,6 @@ export default function StrikeBoard() {
     const a = attackerAlliances.find(x => x.id === attackerId);
     return getBracket(a?.rank_int ?? null);
   }, [attackerAlliances, attackerId]);
-
-  useEffect(() => {
-    const saved = Number(localStorage.getItem('offense_step') || '1');
-    if (saved>=1 && saved<=4) setOffense(saved as 1|2|3|4);
-  }, []);
-  useEffect(() => { localStorage.setItem('offense_step', String(offense)); }, [offense]);
 
   useEffect(() => {
     if (!orgId || !supabase) return;
@@ -90,13 +83,11 @@ export default function StrikeBoard() {
 
   useEffect(() => {
     if (!orgId || top20.length === 0) { setInterest({}); return; }
-    const note = `offense:${offense}`;
     (supabase as any)
       .from('declarations')
       .select('id,target_alliance_id')
       .eq('org_id', orgId)
       .eq('status','proposed')
-      .eq('notes', note)
       .in('target_alliance_id', top20.map(a=> a.id))
       .then(async ({ data }: any) => {
         const map: Record<string, { id: string }> = {};
@@ -114,11 +105,10 @@ export default function StrikeBoard() {
         }
         setInterest(out);
       }).catch(()=>{});
-  }, [orgId, top20, offense]);
+  }, [orgId, top20]);
 
   const handleInterested = async (targetAllianceId: string) => {
     if (!orgId || !attackerId) { alert('Select an attacker alliance first'); return; }
-    const note = `offense:${offense}`;
     // find or create declaration
     let declId: string | null = null;
     const { data: found } = await (supabase as any)
@@ -127,11 +117,12 @@ export default function StrikeBoard() {
       .eq('org_id', orgId)
       .eq('target_alliance_id', targetAllianceId)
       .eq('status','proposed')
-      .eq('notes', note)
       .maybeSingle();
     if (found?.id) declId = found.id;
     if (!declId) {
       const now = new Date().toISOString();
+      const { data: userRes } = await (supabase as any).auth.getUser();
+      const uid = userRes?.user?.id || null;
       const { data: created, error } = await (supabase as any).from('declarations').insert({
         org_id: orgId,
         season: 'S',
@@ -141,7 +132,8 @@ export default function StrikeBoard() {
         end: now,
         visibility: 'faction',
         status: 'proposed',
-        notes: note
+        notes: null,
+        created_by: uid
       }).select('id').single();
       if (error) { alert('Failed to create'); return; }
       declId = created.id;
@@ -155,19 +147,16 @@ export default function StrikeBoard() {
     setInterest(prev => ({ ...prev, [targetAllianceId]: { count: ids.length, tags: (attackers||[]).map((x:any)=> x.tag).slice(0,4) } }));
   };
 
-  const handleResetOffense = async () => {
+  const handleReset = async () => {
     if (!canReset) return;
-    if (!confirm(`Reset offense ${offense}? This clears proposed interest for this offense.`)) return;
-    const note = `offense:${offense}`;
+    if (!confirm(`Reset current cycle? This clears all proposed interest.`)) return;
     try {
       await (supabase as any)
         .from('declarations')
         .delete()
         .eq('org_id', orgId)
-        .eq('status','proposed')
-        .eq('notes', note);
+        .eq('status','proposed');
       setInterest({});
-      setOffense(prev => (prev < 4 ? (prev + 1) as 1|2|3|4 : 1));
     } catch {
       alert('Reset failed');
     }
@@ -176,11 +165,6 @@ export default function StrikeBoard() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <div className="inline-flex rounded-full border overflow-hidden">
-          {[1,2,3,4].map(n => (
-            <button key={n} className={`px-3 py-1 text-xs ${offense===n?'bg-primary text-primary-foreground':'hover:bg-accent'}`} onClick={()=> setOffense(n as 1|2|3|4)}>Offense {n}</button>
-          ))}
-        </div>
         <div className="text-xs border rounded px-2 py-1 bg-accent/40">
           My Faction: <strong>{(factions.find(f=> f.id===factionId)?.name) || '—'}</strong>
         </div>
@@ -191,8 +175,8 @@ export default function StrikeBoard() {
           <option value="">Attacker alliance…</option>
           {attackerAlliances.map(a => <option key={a.id} value={a.id}>{a.tag}</option>)}
         </select>
-        <button className="ml-auto px-3 py-1 border rounded text-xs disabled:opacity-50" disabled={!canReset} onClick={handleResetOffense} title={canReset? 'Clears all proposed interest for this offense and steps to next' : 'Only org admin/creator can reset'}>
-          Reset offense {offense}
+        <button className="ml-auto px-3 py-1 border rounded text-xs disabled:opacity-50" disabled={!canReset} onClick={handleReset} title={canReset? 'Clears all proposed interest in current cycle' : 'Only org admin/creator can reset'}>
+          Reset current cycle
         </button>
       </div>
       <div className="border rounded overflow-hidden">
