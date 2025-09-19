@@ -11,6 +11,7 @@ export default function StrikeBoard() {
   const [offense, setOffense] = useState<1|2|3|4>(1);
   const [factions, setFactions] = useState<Faction[]>([]);
   const [factionId, setFactionId] = useState<string>('');
+  const [opponentFactionId, setOpponentFactionId] = useState<string>('');
   const [top20, setTop20] = useState<Alliance[]>([]);
   const [attackerAlliances, setAttackerAlliances] = useState<Alliance[]>([]);
   const [attackerId, setAttackerId] = useState<string>('');
@@ -29,7 +30,7 @@ export default function StrikeBoard() {
       setFactions(data||[]);
       if (data && data[0] && !factionId) setFactionId(data[0].id);
     }).catch(()=>{});
-    listAlliances(orgId).then(setAttackerAlliances).catch(()=>{});
+    // attacker alliances will load when factionId resolves (see below)
     (async () => {
       try {
         const { data: userRes } = await (supabase as any).auth.getUser();
@@ -50,6 +51,10 @@ export default function StrikeBoard() {
 
   useEffect(() => {
     if (!orgId || !factionId) return;
+    // determine opponent faction (assumes two factions per org)
+    const other = (factions || []).find(f => f.id !== factionId);
+    setOpponentFactionId(other?.id || '');
+    // load Top-20 targets for selected faction
     (supabase as any)
       .from('alliances')
       .select('id,tag,name,rank_int')
@@ -60,7 +65,20 @@ export default function StrikeBoard() {
       .order('rank_int', { ascending: true })
       .then(({ data }: any) => setTop20(data || []))
       .catch(()=>{});
-  }, [orgId, factionId]);
+  }, [orgId, factionId, factions]);
+
+  // Load attacker alliances from the opponent faction
+  useEffect(() => {
+    if (!orgId || !opponentFactionId) { setAttackerAlliances([]); setAttackerId(''); return; }
+    (supabase as any)
+      .from('alliances')
+      .select('id,tag,name,rank_int')
+      .eq('org_id', orgId)
+      .eq('faction_id', opponentFactionId)
+      .order('tag', { ascending: true })
+      .then(({ data }: any) => { setAttackerAlliances(data || []); setAttackerId(''); })
+      .catch(()=>{});
+  }, [orgId, opponentFactionId]);
 
   useEffect(() => {
     if (!orgId || top20.length === 0) { setInterest({}); return; }
