@@ -20,7 +20,13 @@ export default function OrgAdminPage() {
     const initial = urlOrg || localStorage.getItem('current_org') || '';
     setOrgId(initial);
     if (initial) localStorage.setItem('current_org', initial);
+    const savedStep = parseInt(localStorage.getItem('admin_step') || '1', 10);
+    if (savedStep === 1 || savedStep === 2 || savedStep === 3) setStep(savedStep as 1|2|3);
   }, [urlOrg]);
+
+  useEffect(() => {
+    localStorage.setItem('admin_step', String(step));
+  }, [step]);
 
   return (
     <div className="container mx-auto p-4 space-y-4">
