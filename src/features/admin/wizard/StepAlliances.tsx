@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { listServers, listAlliances, createAlliance, getServerFaction } from '@/services/adminApi';
+import { listServers, listAlliances, createAlliance, getServerFaction, deleteAlliance } from '@/services/adminApi';
 
 export default function StepAlliances() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
@@ -61,6 +61,10 @@ export default function StepAlliances() {
             <div key={a.id} className="flex items-center gap-2 text-sm">
               <div className="w-24 font-mono">{a.tag}</div>
               <div className="flex-1">{a.name}</div>
+              <button className="px-2 py-0.5 border rounded text-xs" title="Delete" onClick={async ()=>{
+                if (!confirm(`Delete alliance ${a.tag}?`)) return;
+                try { await deleteAlliance(orgId, a.id); setAlliances(prev=> prev.filter(x=> x.id !== a.id)); } catch (e:any) { setError(e.message || 'Delete failed'); }
+              }}>Delete</button>
             </div>
           ))}
         </div>

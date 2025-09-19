@@ -120,3 +120,8 @@ export async function removeRep(orgId: string, allianceId: string, userId: strin
   if (error) throw error;
 }
 
+export async function deleteAlliance(orgId: string, allianceId: string): Promise<void> {
+  const { error } = await (supabase as any).from('alliances').delete().eq('org_id', orgId).eq('id', allianceId);
+  if (error) throw error;
+}
+
