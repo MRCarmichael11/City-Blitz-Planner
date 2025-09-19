@@ -5,7 +5,7 @@ import StepAlliances from './wizard/StepAlliances';
 import StepTop20Ranker from './wizard/StepTop20Ranker';
 import InviteMaker from './InviteMaker';
 import AllianceRepsManager from './AllianceRepsManager';
-import { createOrg, getOrgById } from '@/services/adminApi';
+import { createOrgWithSlug, getOrgById, getOrgBySlug, listUserOrgs } from '@/services/adminApi';
 
 export default function OrgAdminPage() {
   const params = useParams();
@@ -14,7 +14,9 @@ export default function OrgAdminPage() {
   const [orgId, setOrgId] = useState<string>('');
   const [orgName, setOrgName] = useState<string>('');
   const [orgSeason, setOrgSeason] = useState<string>('S');
+  const [orgSlug, setOrgSlug] = useState<string>('');
   const [orgError, setOrgError] = useState<string | null>(null);
+  const [orgs, setOrgs] = useState<Array<{ id: string; name: string; season: string; slug?: string }>>([]);
 
   useEffect(() => {
     const initial = urlOrg || localStorage.getItem('current_org') || '';
@@ -22,6 +24,7 @@ export default function OrgAdminPage() {
     if (initial) localStorage.setItem('current_org', initial);
     const savedStep = parseInt(localStorage.getItem('admin_step') || '1', 10);
     if (savedStep === 1 || savedStep === 2 || savedStep === 3) setStep(savedStep as 1|2|3);
+    listUserOrgs().then(setOrgs).catch(()=>{});
   }, [urlOrg]);
 
   useEffect(() => {
@@ -33,15 +36,21 @@ export default function OrgAdminPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Org Admin</h1>
         <div className="flex items-center gap-2">
-          <input className="border rounded px-2 py-1 text-sm w-[320px] bg-background text-foreground" placeholder="Org ID (uuid)" value={orgId} onChange={(e)=> setOrgId(e.target.value)} />
+          <input className="border rounded px-2 py-1 text-sm w-[200px] bg-background text-foreground" placeholder="Org ID (uuid)" value={orgId} onChange={(e)=> setOrgId(e.target.value)} />
           <button className="px-2 py-1 border rounded text-sm" onClick={async ()=>{
             try { setOrgError(null); const id = orgId.trim(); if (!/^[0-9a-fA-F-]{36}$/.test(id)) { setOrgError('Enter a valid UUID'); return; } const found = await getOrgById(id); if (!found) { setOrgError('Org not found'); return; } localStorage.setItem('current_org', found.id); alert('Org loaded'); }
             catch (e: any) { setOrgError(e.message || 'Failed to load org'); }
           }}>Load Org</button>
+          <input className="border rounded px-2 py-1 text-sm w-[160px] bg-background text-foreground" placeholder="or Slug (e.g., anubis3)" value={orgSlug} onChange={(e)=> setOrgSlug(e.target.value)} />
+          <button className="px-2 py-1 border rounded text-sm" onClick={async ()=>{
+            try { setOrgError(null); const slug = orgSlug.trim(); if (!slug) { setOrgError('Enter a slug'); return; } const found = await getOrgBySlug(slug); if (!found) { setOrgError('Slug not found'); return; } localStorage.setItem('current_org', found.id); setOrgId(found.id); alert(`Org loaded: ${found.slug || found.id}`); }
+            catch (e: any) { setOrgError(e.message || 'Failed to load by slug'); }
+          }}>Load by Slug</button>
           <input className="border rounded px-2 py-1 text-sm w-[200px] bg-background text-foreground" placeholder="New org name" value={orgName} onChange={(e)=> setOrgName(e.target.value)} />
           <input className="border rounded px-2 py-1 text-sm w-[80px] bg-background text-foreground" placeholder="Season" value={orgSeason} onChange={(e)=> setOrgSeason(e.target.value)} />
+          <input className="border rounded px-2 py-1 text-sm w-[120px] bg-background text-foreground" placeholder="Slug (optional)" value={orgSlug} onChange={(e)=> setOrgSlug(e.target.value)} />
           <button className="px-2 py-1 border rounded text-sm" onClick={async ()=>{
-            try { setOrgError(null); const created = await createOrg(orgName.trim() || 'Org', orgSeason.trim() || 'S'); setOrgId(created.id); localStorage.setItem('current_org', created.id); alert(`Org created: ${created.id}`); }
+            try { setOrgError(null); const created = await createOrgWithSlug(orgName.trim() || 'Org', orgSeason.trim() || 'S', orgSlug.trim() || undefined); setOrgId(created.id); localStorage.setItem('current_org', created.id); alert(`Org created: ${created.slug || created.id}`); setOrgs(prev=> [{ id: created.id, name: created.name, season: created.season, slug: created.slug }, ...prev]); }
             catch (e: any) { setOrgError(e.message || 'Failed to create org'); }
           }}>Create Org</button>
         </div>
@@ -50,6 +59,18 @@ export default function OrgAdminPage() {
       <div className="text-xs text-muted-foreground">
         DB not initialized? Open Supabase SQL editor and run schema file: <a className="underline" href="/supabase-schema.sql" download>supabase-schema.sql</a>
       </div>
+      {orgs.length > 0 && (
+        <div className="border rounded p-2 text-sm">
+          <div className="font-medium mb-1">Your Orgs</div>
+          <div className="flex flex-wrap gap-2">
+            {orgs.map(o => (
+              <button key={o.id} className="px-2 py-1 border rounded" onClick={()=>{ localStorage.setItem('current_org', o.id); setOrgId(o.id); alert(`Org loaded: ${o.slug || o.id}`); }}>
+                {o.slug || o.name} ({o.season})
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex gap-2">
         <button className={`px-3 py-1 border rounded ${step===1? 'bg-primary text-primary-foreground':''}`} onClick={()=> setStep(1)}>Servers & Factions</button>
         <button className={`px-3 py-1 border rounded ${step===2? 'bg-primary text-primary-foreground':''}`} onClick={()=> setStep(2)}>Alliances</button>

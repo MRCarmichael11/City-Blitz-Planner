@@ -25,6 +25,31 @@ export async function getOrgById(orgId: string): Promise<Org | null> {
   return data as Org | null;
 }
 
+export async function getOrgBySlug(slug: string): Promise<Org | null> {
+  const { data, error } = await (supabase as any).from('orgs').select('*').ilike('slug', slug).maybeSingle();
+  if (error) throw error;
+  return data as Org | null;
+}
+
+export async function createOrgWithSlug(name: string, season: string, slug?: string): Promise<Org> {
+  const payload: any = { name, season, slug: slug ?? null, created_by: (await (supabase as any).auth.getUser()).data.user?.id || null };
+  const { data, error } = await (supabase as any).from('orgs').insert(payload).select('*').single();
+  if (error) throw error;
+  return data as Org;
+}
+
+export async function listUserOrgs(): Promise<Org[]> {
+  const { data: userRes } = await (supabase as any).auth.getUser();
+  const uid = userRes?.user?.id;
+  if (!uid) return [];
+  const { data, error } = await (supabase as any)
+    .from('org_memberships')
+    .select('orgs(id,name,season,slug)')
+    .eq('user_id', uid);
+  if (error) return [];
+  return (data || []).map((r: any) => r.orgs).filter(Boolean) as Org[];
+}
+
 export async function createServer(orgId: string, name: string): Promise<Server> {
   const { data, error } = await (supabase as any).from('servers').insert({ org_id: orgId, name }).select('*').single();
   if (error) throw error;
