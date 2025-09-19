@@ -28,7 +28,10 @@ export default function StrikeBoard() {
     if (!orgId || !supabase) return;
     (supabase as any).from('factions').select('id,name').eq('org_id', orgId).then(({ data }: any)=>{
       setFactions(data||[]);
-      if (data && data[0] && !factionId) setFactionId(data[0].id);
+      const preferred = localStorage.getItem('my_faction_id') || '';
+      const mine = (data||[]).find((f:any)=> f.id===preferred);
+      if (mine) setFactionId(mine.id);
+      else if (data && data[0] && !factionId) setFactionId(data[0].id);
     }).catch(()=>{});
     // attacker alliances will load when factionId resolves (see below)
     (async () => {

@@ -5,6 +5,7 @@ export default function StepServersAndFactions() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
   const [servers, setServers] = useState<Array<{ id: string; name: string }>>([]);
   const [factions, setFactions] = useState<Array<{ id: string; name: string }>>([]);
+  const [myFactionId, setMyFactionId] = useState<string>('');
   const [newServer, setNewServer] = useState('');
   const [newFaction, setNewFaction] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +14,7 @@ export default function StepServersAndFactions() {
   useEffect(() => {
     if (!orgId) return;
     listServers(orgId).then(setServers).catch(()=>{});
-    listFactions(orgId).then(setFactions).catch(()=>{});
+    listFactions(orgId).then(fs=> { setFactions(fs); const saved = localStorage.getItem('my_faction_id') || ''; if (saved && fs.find(f=> f.id===saved)) setMyFactionId(saved); }).catch(()=>{});
   }, [orgId]);
 
   useEffect(() => {
@@ -58,6 +59,19 @@ export default function StepServersAndFactions() {
           ))}
         </div>
       </div>
+
+      {factions.length > 0 && (
+        <div className="border rounded p-3">
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-medium">My Faction</div>
+            <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={myFactionId} onChange={e=> { setMyFactionId(e.target.value); localStorage.setItem('my_faction_id', e.target.value); localStorage.setItem('my_faction_name', factions.find(f=> f.id===e.target.value)?.name || ''); }}>
+              <option value="">Select…</option>
+              {factions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+            {myFactionId && <span className="text-xs text-muted-foreground">Saved for Strike Planner</span>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
