@@ -2,6 +2,7 @@ import DeclarationForm from './components/DeclarationForm';
 import DeclarationCard from './components/DeclarationCard';
 import ToolSwitcher from '@/components/ToolSwitcher';
 import { useEffect, useState } from 'react';
+import StrikeBoard from './StrikeBoard';
 
 export default function FactionStrikePage() {
   const [tab, setTab] = useState<'active'|'proposed'|'history'>('active');
@@ -18,10 +19,7 @@ export default function FactionStrikePage() {
         <button className={`px-2 py-1 border rounded ${tab==='proposed'?'bg-primary text-primary-foreground':''}`} onClick={()=> setTab('proposed')}>Proposed</button>
         <button className={`px-2 py-1 border rounded ${tab==='history'?'bg-primary text-primary-foreground':''}`} onClick={()=> setTab('history')}>History</button>
       </div>
-      <DeclarationForm />
-      <div className="grid gap-3">
-        <DeclarationCard />
-      </div>
+      <StrikeBoard />
     </div>
   );
 }
