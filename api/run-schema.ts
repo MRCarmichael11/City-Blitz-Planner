@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import fs from 'fs';
 import path from 'path';
+import { Client } from 'pg';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
@@ -51,32 +52,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true, method: 'management_api' });
     }
 
-    // Fallback to project Postgres API with service role
-    if (!supabaseUrl || !serviceRole) return res.status(500).json({ error: 'missing_supabase_env' });
-    const applyResp = await fetch(`${supabaseUrl}/postgres/v1/query`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': serviceRole,
-        'Authorization': `Bearer ${serviceRole}`
-      },
-      body: JSON.stringify({ query: sql })
-    });
-    const atext = await applyResp.text();
-    if (!applyResp.ok) return res.status(500).json({ error: 'apply_failed', detail: atext });
-    const reload = await fetch(`${supabaseUrl}/postgres/v1/query`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': serviceRole,
-        'Authorization': `Bearer ${serviceRole}`
-      },
-      body: JSON.stringify({ query: `select pg_notify('pgrst', 'reload schema');` })
-    });
-    const t2 = await reload.text();
-    if (!reload.ok) return res.status(500).json({ error: 'reload_failed', detail: t2 });
-
-    return res.status(200).json({ ok: true, method: 'project_postgres_api' });
+    // Fallback to direct Postgres connection with service role creds
+    const dbHost = process.env.SUPABASE_DB_HOST;
+    const dbPort = Number(process.env.SUPABASE_DB_PORT || 6543);
+    const dbName = process.env.SUPABASE_DB_NAME || 'postgres';
+    const dbUser = process.env.SUPABASE_DB_USER || 'postgres';
+    const dbPass = process.env.SUPABASE_DB_PASSWORD;
+    if (!dbHost || !dbPass) return res.status(500).json({ error: 'missing_db_env' });
+    const client = new Client({ host: dbHost, port: dbPort, database: dbName, user: dbUser, password: dbPass, ssl: { rejectUnauthorized: false } });
+    await client.connect();
+    try {
+      await client.query(sql);
+      await client.query(`select pg_notify('pgrst', 'reload schema');`);
+    } finally {
+      await client.end();
+    }
+    return res.status(200).json({ ok: true, method: 'direct_pg' });
   } catch (e: any) {
     return res.status(500).json({ error: 'unexpected', detail: e?.message || String(e) });
   }
