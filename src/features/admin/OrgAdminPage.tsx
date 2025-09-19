@@ -75,10 +75,10 @@ export default function OrgAdminPage() {
           </div>
         </div>
       )}
-      <div className="flex gap-2">
-        <button className={`px-3 py-1 border rounded ${step===1? 'bg-primary text-primary-foreground':''}`} onClick={()=> setStep(1)}>Servers & Factions</button>
-        <button className={`px-3 py-1 border rounded ${step===2? 'bg-primary text-primary-foreground':''}`} onClick={()=> setStep(2)}>Alliances</button>
-        <button className={`px-3 py-1 border rounded ${step===3? 'bg-primary text-primary-foreground':''}`} onClick={()=> setStep(3)}>Top-20 Ranker</button>
+      <div className="inline-flex rounded-full border overflow-hidden">
+        <button className={`px-3 py-1 text-xs ${step===1? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`} onClick={()=> setStep(1)}>Servers & Factions</button>
+        <button className={`px-3 py-1 text-xs ${step===2? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`} onClick={()=> setStep(2)}>Alliances</button>
+        <button className={`px-3 py-1 text-xs ${step===3? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`} onClick={()=> setStep(3)}>Top-20 Ranker</button>
       </div>
       {step === 1 && <StepServersAndFactions />}
       {step === 2 && <StepAlliances />}
