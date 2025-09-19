@@ -22,13 +22,10 @@ export default function InviteMaker() {
       <div className="border rounded p-3 space-y-2">
         <div className="flex items-center gap-2">
           <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={role} onChange={e=> setRole(e.target.value)}>
-            <option>server_admin</option>
-            <option>faction_leader</option>
             <option>alliance_leader</option>
             <option>member</option>
-            <option>viewer</option>
           </select>
-          {(role==='alliance_leader' || role==='member' || role==='viewer') && (
+          {(role==='alliance_leader' || role==='member') && (
             <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={allianceId} onChange={e=> setAllianceId(e.target.value)}>
               <option value="">Alliance…</option>
               {alliances.map(a => <option key={a.id} value={a.id}>{a.tag}</option>)}
@@ -37,7 +34,7 @@ export default function InviteMaker() {
           <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!orgId || generating} onClick={async ()=>{
             try {
               setMsg(null); setGenerating(true);
-              const row = await createInvite(orgId, role, (role==='alliance_leader'||role==='member'||role==='viewer') ? allianceId || undefined : undefined);
+              const row = await createInvite(orgId, role, (role==='alliance_leader'||role==='member') ? allianceId || undefined : undefined);
               const url = `${base}/invite?token=${encodeURIComponent(row.token)}`;
               setLastUrl(url);
               setInvites(prev=> [row, ...prev]);

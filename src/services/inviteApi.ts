@@ -25,11 +25,12 @@ export async function listInvites(orgId: string) {
 export async function acceptInvite(token: string) {
   const { data: inv, error } = await (supabase as any)
     .from('invites')
-    .select('id,org_id,role,expires_at,alliance_id')
+    .select('id,org_id,role,expires_at,alliance_id,consumed_at')
     .eq('token', token)
     .maybeSingle();
   if (error || !inv) throw new Error('Invalid invite');
   if (new Date(inv.expires_at).getTime() < Date.now()) throw new Error('Invite expired');
+  if (inv.consumed_at) throw new Error('Invite already used');
   const { data: userRes } = await (supabase as any).auth.getUser();
   const uid = userRes?.user?.id;
   if (!uid) throw new Error('Not signed in');
@@ -44,7 +45,8 @@ export async function acceptInvite(token: string) {
       .from('alliance_reps')
       .upsert({ org_id: inv.org_id, alliance_id: inv.alliance_id, user_id: uid, role: repRole }, { onConflict: 'org_id,alliance_id,user_id' });
   }
-  await (supabase as any).from('invites').delete().eq('id', inv.id);
+  // Mark as consumed to enforce one-time use
+  await (supabase as any).from('invites').update({ consumed_at: new Date().toISOString() }).eq('id', inv.id);
   return { org_id: inv.org_id, role: inv.role };
 }
 
