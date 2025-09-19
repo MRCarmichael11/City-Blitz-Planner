@@ -1,4 +1,7 @@
 import { Link, useLocation, generatePath } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { getMembership, can } from '@/lib/rbac';
+import { supabase } from '@/services/supabaseClient';
 
 type Props = {
   orgId?: string | null;
@@ -18,12 +21,30 @@ export default function ToolSwitcher({ orgId }: Props) {
   const saved = typeof window !== 'undefined' ? localStorage.getItem('current_org') : null;
   const resolvedOrg = isUuid(orgId || saved || undefined) ? (orgId || (saved as string)) : null;
   const adminHref = resolvedOrg ? generatePath('/admin/org/:orgId', { orgId: resolvedOrg }) : '/admin/org/new';
+  const [showAdmin, setShowAdmin] = useState<boolean>(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!resolvedOrg || !supabase) { setShowAdmin(false); return; }
+        const { data: userRes } = await (supabase as any).auth.getUser();
+        const uid = userRes?.user?.id;
+        if (!uid) { setShowAdmin(false); return; }
+        const mem = await getMembership(resolvedOrg, uid);
+        setShowAdmin(mem?.role ? can.adminServer(mem.role) : false);
+      } catch {
+        setShowAdmin(false);
+      }
+    })();
+  }, [resolvedOrg]);
 
   return (
     <div className="inline-flex rounded-full border overflow-hidden">
       <Link to="/" className={`px-3 py-1 text-xs ${tab==='blitz' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>City Blitz</Link>
       <Link to="/faction-strike-planner" className={`px-3 py-1 text-xs ${tab==='strike' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Strike Planner</Link>
-      <Link to={adminHref} className={`px-3 py-1 text-xs ${tab==='admin' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`} title={orgId ? '' : 'Replace ORG_ID in URL'}>Admin</Link>
+      {showAdmin && (
+        <Link to={adminHref} className={`px-3 py-1 text-xs ${tab==='admin' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Admin</Link>
+      )}
     </div>
   );
 }
