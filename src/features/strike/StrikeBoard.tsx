@@ -5,7 +5,7 @@ import { getMembership, can } from '@/lib/rbac';
 import { getBracket } from '@/lib/brackets';
 
 type Faction = { id: string; name: string };
-type Alliance = { id: string; tag: string; name: string; rank_int: number | null };
+type Alliance = { id: string; tag: string; name: string; rank_int: number | null; server?: { name: string } };
 
 export default function StrikeBoard() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
@@ -58,7 +58,7 @@ export default function StrikeBoard() {
     // load Top-20 targets for enemy faction (other)
     (supabase as any)
       .from('alliances')
-      .select('id,tag,name,rank_int')
+      .select('id,tag,name,rank_int,server:servers(name)')
       .eq('org_id', orgId)
       .eq('faction_id', other?.id || '')
       .not('rank_int','is',null)
@@ -73,7 +73,7 @@ export default function StrikeBoard() {
     if (!orgId || !factionId) { setAttackerAlliances([]); setAttackerId(''); return; }
     (supabase as any)
       .from('alliances')
-      .select('id,tag,name,rank_int')
+      .select('id,tag,name,rank_int,server:servers(name)')
       .eq('org_id', orgId)
       .eq('faction_id', factionId)
       .order('tag', { ascending: true })
@@ -201,7 +201,7 @@ export default function StrikeBoard() {
               return (
                 <tr key={a.id} className="border-t">
                   <td className="px-2 py-1">{a.rank_int ?? ''}</td>
-                  <td className="px-2 py-1 font-mono">{a.tag}</td>
+                  <td className="px-2 py-1 font-mono">{a.tag} {a.server?.name ? `(S${a.server.name})` : ''}</td>
                   <td className="px-2 py-1">
                     {meta.count>0 ? (
                       <div className="flex items-center gap-1 flex-wrap">
@@ -227,7 +227,7 @@ export default function StrikeBoard() {
               return (
                 <tr key={a.id} className="border-t">
                   <td className="px-2 py-1">{a.rank_int ?? ''}</td>
-                  <td className="px-2 py-1 font-mono">{a.tag}</td>
+                  <td className="px-2 py-1 font-mono">{a.tag} {a.server?.name ? `(S${a.server.name})` : ''}</td>
                   <td className="px-2 py-1">
                     {meta.count>0 ? (
                       <div className="flex items-center gap-1 flex-wrap">
