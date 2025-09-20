@@ -99,8 +99,8 @@ export default function StrikeBoard() {
           const { data: parts } = await (supabase as any).from('declaration_participants').select('alliance_id').eq('declaration_id', declId);
           const ids = (parts||[]).map((p:any)=> p.alliance_id);
           if (ids.length) {
-            const { data: attackers } = await (supabase as any).from('alliances').select('tag').in('id', ids);
-            out[targetId] = { count: ids.length, tags: (attackers||[]).map((x:any)=> x.tag).slice(0,4) };
+            const { data: attackers } = await (supabase as any).from('alliances').select('tag,server:servers(name)').in('id', ids);
+            out[targetId] = { count: ids.length, tags: (attackers||[]).map((x:any)=> (x.server?.name ? `${x.tag} (${x.server.name})` : x.tag)).slice(0,4) };
           }
         }
         setInterest(out);
@@ -201,7 +201,7 @@ export default function StrikeBoard() {
               return (
                 <tr key={a.id} className="border-t">
                   <td className="px-2 py-1">{a.rank_int ?? ''}</td>
-                  <td className="px-2 py-1 font-mono">{a.tag} {a.server?.name ? `(S${a.server.name})` : ''}</td>
+                  <td className="px-2 py-1 font-mono">{a.tag} {a.server?.name ? `(${a.server.name})` : ''}</td>
                   <td className="px-2 py-1">
                     {meta.count>0 ? (
                       <div className="flex items-center gap-1 flex-wrap">
@@ -227,7 +227,7 @@ export default function StrikeBoard() {
               return (
                 <tr key={a.id} className="border-t">
                   <td className="px-2 py-1">{a.rank_int ?? ''}</td>
-                  <td className="px-2 py-1 font-mono">{a.tag} {a.server?.name ? `(S${a.server.name})` : ''}</td>
+                  <td className="px-2 py-1 font-mono">{a.tag} {a.server?.name ? `(${a.server.name})` : ''}</td>
                   <td className="px-2 py-1">
                     {meta.count>0 ? (
                       <div className="flex items-center gap-1 flex-wrap">
