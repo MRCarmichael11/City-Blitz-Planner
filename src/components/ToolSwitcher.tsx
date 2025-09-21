@@ -27,6 +27,7 @@ export default function ToolSwitcher({ orgId }: Props) {
   const [showSuper, setShowSuper] = useState<boolean>(false);
   const { lang, setLang, langs } = useI18n();
   const [bootstrappedOrgId, setBootstrappedOrgId] = useState<string | null>(null);
+  const [isSignedIn, setIsSignedIn] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
@@ -35,7 +36,8 @@ export default function ToolSwitcher({ orgId }: Props) {
         const { data: userRes } = await (supabase as any).auth.getUser();
         const uid = userRes?.user?.id;
         const email = userRes?.user?.email as string | undefined;
-        if (!uid) { setShowAdmin(false); setShowSuper(false); return; }
+        if (!uid) { setShowAdmin(false); setShowSuper(false); setIsSignedIn(false); return; }
+        setIsSignedIn(true);
 
         // If no org in context, auto-select the user's most recent org membership
         if (!resolvedOrg) {
@@ -71,6 +73,35 @@ export default function ToolSwitcher({ orgId }: Props) {
     })();
   }, [resolvedOrg]);
 
+  async function quickOrgSwitch() {
+    try {
+      const input = window.prompt('Enter Org UUID or slug');
+      if (!input) return;
+      const val = input.trim();
+      let found: any = null;
+      if (/^[0-9a-fA-F-]{36}$/.test(val)) {
+        const { data } = await (supabase as any).from('orgs').select('id,slug').eq('id', val).maybeSingle();
+        found = data;
+      } else {
+        const { data } = await (supabase as any).from('orgs').select('id,slug').ilike('slug', val).maybeSingle();
+        found = data;
+      }
+      if (!found?.id) { alert('Org not found'); return; }
+      localStorage.setItem('current_org', found.id);
+      setBootstrappedOrgId(found.id);
+      // Re-evaluate admin visibility for this org
+      const { data: userRes } = await (supabase as any).auth.getUser();
+      const uid = userRes?.user?.id;
+      if (uid) {
+        const mem = await getMembership(found.id, uid);
+        setShowAdmin(mem?.role ? can.adminServer(mem.role) : false);
+      }
+      alert(`Org loaded: ${found.slug || found.id}`);
+    } catch (e: any) {
+      alert(e?.message || 'Failed to load org');
+    }
+  }
+
   return (
     <div className="flex items-center gap-2">
       <div className="inline-flex rounded-full border overflow-hidden">
@@ -86,6 +117,9 @@ export default function ToolSwitcher({ orgId }: Props) {
       <select className="border rounded px-2 py-1 text-xs bg-background text-foreground" value={lang} onChange={(e)=> setLang(e.target.value as any)}>
         {langs.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
       </select>
+      {isSignedIn && (
+        <button className="border rounded px-2 py-1 text-xs" onClick={quickOrgSwitch} title="Set org by UUID or slug">Org…</button>
+      )}
     </div>
   );
 }
