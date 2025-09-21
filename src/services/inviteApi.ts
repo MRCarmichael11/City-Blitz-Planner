@@ -15,7 +15,7 @@ export async function createInvite(orgId: string, role: string, allianceId?: str
 export async function listInvites(orgId: string) {
   const { data, error } = await (supabase as any)
     .from('invites')
-    .select('id,role,expires_at')
+    .select('id,role,expires_at,alliance_id,alliances(tag)')
     .eq('org_id', orgId)
     .order('expires_at', { ascending: false });
   if (error) throw error;

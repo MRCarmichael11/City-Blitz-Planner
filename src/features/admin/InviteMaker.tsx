@@ -69,7 +69,7 @@ export default function InviteMaker() {
               const row = await createInvite(orgId, role, (role==='alliance_leader'||role==='member') ? allianceId || undefined : undefined);
               const url = `${base}/invite?token=${encodeURIComponent(row.token)}`;
               setLastUrl(url);
-              setInvites(prev=> [row, ...prev]);
+              try { const updated = await listInvites(orgId); setInvites(updated); } catch {}
               try { await navigator.clipboard.writeText(url); setMsg('Invite copied to clipboard'); } catch {
                 setMsg('Invite generated. Copy from the field below.');
               }
@@ -89,7 +89,13 @@ export default function InviteMaker() {
           </div>
         )}
         <div className="space-y-1 max-h-40 overflow-auto">
-          {invites.map(x => <div key={x.id} className="text-xs flex items-center gap-2"><span className="border rounded px-1">{x.role}</span><span className="text-muted-foreground">{new Date(x.expires_at).toLocaleString()}</span></div>)}
+          {invites.map((x: any) => (
+            <div key={x.id} className="text-xs flex items-center gap-2">
+              <span className="border rounded px-1">{x.role}</span>
+              {x.alliances?.tag && (<span className="border rounded px-1 bg-accent/30">{x.alliances.tag}</span>)}
+              <span className="text-muted-foreground">{new Date(x.expires_at).toLocaleString()}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
