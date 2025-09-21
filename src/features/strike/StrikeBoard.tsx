@@ -17,6 +17,9 @@ export default function StrikeBoard() {
   const [attackerId, setAttackerId] = useState<string>('');
   const [interest, setInterest] = useState<Record<string, { count: number; tags: string[] }>>({});
   const [canReset, setCanReset] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string>('');
+  const [isOrgAdmin, setIsOrgAdmin] = useState<boolean>(false);
+  const [lockedAlliance, setLockedAlliance] = useState<Alliance | null>(null);
   const attackerBracket = useMemo(() => {
     const a = attackerAlliances.find(x => x.id === attackerId);
     return getBracket(a?.rank_int ?? null);
@@ -36,9 +39,11 @@ export default function StrikeBoard() {
       try {
         const { data: userRes } = await (supabase as any).auth.getUser();
         const uid = userRes?.user?.id;
+        setUserId(uid || '');
         const mem = uid ? await getMembership(orgId, uid) : null;
         let allowed = false;
         if (mem && can.adminOrg(mem.role)) allowed = true;
+        setIsOrgAdmin(!!(mem && can.adminOrg(mem.role)));
         if (!allowed && uid) {
           const { data: org } = await (supabase as any).from('orgs').select('created_by').eq('id', orgId).maybeSingle();
           if (org?.created_by === uid) allowed = true;
@@ -80,6 +85,41 @@ export default function StrikeBoard() {
       .then(({ data }: any) => { setAttackerAlliances(data || []); setAttackerId(''); })
       .catch(()=>{});
   }, [orgId, factionId]);
+
+  // For non-admins, lock the attacker alliance to the user's mapped alliance (via alliance_reps)
+  useEffect(() => {
+    (async () => {
+      if (!orgId || !userId || isOrgAdmin === true) { setLockedAlliance(null); return; }
+      try {
+        const { data: reps } = await (supabase as any)
+          .from('alliance_reps')
+          .select('alliance_id')
+          .eq('org_id', orgId)
+          .eq('user_id', userId);
+        const ids: string[] = (reps || []).map((r:any)=> r.alliance_id);
+        if (!ids.length) { setLockedAlliance(null); setAttackerId(''); return; }
+        const { data: alliances } = await (supabase as any)
+          .from('alliances')
+          .select('id,tag,name,rank_int,faction_id,server:servers(name)')
+          .in('id', ids);
+        const chosen: Alliance & { faction_id?: string } | undefined = (alliances || []).find((a:any)=> a.faction_id === factionId) || (alliances || [])[0];
+        if (chosen) {
+          setLockedAlliance({ id: chosen.id, tag: (chosen as any).tag, name: (chosen as any).name, rank_int: (chosen as any).rank_int, server: (chosen as any).server });
+          setAttackerId(chosen.id);
+          if (chosen && (chosen as any).faction_id && (chosen as any).faction_id !== factionId) {
+            setFactionId((chosen as any).faction_id);
+            localStorage.setItem('my_faction_id', (chosen as any).faction_id);
+          }
+        } else {
+          setLockedAlliance(null);
+          setAttackerId('');
+        }
+      } catch {
+        setLockedAlliance(null);
+        setAttackerId('');
+      }
+    })();
+  }, [orgId, userId, isOrgAdmin, factionId]);
 
   useEffect(() => {
     if (!orgId || top20.length === 0) { setInterest({}); return; }
@@ -143,8 +183,8 @@ export default function StrikeBoard() {
     // refresh interest for this row
     const { data: parts } = await (supabase as any).from('declaration_participants').select('alliance_id').eq('declaration_id', declId);
     const ids = (parts||[]).map((p:any)=> p.alliance_id);
-    const { data: attackers } = await (supabase as any).from('alliances').select('tag').in('id', ids);
-    setInterest(prev => ({ ...prev, [targetAllianceId]: { count: ids.length, tags: (attackers||[]).map((x:any)=> x.tag).slice(0,4) } }));
+    const { data: attackers } = await (supabase as any).from('alliances').select('tag,server:servers(name)').in('id', ids);
+    setInterest(prev => ({ ...prev, [targetAllianceId]: { count: ids.length, tags: (attackers||[]).map((x:any)=> (x.server?.name ? `${x.tag} (${x.server.name})` : x.tag)).slice(0,4) } }));
   };
 
   const handleReset = async () => {
@@ -171,10 +211,16 @@ export default function StrikeBoard() {
         <div className="text-xs border rounded px-2 py-1 bg-accent/40">
           Targeting: <strong>{(factions.find(f=> f.id===opponentFactionId)?.name) || '—'}</strong>
         </div>
-        <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={attackerId} onChange={e=> setAttackerId(e.target.value)}>
-          <option value="">Attacker alliance…</option>
-          {attackerAlliances.map(a => <option key={a.id} value={a.id}>{a.tag}</option>)}
-        </select>
+        {isOrgAdmin ? (
+          <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={attackerId} onChange={e=> setAttackerId(e.target.value)}>
+            <option value="">Attacker alliance…</option>
+            {attackerAlliances.map(a => <option key={a.id} value={a.id}>{a.tag} {a.server?.name ? `(${a.server.name})` : ''}</option>)}
+          </select>
+        ) : (
+          <div className="text-xs border rounded px-2 py-1 bg-accent/20">
+            Attacker: <strong>{lockedAlliance ? `${lockedAlliance.tag}${lockedAlliance.server?.name ? ` (${lockedAlliance.server.name})` : ''}` : '—'}</strong>
+          </div>
+        )}
         <button className="ml-auto px-3 py-1 border rounded text-xs disabled:opacity-50" disabled={!canReset} onClick={handleReset} title={canReset? 'Clears all proposed interest in current cycle' : 'Only org admin/creator can reset'}>
           Reset current cycle
         </button>
