@@ -103,6 +103,11 @@ create table if not exists invites (
 -- Backfill/ensure column exists even if table existed before
 alter table invites add column if not exists alliance_id uuid references alliances(id);
 alter table invites add column if not exists consumed_at timestamptz;
+alter table invites add column if not exists is_broadcast boolean not null default false;
+alter table invites add column if not exists max_uses int;
+alter table invites add column if not exists use_count int not null default 0;
+alter table invites add column if not exists revoked_at timestamptz;
+alter table invites add column if not exists created_by uuid;
 
 create unique index if not exists ux_locked_target
   on declarations (org_id, target_alliance_id, tstzrange(start, "end"))

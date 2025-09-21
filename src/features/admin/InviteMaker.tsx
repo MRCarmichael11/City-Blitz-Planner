@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useMemo as useReactMemo } from 'react';
-import { createInvite, listInvites } from '@/services/inviteApi';
+import { createInvite, listInvites, createBroadcastInvite, getActiveBroadcastInvite, revokeBroadcastInvite } from '@/services/inviteApi';
 import { useEffect as useEffectReact } from 'react';
 import { listAlliances, listFactions, listServers } from '@/services/adminApi';
 
@@ -17,7 +17,8 @@ export default function InviteMaker() {
   const [factionId, setFactionId] = useState<string>('');
   const [servers, setServers] = useState<Array<{ id: string; name: string }>>([]);
   const [serverId, setServerId] = useState<string>('');
-  useEffect(()=> { if (!orgId) return; listInvites(orgId).then(setInvites).catch(()=>{}); }, [orgId]);
+  const [broadcast, setBroadcast] = useState<{ token: string; expires_at: string; max_uses: number; use_count: number } | null>(null);
+  useEffect(()=> { if (!orgId) return; listInvites(orgId).then(setInvites).catch(()=>{}); getActiveBroadcastInvite(orgId).then((b:any)=>{ if (b) setBroadcast({ token: b.token, expires_at: b.expires_at, max_uses: b.max_uses, use_count: b.use_count }); }).catch(()=>{}); }, [orgId]);
   useEffectReact(()=> { if (!orgId) return; (async ()=>{
     try {
       const [f, s] = await Promise.all([listFactions(orgId), listServers(orgId)]);
@@ -43,6 +44,21 @@ export default function InviteMaker() {
     <div className="space-y-2">
       <h3 className="font-semibold">Invite Maker</h3>
       <p className="text-sm text-muted-foreground">Issue org-scoped invites for roles (server_admin, faction_leader, alliance_leader, member, viewer).</p>
+      <div className="border rounded p-3 space-y-2">
+        <div className="text-xs font-medium">Broadcast viewer link</div>
+        {broadcast ? (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="border rounded px-1">uses {broadcast.use_count}/{broadcast.max_uses}</span>
+            <span className="text-muted-foreground">expires {new Date(broadcast.expires_at).toLocaleString()}</span>
+            <button className="px-2 py-1 border rounded" onClick={async ()=>{ try { await revokeBroadcastInvite(orgId); setBroadcast(null); } catch {} }}>Revoke</button>
+            <input className="flex-1 border rounded px-2 py-1 text-xs bg-background text-foreground" value={`${base}/invite?token=${broadcast.token}`} readOnly onClick={(e)=> (e.currentTarget as HTMLInputElement).select()} />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-xs">
+            <button className="px-2 py-1 border rounded" onClick={async ()=>{ try { const row:any = await createBroadcastInvite(orgId, 40, 400); setBroadcast({ token: row.token, expires_at: row.expires_at, max_uses: row.max_uses, use_count: row.use_count }); } catch {} }}>Create 40-day / 400-use link</button>
+          </div>
+        )}
+      </div>
       <div className="border rounded p-3 space-y-2">
         <div className="flex items-center gap-2">
           <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={factionId} onChange={e=> { setFactionId(e.target.value); setServerId(''); setAllianceId(''); }}>

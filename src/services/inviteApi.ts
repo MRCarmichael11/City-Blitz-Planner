@@ -5,7 +5,7 @@ export async function createInvite(orgId: string, role: string, allianceId?: str
   const expires_at = new Date(Date.now() + 1000*60*60*24*7).toISOString();
   const { data, error } = await (supabase as any)
     .from('invites')
-    .insert({ org_id: orgId, role, token, expires_at, alliance_id: allianceId ?? null })
+    .insert({ org_id: orgId, role, token, expires_at, alliance_id: allianceId ?? null, is_broadcast: false })
     .select('*')
     .single();
   if (error) throw error;
@@ -15,7 +15,7 @@ export async function createInvite(orgId: string, role: string, allianceId?: str
 export async function listInvites(orgId: string) {
   const { data, error } = await (supabase as any)
     .from('invites')
-    .select('id,role,expires_at,alliance_id,alliances(tag)')
+    .select('id,role,expires_at,alliance_id,alliances(tag),is_broadcast,max_uses,use_count,revoked_at')
     .eq('org_id', orgId)
     .order('expires_at', { ascending: false });
   if (error) throw error;
@@ -25,12 +25,17 @@ export async function listInvites(orgId: string) {
 export async function acceptInvite(token: string) {
   const { data: inv, error } = await (supabase as any)
     .from('invites')
-    .select('id,org_id,role,expires_at,alliance_id,consumed_at')
+    .select('id,org_id,role,expires_at,alliance_id,consumed_at,is_broadcast,max_uses,use_count,revoked_at')
     .eq('token', token)
     .maybeSingle();
   if (error || !inv) throw new Error('Invalid invite');
   if (new Date(inv.expires_at).getTime() < Date.now()) throw new Error('Invite expired');
-  if (inv.consumed_at) throw new Error('Invite already used');
+  if (inv.revoked_at) throw new Error('Invite revoked');
+  if (!inv.is_broadcast) {
+    if (inv.consumed_at) throw new Error('Invite already used');
+  } else {
+    if (inv.max_uses != null && inv.use_count >= inv.max_uses) throw new Error('Invite exhausted');
+  }
   const { data: userRes } = await (supabase as any).auth.getUser();
   const uid = userRes?.user?.id;
   if (!uid) throw new Error('Not signed in');
@@ -45,8 +50,53 @@ export async function acceptInvite(token: string) {
       .from('alliance_reps')
       .upsert({ org_id: inv.org_id, alliance_id: inv.alliance_id, user_id: uid, role: repRole }, { onConflict: 'org_id,alliance_id,user_id' });
   }
-  // Mark as consumed to enforce one-time use
-  await (supabase as any).from('invites').update({ consumed_at: new Date().toISOString() }).eq('id', inv.id);
+  if (!inv.is_broadcast) {
+    await (supabase as any).from('invites').update({ consumed_at: new Date().toISOString() }).eq('id', inv.id);
+  } else {
+    // increment use_count with simple update; in heavy contention you could add a where to guard
+    await (supabase as any).from('invites').update({ use_count: (inv.use_count || 0) + 1 }).eq('id', inv.id);
+  }
   return { org_id: inv.org_id, role: inv.role };
+}
+
+export async function createBroadcastInvite(orgId: string, days: number, maxUses: number) {
+  // Revoke existing active broadcast for this org
+  await (supabase as any)
+    .from('invites')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('org_id', orgId)
+    .eq('is_broadcast', true)
+    .is('revoked_at', null);
+  const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  const expires_at = new Date(Date.now() + 1000*60*60*24*days).toISOString();
+  const { data, error } = await (supabase as any)
+    .from('invites')
+    .insert({ org_id: orgId, role: 'viewer', token, expires_at, is_broadcast: true, max_uses: maxUses, use_count: 0 })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as { id: string; token: string; role: string; expires_at: string; max_uses: number; use_count: number };
+}
+
+export async function revokeBroadcastInvite(orgId: string) {
+  const { error } = await (supabase as any)
+    .from('invites')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('org_id', orgId)
+    .eq('is_broadcast', true)
+    .is('revoked_at', null);
+  if (error) throw error;
+}
+
+export async function getActiveBroadcastInvite(orgId: string) {
+  const { data, error } = await (supabase as any)
+    .from('invites')
+    .select('id,role,expires_at,is_broadcast,max_uses,use_count,revoked_at,token')
+    .eq('org_id', orgId)
+    .eq('is_broadcast', true)
+    .is('revoked_at', null)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
 }
 
