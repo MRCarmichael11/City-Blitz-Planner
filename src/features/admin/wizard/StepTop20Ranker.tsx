@@ -11,6 +11,35 @@ export default function StepTop20Ranker() {
   useEffect(() => { listFactions(orgId).then(f => { setFactions(f); if (f[0]) setFactionId(f[0].id); }).catch(()=>{}); }, [orgId]);
   useEffect(() => { if (!orgId || !factionId) return; listAlliances(orgId, undefined, factionId).then(setAlliances).catch(()=>{}); }, [orgId, factionId]);
 
+  async function refresh() {
+    try { const data = await listAlliances(orgId, undefined, factionId); setAlliances(data); } catch {}
+  }
+
+  async function handleRankChange(allianceId: string, nextRank: number | null) {
+    try {
+      if (nextRank != null) {
+        // Clear any existing holder of this rank within the same faction to avoid unique constraint errors
+        const res = await (window as any).supabase
+          ?.from('alliances')
+          .select('id')
+          .eq('org_id', orgId)
+          .eq('faction_id', factionId)
+          .eq('rank_int', nextRank)
+          .neq('id', allianceId)
+          .maybeSingle();
+        const existingId = res?.data?.id as string | undefined;
+        if (existingId) {
+          await setAllianceRank(existingId, orgId, null);
+        }
+      }
+      await setAllianceRank(allianceId, orgId, nextRank);
+      await refresh();
+    } catch (e) {
+      alert('Failed to set rank. Ensure 1-20 and unique within faction.');
+      await refresh();
+    }
+  }
+
   return (
     <div className="space-y-2">
       <h2 className="font-semibold">Step 3 — Top-20 Ranker</h2>
@@ -37,7 +66,8 @@ export default function StepTop20Ranker() {
                 <input className="w-16 border rounded px-1 py-0.5 text-xs bg-background text-foreground" placeholder="rank" defaultValue={a.rank_int ?? ''} onBlur={async (e)=>{
                   const v = e.currentTarget.value.trim();
                   const n = v ? parseInt(v, 10) : null;
-                  try { await setAllianceRank(a.id, orgId, n); e.currentTarget.value = n?.toString() ?? ''; } catch {}
+                  await handleRankChange(a.id, n);
+                  e.currentTarget.value = n?.toString() ?? '';
                 }} />
               </div>
             );
