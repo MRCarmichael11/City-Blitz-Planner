@@ -15,6 +15,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronDown, Moon, Sun, LogIn, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ToolSwitcher from '@/components/ToolSwitcher';
+import { useI18n } from '@/i18n';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
@@ -215,6 +216,7 @@ function AuthWidget() {
 }
 
 export default function V2() {
+  const { t } = useI18n();
   const [seasonKey, setSeasonKey] = useState<SeasonKey>('S3');
   const season = seasons[seasonKey];
   // 12-hour Action timeline state
@@ -532,7 +534,7 @@ export default function V2() {
       <header className="border-b bg-card/60">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="font-bold flex items-center gap-3">
-            <span>City Blitz Planner</span>
+            <span>{t('blitz.title')}</span>
             <ToolSwitcher />
           </div>
           <div className="flex items-center gap-3">

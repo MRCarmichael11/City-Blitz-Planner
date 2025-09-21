@@ -6,6 +6,7 @@ type Dict = Record<string, string>;
 
 const dictionaries: Record<Lang, Dict> = {
   en: {
+    'blitz.title': 'City Blitz Planner',
     'strike.title': 'Faction Strike Planner',
     'tabs.active': 'Active',
     'tabs.proposed': 'Proposed',
@@ -27,6 +28,7 @@ const dictionaries: Record<Lang, Dict> = {
     'tooltips.bracketMismatch': 'Bracket mismatch',
   },
   ko: {
+    'blitz.title': '시티 블리츠 플래너',
     'strike.title': '진영 공격 플래너',
     'tabs.active': '진행 중',
     'tabs.proposed': '제안됨',
@@ -48,6 +50,7 @@ const dictionaries: Record<Lang, Dict> = {
     'tooltips.bracketMismatch': '브래킷 불일치',
   },
   'zh-CN': {
+    'blitz.title': '城市闪电战规划器',
     'strike.title': '阵营打击计划',
     'tabs.active': '进行中',
     'tabs.proposed': '已提议',
@@ -69,6 +72,7 @@ const dictionaries: Record<Lang, Dict> = {
     'tooltips.bracketMismatch': '分档不匹配',
   },
   th: {
+    'blitz.title': 'ตัววางแผน City Blitz',
     'strike.title': 'ตัววางแผนการโจมตีของฝ่าย',
     'tabs.active': 'กำลังดำเนินการ',
     'tabs.proposed': 'เสนอไว้',
