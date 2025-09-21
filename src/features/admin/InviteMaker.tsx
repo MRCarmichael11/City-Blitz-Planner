@@ -18,6 +18,7 @@ export default function InviteMaker() {
   const [servers, setServers] = useState<Array<{ id: string; name: string }>>([]);
   const [serverId, setServerId] = useState<string>('');
   const [broadcast, setBroadcast] = useState<{ token: string; expires_at: string; max_uses: number; use_count: number } | null>(null);
+  const [broadcastBusy, setBroadcastBusy] = useState(false);
   useEffect(()=> { if (!orgId) return; listInvites(orgId).then(setInvites).catch(()=>{}); getActiveBroadcastInvite(orgId).then((b:any)=>{ if (b) setBroadcast({ token: b.token, expires_at: b.expires_at, max_uses: b.max_uses, use_count: b.use_count }); }).catch(()=>{}); }, [orgId]);
   useEffectReact(()=> { if (!orgId) return; (async ()=>{
     try {
@@ -47,15 +48,34 @@ export default function InviteMaker() {
       <div className="border rounded p-3 space-y-2">
         <div className="text-xs font-medium">Broadcast viewer link</div>
         {broadcast ? (
-          <div className="flex items-center gap-2 text-xs">
-            <span className="border rounded px-1">uses {broadcast.use_count}/{broadcast.max_uses}</span>
-            <span className="text-muted-foreground">expires {new Date(broadcast.expires_at).toLocaleString()}</span>
-            <button className="px-2 py-1 border rounded" onClick={async ()=>{ try { await revokeBroadcastInvite(orgId); setBroadcast(null); } catch {} }}>Revoke</button>
-            <input className="flex-1 border rounded px-2 py-1 text-xs bg-background text-foreground" value={`${base}/invite?token=${broadcast.token}`} readOnly onClick={(e)=> (e.currentTarget as HTMLInputElement).select()} />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="border rounded px-1">uses {broadcast.use_count}/{broadcast.max_uses}</span>
+              <span className="text-muted-foreground">expires {new Date(broadcast.expires_at).toLocaleString()}</span>
+              <button className="px-2 py-1 border rounded disabled:opacity-50" disabled={broadcastBusy} onClick={async ()=>{ try { setBroadcastBusy(true); await revokeBroadcastInvite(orgId); setBroadcast(null); setMsg('Broadcast link revoked'); } catch { setMsg('Failed to revoke'); } finally { setBroadcastBusy(false); } }}>Revoke</button>
+            </div>
+            <div className="flex items-center gap-2">
+              <input className="flex-1 border rounded px-2 py-1 text-xs bg-background text-foreground" value={`${base}/invite?token=${broadcast.token}`} readOnly onClick={(e)=> (e.currentTarget as HTMLInputElement).select()} />
+              <button className="px-2 py-1 border rounded text-xs" onClick={async ()=>{ try { await navigator.clipboard.writeText(`${base}/invite?token=${broadcast.token}`); setMsg('Copied!'); } catch { /* ignore */ } }}>Copy</button>
+            </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-xs">
-            <button className="px-2 py-1 border rounded" onClick={async ()=>{ try { const row:any = await createBroadcastInvite(orgId, 40, 400); setBroadcast({ token: row.token, expires_at: row.expires_at, max_uses: row.max_uses, use_count: row.use_count }); } catch {} }}>Create 40-day / 400-use link</button>
+            <button className="px-2 py-1 border rounded disabled:opacity-50" disabled={broadcastBusy} onClick={async ()=>{
+              try {
+                setMsg(null); setBroadcastBusy(true);
+                const row:any = await createBroadcastInvite(orgId, 40, 400);
+                setBroadcast({ token: row.token, expires_at: row.expires_at, max_uses: row.max_uses, use_count: row.use_count });
+                const url = `${base}/invite?token=${row.token}`;
+                setLastUrl(url);
+                try { await navigator.clipboard.writeText(url); setMsg('Broadcast link copied to clipboard'); } catch { setMsg('Broadcast link created. Copy from the field below.'); }
+                try { const updated = await listInvites(orgId); setInvites(updated); } catch {}
+              } catch {
+                setMsg('Failed to create broadcast link');
+              } finally {
+                setBroadcastBusy(false);
+              }
+            }}>Create 40-day / 400-use link</button>
           </div>
         )}
       </div>
