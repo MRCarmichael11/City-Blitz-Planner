@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { useI18n } from '@/i18n';
 
 const COLOR_PALETTE = [
   // Classic Reds
@@ -70,6 +71,7 @@ interface Props {
 }
 
 export default function AllianceLegend({ map, assignments, selectedAlliance, onSelectAlliance, onCreateAlliance, onRemoveAlliance, onUpdateAlliance, events, currentTick }: Props) {
+  const { t } = useI18n();
   const [openFor, setOpenFor] = useState<string | null>(null);
 
   const stats = useMemo(() => {
@@ -112,7 +114,7 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
   return (
     <div className="mt-3 border rounded bg-card/60">
       <div className="p-2 flex items-center gap-2">
-        <div className="text-xs text-muted-foreground">Alliances</div>
+        <div className="text-xs text-muted-foreground">{t('legend.alliances')}</div>
         <CreateAllianceInline onCreate={onCreateAlliance} />
       </div>
       <div className="px-2 pb-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -120,20 +122,20 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
           <Card key={alliance.id} className={`p-2 border ${selectedAlliance===alliance.name? 'ring-2 ring-primary': ''}`}>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: alliance.color }} />
-              <button className="text-sm font-medium truncate" title="Filter by alliance" onClick={()=> onSelectAlliance(selectedAlliance===alliance.name? null : alliance.name)}>
+              <button className="text-sm font-medium truncate" title={t('legend.filterByAlliance')} onClick={()=> onSelectAlliance(selectedAlliance===alliance.name? null : alliance.name)}>
                 {alliance.name}
               </button>
-              <div className="ml-auto text-[10px] text-muted-foreground" title="Holdings count">{terr.length}</div>
+              <div className="ml-auto text-[10px] text-muted-foreground" title={t('legend.holdings')}>{terr.length}</div>
             </div>
             {/* Condensed core stats */}
             <div className="mt-1 text-[11px] text-muted-foreground">
               M/hr {mithril} • S/hr {spice}
             </div>
             <div className="mt-0.5 text-[10px] text-muted-foreground">
-              Today: S {todayS}/2 • C {todayC}/2
+              {t('legend.today')}: S {todayS}/2 • C {todayC}/2
             </div>
             <div className="mt-2">
-              <button className="text-xs underline" onClick={()=> setOpenFor(alliance.name)}>Details</button>
+              <button className="text-xs underline" onClick={()=> setOpenFor(alliance.name)}>{t('legend.details')}</button>
             </div>
           </Card>
         ))}
@@ -159,6 +161,7 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
 }
 
 function AllianceDetails({ alliance, map, assignments, lastLabel, lastTick, onUpdateAlliance, onRemoveAlliance }: { alliance: Alliance; map: MapData; assignments: Assignments; lastLabel: string | null; lastTick: number | null; onUpdateAlliance: (id: string, patch: Partial<Alliance>) => void; onRemoveAlliance: (id: string) => void; }) {
+  const { t } = useI18n();
   const name = alliance.name;
   const items = useMemo(()=> map.territories.filter(t => assignments[t.id]?.alliance === name), [map.territories, assignments, name]);
   const totals = useMemo(()=> {
@@ -173,14 +176,14 @@ function AllianceDetails({ alliance, map, assignments, lastLabel, lastTick, onUp
           {name}
         </SheetTitle>
         <SheetDescription>
-          Holdings: {items.length} • M/hr {totals.m} • S/hr {totals.s}{lastLabel ? ` • Last: ${lastLabel} (Tick ${lastTick})` : ''}
+          {t('legend.holdings')}: {items.length} • M/hr {totals.m} • S/hr {totals.s}{lastLabel ? ` • ${t('legend.last')}: ${lastLabel} (Tick ${lastTick})` : ''}
         </SheetDescription>
       </SheetHeader>
 
       {/* Editable fields moved here to reduce card clutter */}
       <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Color</span>
+          <span className="text-xs text-muted-foreground">{t('legend.color')}</span>
           <Select value={alliance.color} onValueChange={(v)=> onUpdateAlliance(alliance.id, { color: v })}>
             <SelectTrigger className="h-8 w-40">
               <SelectValue placeholder={alliance.color} />
@@ -195,11 +198,11 @@ function AllianceDetails({ alliance, map, assignments, lastLabel, lastTick, onUp
           </Select>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Priority</span>
+          <span className="text-xs text-muted-foreground">{t('legend.priority')}</span>
           <Input type="number" className="h-8 w-24" value={alliance.priority ?? ''} onChange={(e)=> onUpdateAlliance(alliance.id, { priority: e.target.value === '' ? undefined : Number(e.target.value) })} />
         </div>
         <div className="flex justify-end">
-          <Button variant="destructive" onClick={()=> onRemoveAlliance(alliance.id)}>Remove alliance</Button>
+          <Button variant="destructive" onClick={()=> onRemoveAlliance(alliance.id)}>{t('legend.remove')}</Button>
         </div>
       </div>
 
@@ -223,15 +226,16 @@ function labelFor(t: Territory) {
 }
 
 function CreateAllianceInline({ onCreate }: { onCreate: (name: string, color: string, priority?: number) => void }) {
+  const { t } = useI18n();
   const palette = COLOR_PALETTE;
   let name = '';
   let color = palette[0];
   let priority: number | undefined = undefined;
   return (
     <div className="ml-auto flex items-center gap-2">
-      <Input placeholder="Alliance name" onChange={(e)=> name = e.target.value} className="h-8 w-36" />
+      <Input placeholder={t('legend.allianceName')} onChange={(e)=> name = e.target.value} className="h-8 w-36" />
       <Select onValueChange={(v)=> { color = v; }}>
-        <SelectTrigger className="h-8 w-36"><SelectValue placeholder="Pick color" /></SelectTrigger>
+        <SelectTrigger className="h-8 w-36"><SelectValue placeholder={t('legend.pickColor')} /></SelectTrigger>
         <SelectContent>
           {palette.map(c => (
             <SelectItem key={c} value={c}>
@@ -241,10 +245,10 @@ function CreateAllianceInline({ onCreate }: { onCreate: (name: string, color: st
         </SelectContent>
       </Select>
       <div className="flex items-center gap-1">
-        <span className="text-xs">Priority</span>
+        <span className="text-xs">{t('legend.priority')}</span>
         <Input type="number" className="h-8 w-20" onChange={(e)=> { const v = e.target.value; priority = v === '' ? undefined : Number(v); }} />
       </div>
-      <Button className="h-8" onClick={()=>{ if (!name.trim()) return; onCreate(name.trim(), color, priority); }}>Add</Button>
+      <Button className="h-8" onClick={()=>{ if (!name.trim()) return; onCreate(name.trim(), color, priority); }}>{t('legend.add')}</Button>
     </div>
   );
 }
