@@ -40,24 +40,7 @@ export default function OrgAdminPage() {
         <ToolSwitcher />
       </div>
       {orgError && <div className="text-xs text-red-600">{orgError}</div>}
-      <div className="text-xs text-muted-foreground flex items-center gap-2">
-        <span>DB not initialized?</span>
-        <a className="underline" href="/supabase-schema.sql" download>Download schema</a>
-        <span>or</span>
-        <button className="px-2 py-1 border rounded disabled:opacity-50" disabled={runningSchema} onClick={async ()=>{
-          try {
-            setOrgError(null); setRunningSchema(true);
-            const resp = await fetch('/api/run-schema', { method: 'POST' });
-            const j = await resp.json();
-            if (!resp.ok) throw new Error(j?.detail || 'Schema apply failed');
-            alert('Schema applied and cache reloaded.');
-          } catch (e: any) {
-            setOrgError(e.message || 'Failed to apply schema');
-          } finally {
-            setRunningSchema(false);
-          }
-        }}>Run schema now</button>
-      </div>
+      {/* Schema controls moved to Super Admin */}
       {/* Compact org controls below header for a cleaner look */}
       <div className="border rounded bg-card/60 p-2">
         <div className="text-xs font-medium mb-1">Organization</div>
