@@ -2,6 +2,7 @@ import { Link, useLocation, generatePath } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getMembership, can } from '@/lib/rbac';
 import { supabase } from '@/services/supabaseClient';
+import { useI18n } from '@/i18n';
 
 type Props = {
   orgId?: string | null;
@@ -24,6 +25,7 @@ export default function ToolSwitcher({ orgId }: Props) {
   const adminHref = resolvedOrg ? generatePath('/admin/org/:orgId', { orgId: resolvedOrg }) : '/admin/org/new';
   const [showAdmin, setShowAdmin] = useState<boolean>(false);
   const [showSuper, setShowSuper] = useState<boolean>(false);
+  const { lang, setLang, langs } = useI18n();
 
   useEffect(() => {
     (async () => {
@@ -50,15 +52,20 @@ export default function ToolSwitcher({ orgId }: Props) {
   }, [resolvedOrg]);
 
   return (
-    <div className="inline-flex rounded-full border overflow-hidden">
-      <Link to="/" className={`px-3 py-1 text-xs ${tab==='blitz' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>City Blitz</Link>
-      <Link to="/faction-strike-planner" className={`px-3 py-1 text-xs ${tab==='strike' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Strike Planner</Link>
-      {showAdmin && (
-        <Link to={adminHref} className={`px-3 py-1 text-xs ${tab==='admin' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Admin</Link>
-      )}
-      {showSuper && (
-        <Link to="/super-admin" className={`px-3 py-1 text-xs ${tab==='super' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Super Admin</Link>
-      )}
+    <div className="flex items-center gap-2">
+      <div className="inline-flex rounded-full border overflow-hidden">
+        <Link to="/" className={`px-3 py-1 text-xs ${tab==='blitz' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>City Blitz</Link>
+        <Link to="/faction-strike-planner" className={`px-3 py-1 text-xs ${tab==='strike' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Strike Planner</Link>
+        {showAdmin && (
+          <Link to={adminHref} className={`px-3 py-1 text-xs ${tab==='admin' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Admin</Link>
+        )}
+        {showSuper && (
+          <Link to="/super-admin" className={`px-3 py-1 text-xs ${tab==='super' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Super Admin</Link>
+        )}
+      </div>
+      <select className="border rounded px-2 py-1 text-xs bg-background text-foreground" value={lang} onChange={(e)=> setLang(e.target.value as any)}>
+        {langs.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+      </select>
     </div>
   );
 }
