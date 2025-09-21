@@ -674,14 +674,14 @@ export default function V2() {
               onClick={()=> setMode('planning')}
               title="Plan your final-day end-state"
             >
-              Planning
+              {t('blitz.modes.planning')}
             </button>
             <button
               className={`px-3 py-1 text-xs ${mode==='action' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
               onClick={()=> setMode('action')}
               title="Schedule day-by-day actions"
             >
-              Action
+              {t('blitz.modes.action')}
             </button>
           </div>
 
@@ -747,7 +747,7 @@ export default function V2() {
             {/* Data menu */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">Data <ChevronDown className="w-4 h-4" /></button>
+                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">{t('toolbar.data')} <ChevronDown className="w-4 h-4" /></button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="z-50 min-w-[260px] rounded border bg-card p-1 shadow-md">
                 <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={()=>{
@@ -755,9 +755,9 @@ export default function V2() {
                   const blob = new Blob([JSON.stringify(data,null,2)], { type: 'application/json' });
                   const url = URL.createObjectURL(blob); const a = document.createElement('a');
                   a.href = url; a.download = `lastwar-v3-${season.key}.json`; a.click(); URL.revokeObjectURL(url);
-                }}>Export</button>
+                }}>{t('btn.export')}</button>
                 <label className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded cursor-pointer inline-block">
-                  Import
+                  {t('btn.import')}
                   <input type="file" accept="application/json" className="hidden" onChange={async (e)=>{
                     const f = e.target.files?.[0]; if (!f) return; const text = await f.text();
                     try {
@@ -807,7 +807,7 @@ export default function V2() {
             {/* Actions menu */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">Actions <ChevronDown className="w-4 h-4" /></button>
+                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">{t('toolbar.actions')} <ChevronDown className="w-4 h-4" /></button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="z-50 min-w-[260px] rounded border bg-card p-1 shadow-md">
                 {/* Open Planner sheet */}
@@ -866,7 +866,7 @@ export default function V2() {
                   <div className="p-1">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" title="Remove all events from the current tick onward">Clear Future</button>
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" title="Remove all events from the current tick onward">{t('actions.clearFuture')}</button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
@@ -890,7 +890,7 @@ export default function V2() {
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" title="Remove all events in this season">Clear All</button>
+                        <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" title="Remove all events in this season">{t('actions.clearAll')}</button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
@@ -924,7 +924,7 @@ export default function V2() {
                       }
                       setEvents(prev => prev.filter(e => !(e.alliance === last.alliance && e.action === last.action && e.tileId === last.tileId && e.tick === last.tick)).sort((a,b)=> a.tick - b.tick));
                       toast({ title: 'Undone', description: `Removed last ${last.action} on ${last.tileId} for ${selectedAlliance} (Day ${day}).` });
-                    }}>Undo last action (today)</button>
+                    }}>{t('actions.undoClear')}</button>
 
                     <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!manualMode || !selectedAlliance} title="Refund today's last capture for the selected alliance" onClick={()=>{
                       if (!selectedAlliance) return;
@@ -944,7 +944,7 @@ export default function V2() {
                         return next.sort((a,b)=> a.tick - b.tick);
                       });
                       toast({ title: 'Undone', description: `Refunded one city/SH attack for ${selectedAlliance} on Day ${day}.` });
-                    }}>Undo last capture (refund)</button>
+                    }}>{t('actions.undoClear')}</button>
 
                     <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!manualMode || !selectedAlliance} title="Remove all scheduled events for the selected alliance on this day" onClick={()=>{
                       if (!selectedAlliance) return;
@@ -960,20 +960,20 @@ export default function V2() {
                       setLastCleared(removed);
                       setEvents(keep);
                       toast({ title: 'Cleared today', description: `${removed.length} event(s) removed for ${selectedAlliance} on Day ${day}.` });
-                    }}>Clear today (selected)</button>
+                    }}>{t('actions.clearAll')}</button>
 
                     <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!lastCleared || lastCleared.length===0} onClick={() => {
                       if (!lastCleared || lastCleared.length===0) return;
                       setEvents(prev => [...prev, ...lastCleared].sort((a,b)=> a.tick - b.tick));
                       toast({ title: 'Undo', description: `Restored ${lastCleared.length} event(s).` });
                       setLastCleared(null);
-                    }}>Undo Clear</button>
+                    }}>{t('actions.undoClear')}</button>
                   </div>
                 ) : (
                   <div className="p-1">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" title="Remove all planned assignments for this season">Clear Plan</button>
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" title="Remove all planned assignments for this season">{t('planning.clearPlan')}</button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
@@ -992,7 +992,7 @@ export default function V2() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!lastClearedPlan} onClick={() => { if (!lastClearedPlan) return; setPlannedAssignments(lastClearedPlan); setLastClearedPlan(null); toast({ title: 'Undo', description: 'Restored planned assignments.' }); }}>Undo Clear Plan</button>
+                    <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!lastClearedPlan} onClick={() => { if (!lastClearedPlan) return; setPlannedAssignments(lastClearedPlan); setLastClearedPlan(null); toast({ title: 'Undo', description: 'Restored planned assignments.' }); }}>{t('planning.undoClearPlan')}</button>
                   </div>
                 )}
               </DropdownMenu.Content>
@@ -1001,11 +1001,11 @@ export default function V2() {
             {/* Filters */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">Filters <ChevronDown className="w-4 h-4" /></button>
+                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">{t('toolbar.filters')} <ChevronDown className="w-4 h-4" /></button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="z-50 min-w-[220px] rounded border bg-card p-1 shadow-md">
-                <div className="px-2 py-1 text-xs text-muted-foreground">Alliance filter</div>
-                <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={()=> setSelectedAlliance(null)}>All</button>
+                <div className="px-2 py-1 text-xs text-muted-foreground">{t('filters.allianceFilter')}</div>
+                <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={()=> setSelectedAlliance(null)}>{t('filters.all')}</button>
                 {alliances.map(a => (
                   <button key={a.id} className={`w-full text-left px-2 py-1 text-sm hover:bg-accent rounded ${selectedAlliance===a.name ? 'font-medium' : ''}`} onClick={()=> setSelectedAlliance(selectedAlliance===a.name ? null : a.name)}>
                     {a.name}
@@ -1017,19 +1017,19 @@ export default function V2() {
             {/* Theme menu */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">Theme <ChevronDown className="w-4 h-4" /></button>
+                <button className="border rounded px-2 py-1 inline-flex items-center gap-1">{t('toolbar.theme')} <ChevronDown className="w-4 h-4" /></button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="z-50 min-w-[220px] rounded border bg-card p-1 shadow-md">
                 <div className="px-2 py-1 text-xs text-muted-foreground">Appearance</div>
                 <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded inline-flex items-center gap-2" onClick={()=>{
                   const el = document.documentElement; el.classList.remove('dark'); localStorage.setItem('theme','light');
                 }}>
-                  <Sun className="w-4 h-4" /> Light
+                  <Sun className="w-4 h-4" /> {t('theme.light')}
                 </button>
                 <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded inline-flex items-center gap-2" onClick={()=>{
                   const el = document.documentElement; el.classList.add('dark'); localStorage.setItem('theme','dark');
                 }}>
-                  <Moon className="w-4 h-4" /> Dark
+                  <Moon className="w-4 h-4" /> {t('theme.dark')}
                 </button>
               </DropdownMenu.Content>
             </DropdownMenu.Root>
