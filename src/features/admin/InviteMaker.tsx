@@ -5,7 +5,7 @@ import { listAlliances } from '@/services/adminApi';
 
 export default function InviteMaker() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
-  const [role, setRole] = useState('viewer');
+  const [role, setRole] = useState<'alliance_leader'|'member'>('alliance_leader');
   const [invites, setInvites] = useState<any[]>([]);
   const base = window.location.origin;
   const [generating, setGenerating] = useState(false);
@@ -21,9 +21,9 @@ export default function InviteMaker() {
       <p className="text-sm text-muted-foreground">Issue org-scoped invites for roles (server_admin, faction_leader, alliance_leader, member, viewer).</p>
       <div className="border rounded p-3 space-y-2">
         <div className="flex items-center gap-2">
-          <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={role} onChange={e=> setRole(e.target.value)}>
-            <option>alliance_leader</option>
-            <option>member</option>
+          <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={role} onChange={e=> setRole(e.target.value as any)}>
+            <option value="alliance_leader">alliance_leader</option>
+            <option value="member">member</option>
           </select>
           {(role==='alliance_leader' || role==='member') && (
             <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={allianceId} onChange={e=> setAllianceId(e.target.value)}>
@@ -31,7 +31,7 @@ export default function InviteMaker() {
               {alliances.map(a => <option key={a.id} value={a.id}>{a.tag}</option>)}
             </select>
           )}
-          <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!orgId || generating} onClick={async ()=>{
+          <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!orgId || generating || ((role==='alliance_leader' || role==='member') && !allianceId)} onClick={async ()=>{
             try {
               setMsg(null); setGenerating(true);
               const row = await createInvite(orgId, role, (role==='alliance_leader'||role==='member') ? allianceId || undefined : undefined);
