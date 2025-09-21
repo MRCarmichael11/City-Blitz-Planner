@@ -6,6 +6,7 @@ import { getBracket } from '@/lib/brackets';
 
 type Faction = { id: string; name: string };
 type Alliance = { id: string; tag: string; name: string; rank_int: number | null; server?: { name: string } };
+type InterestRow = { declId: string | null; count: number; participants: Array<{ id: string; tag: string; server?: { name: string } | null }> };
 
 export default function StrikeBoard() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
@@ -15,11 +16,12 @@ export default function StrikeBoard() {
   const [top20, setTop20] = useState<Alliance[]>([]);
   const [attackerAlliances, setAttackerAlliances] = useState<Alliance[]>([]);
   const [attackerId, setAttackerId] = useState<string>('');
-  const [interest, setInterest] = useState<Record<string, { count: number; tags: string[] }>>({});
+  const [interest, setInterest] = useState<Record<string, InterestRow>>({});
   const [canReset, setCanReset] = useState<boolean>(false);
   const [userId, setUserId] = useState<string>('');
   const [isOrgAdmin, setIsOrgAdmin] = useState<boolean>(false);
   const [lockedAlliance, setLockedAlliance] = useState<Alliance | null>(null);
+  const [isAllianceLeader, setIsAllianceLeader] = useState<boolean>(false);
   const attackerBracket = useMemo(() => {
     const a = attackerAlliances.find(x => x.id === attackerId);
     return getBracket(a?.rank_int ?? null);
@@ -93,7 +95,7 @@ export default function StrikeBoard() {
       try {
         const { data: reps } = await (supabase as any)
           .from('alliance_reps')
-          .select('alliance_id')
+          .select('alliance_id,role')
           .eq('org_id', orgId)
           .eq('user_id', userId);
         const ids: string[] = (reps || []).map((r:any)=> r.alliance_id);
@@ -106,6 +108,8 @@ export default function StrikeBoard() {
         if (chosen) {
           setLockedAlliance({ id: chosen.id, tag: (chosen as any).tag, name: (chosen as any).name, rank_int: (chosen as any).rank_int, server: (chosen as any).server });
           setAttackerId(chosen.id);
+          const rep = (reps || []).find((r:any)=> r.alliance_id === chosen.id);
+          setIsAllianceLeader(rep?.role === 'alliance_leader');
           if (chosen && (chosen as any).faction_id && (chosen as any).faction_id !== factionId) {
             setFactionId((chosen as any).faction_id);
             localStorage.setItem('my_faction_id', (chosen as any).faction_id);
@@ -113,10 +117,12 @@ export default function StrikeBoard() {
         } else {
           setLockedAlliance(null);
           setAttackerId('');
+          setIsAllianceLeader(false);
         }
       } catch {
         setLockedAlliance(null);
         setAttackerId('');
+        setIsAllianceLeader(false);
       }
     })();
   }, [orgId, userId, isOrgAdmin, factionId]);
@@ -132,15 +138,18 @@ export default function StrikeBoard() {
       .then(async ({ data }: any) => {
         const map: Record<string, { id: string }> = {};
         (data||[]).forEach((d: any)=> { map[d.target_alliance_id] = { id: d.id }; });
-        const out: Record<string, { count: number; tags: string[] }> = {};
+        const out: Record<string, InterestRow> = {};
         for (const row of Object.entries(map)) {
           const targetId = row[0];
           const declId = (row[1] as any).id;
           const { data: parts } = await (supabase as any).from('declaration_participants').select('alliance_id').eq('declaration_id', declId);
           const ids = (parts||[]).map((p:any)=> p.alliance_id);
           if (ids.length) {
-            const { data: attackers } = await (supabase as any).from('alliances').select('tag,server:servers(name)').in('id', ids);
-            out[targetId] = { count: ids.length, tags: (attackers||[]).map((x:any)=> (x.server?.name ? `${x.tag} (${x.server.name})` : x.tag)).slice(0,4) };
+            const { data: attackers } = await (supabase as any).from('alliances').select('id,tag,server:servers(name)').in('id', ids);
+            const participants = (attackers || []).map((x:any)=> ({ id: x.id, tag: x.tag, server: x.server || null }));
+            out[targetId] = { declId, count: ids.length, participants };
+          } else {
+            out[targetId] = { declId, count: 0, participants: [] };
           }
         }
         setInterest(out);
@@ -183,8 +192,39 @@ export default function StrikeBoard() {
     // refresh interest for this row
     const { data: parts } = await (supabase as any).from('declaration_participants').select('alliance_id').eq('declaration_id', declId);
     const ids = (parts||[]).map((p:any)=> p.alliance_id);
-    const { data: attackers } = await (supabase as any).from('alliances').select('tag,server:servers(name)').in('id', ids);
-    setInterest(prev => ({ ...prev, [targetAllianceId]: { count: ids.length, tags: (attackers||[]).map((x:any)=> (x.server?.name ? `${x.tag} (${x.server.name})` : x.tag)).slice(0,4) } }));
+    if (ids.length) {
+      const { data: attackers } = await (supabase as any).from('alliances').select('id,tag,server:servers(name)').in('id', ids);
+      const participants = (attackers || []).map((x:any)=> ({ id: x.id, tag: x.tag, server: x.server || null }));
+      setInterest(prev => ({ ...prev, [targetAllianceId]: { declId, count: ids.length, participants } }));
+    } else {
+      setInterest(prev => ({ ...prev, [targetAllianceId]: { declId, count: 0, participants: [] } }));
+    }
+  };
+
+  const handleWithdraw = async (targetAllianceId: string, removeAllianceId: string) => {
+    if (!orgId) return;
+    let declId: string | null = interest[targetAllianceId]?.declId || null;
+    if (!declId) {
+      const { data: found } = await (supabase as any)
+        .from('declarations')
+        .select('id')
+        .eq('org_id', orgId)
+        .eq('target_alliance_id', targetAllianceId)
+        .eq('status','proposed')
+        .maybeSingle();
+      if (found?.id) declId = found.id;
+    }
+    if (!declId) return;
+    await (supabase as any).from('declaration_participants').delete().eq('declaration_id', declId).eq('alliance_id', removeAllianceId);
+    const { data: parts } = await (supabase as any).from('declaration_participants').select('alliance_id').eq('declaration_id', declId);
+    const ids = (parts||[]).map((p:any)=> p.alliance_id);
+    if (ids.length) {
+      const { data: attackers } = await (supabase as any).from('alliances').select('id,tag,server:servers(name)').in('id', ids);
+      const participants = (attackers || []).map((x:any)=> ({ id: x.id, tag: x.tag, server: x.server || null }));
+      setInterest(prev => ({ ...prev, [targetAllianceId]: { declId, count: ids.length, participants } }));
+    } else {
+      setInterest(prev => ({ ...prev, [targetAllianceId]: { declId, count: 0, participants: [] } }));
+    }
   };
 
   const handleReset = async () => {
@@ -241,7 +281,7 @@ export default function StrikeBoard() {
               <td className="px-2 py-1 font-medium" colSpan={4}>Bracket 1 (1–10)</td>
             </tr>
             {top20.filter(a => (a.rank_int ?? 99) <= 10).map(a => {
-              const meta = interest[a.id] || { count: 0, tags: [] };
+              const meta = interest[a.id] || { declId: null, count: 0, participants: [] };
               const b = getBracket(a.rank_int ?? null);
               const parityOk = attackerBracket === b && attackerBracket !== 3;
               return (
@@ -252,12 +292,22 @@ export default function StrikeBoard() {
                     {meta.count>0 ? (
                       <div className="flex items-center gap-1 flex-wrap">
                         <span className="text-xs border rounded px-1">{meta.count}</span>
-                        {meta.tags.map((t, i)=> <span key={i} className="text-xs border rounded px-1">{t}</span>)}
+                        {meta.participants.map((p) => (
+                          <span key={p.id} className="text-xs border rounded px-1 inline-flex items-center gap-1">
+                            {p.tag}{p.server?.name ? ` (${p.server.name})` : ''}
+                            {(isOrgAdmin || (lockedAlliance?.id === p.id && isAllianceLeader)) && (
+                              <button className="ml-1 text-[10px]" title="Remove" onClick={()=> handleWithdraw(a.id, p.id)}>✕</button>
+                            )}
+                          </span>
+                        ))}
                       </div>
                     ) : <span className="text-xs text-muted-foreground">None</span>}
                   </td>
-                  <td className="px-2 py-1">
+                  <td className="px-2 py-1 space-x-1">
                     <button className="px-2 py-1 border rounded text-xs disabled:opacity-50" disabled={!attackerId || !parityOk} onClick={()=> handleInterested(a.id)} title={parityOk? 'Mark interest' : 'Bracket mismatch'}>Interested</button>
+                    {(attackerId && (isOrgAdmin || (lockedAlliance?.id === attackerId && isAllianceLeader)) && meta.participants.some(p=> p.id===attackerId)) && (
+                      <button className="px-2 py-1 border rounded text-xs" onClick={()=> handleWithdraw(a.id, attackerId)}>Withdraw</button>
+                    )}
                   </td>
                 </tr>
               );
@@ -267,7 +317,7 @@ export default function StrikeBoard() {
               <td className="px-2 py-1 font-medium" colSpan={4}>Bracket 2 (11–20)</td>
             </tr>
             {top20.filter(a => (a.rank_int ?? 0) > 10).map(a => {
-              const meta = interest[a.id] || { count: 0, tags: [] };
+              const meta = interest[a.id] || { declId: null, count: 0, participants: [] };
               const b = getBracket(a.rank_int ?? null);
               const parityOk = attackerBracket === b && attackerBracket !== 3;
               return (
@@ -278,12 +328,22 @@ export default function StrikeBoard() {
                     {meta.count>0 ? (
                       <div className="flex items-center gap-1 flex-wrap">
                         <span className="text-xs border rounded px-1">{meta.count}</span>
-                        {meta.tags.map((t, i)=> <span key={i} className="text-xs border rounded px-1">{t}</span>)}
+                        {meta.participants.map((p) => (
+                          <span key={p.id} className="text-xs border rounded px-1 inline-flex items-center gap-1">
+                            {p.tag}{p.server?.name ? ` (${p.server.name})` : ''}
+                            {(isOrgAdmin || (lockedAlliance?.id === p.id && isAllianceLeader)) && (
+                              <button className="ml-1 text-[10px]" title="Remove" onClick={()=> handleWithdraw(a.id, p.id)}>✕</button>
+                            )}
+                          </span>
+                        ))}
                       </div>
                     ) : <span className="text-xs text-muted-foreground">None</span>}
                   </td>
-                  <td className="px-2 py-1">
+                  <td className="px-2 py-1 space-x-1">
                     <button className="px-2 py-1 border rounded text-xs disabled:opacity-50" disabled={!attackerId || !parityOk} onClick={()=> handleInterested(a.id)} title={parityOk? 'Mark interest' : 'Bracket mismatch'}>Interested</button>
+                    {(attackerId && (isOrgAdmin || (lockedAlliance?.id === attackerId && isAllianceLeader)) && meta.participants.some(p=> p.id===attackerId)) && (
+                      <button className="px-2 py-1 border rounded text-xs" onClick={()=> handleWithdraw(a.id, attackerId)}>Withdraw</button>
+                    )}
                   </td>
                 </tr>
               );
