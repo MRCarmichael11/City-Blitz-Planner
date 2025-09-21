@@ -39,16 +39,45 @@ export async function acceptInvite(token: string) {
   const { data: userRes } = await (supabase as any).auth.getUser();
   const uid = userRes?.user?.id;
   if (!uid) throw new Error('Not signed in');
+  // Do not downgrade existing membership role
+  const roleRank: Record<string, number> = {
+    org_admin: 6,
+    server_admin: 5,
+    faction_leader: 4,
+    alliance_leader: 3,
+    member: 2,
+    viewer: 1,
+  };
+  const { data: existingMem } = await (supabase as any)
+    .from('org_memberships')
+    .select('role')
+    .eq('org_id', inv.org_id)
+    .eq('user_id', uid)
+    .maybeSingle();
+  const existingRole: string | null = existingMem?.role ?? null;
+  const incomingRole: string = inv.role;
+  const finalRole = existingRole && roleRank[existingRole] >= roleRank[incomingRole] ? existingRole : incomingRole;
   const { error: upErr } = await (supabase as any)
     .from('org_memberships')
-    .upsert({ org_id: inv.org_id, user_id: uid, role: inv.role }, { onConflict: 'org_id,user_id' });
+    .upsert({ org_id: inv.org_id, user_id: uid, role: finalRole }, { onConflict: 'org_id,user_id' });
   if (upErr) throw upErr;
   // If invite targets an alliance, map as rep with role
   if (inv.alliance_id) {
     const repRole = inv.role === 'alliance_leader' ? 'alliance_leader' : (inv.role === 'member' ? 'member' : 'viewer');
+    // Do not downgrade existing rep role
+    const repRank: Record<string, number> = { alliance_leader: 3, member: 2, viewer: 1 } as const;
+    const { data: existingRep } = await (supabase as any)
+      .from('alliance_reps')
+      .select('role')
+      .eq('org_id', inv.org_id)
+      .eq('alliance_id', inv.alliance_id)
+      .eq('user_id', uid)
+      .maybeSingle();
+    const currentRepRole: string | null = existingRep?.role ?? null;
+    const finalRepRole = currentRepRole && repRank[currentRepRole] >= repRank[repRole] ? currentRepRole : repRole;
     await (supabase as any)
       .from('alliance_reps')
-      .upsert({ org_id: inv.org_id, alliance_id: inv.alliance_id, user_id: uid, role: repRole }, { onConflict: 'org_id,alliance_id,user_id' });
+      .upsert({ org_id: inv.org_id, alliance_id: inv.alliance_id, user_id: uid, role: finalRepRole }, { onConflict: 'org_id,alliance_id,user_id' });
   }
   if (!inv.is_broadcast) {
     await (supabase as any).from('invites').update({ consumed_at: new Date().toISOString() }).eq('id', inv.id);
