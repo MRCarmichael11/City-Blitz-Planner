@@ -411,17 +411,7 @@
     { "coordinates": "J14", "level": 2, "subLabel": "Altar", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 200 },
     { "coordinates": "K14", "level": 2, "subLabel": "Altar", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 200 },
     { "coordinates": "L14", "level": 2, "subLabel": "Altar", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 200 },
-    { "coordinates": "M14", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 },
-    { "coordinates": "C15", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 },
-    { "coordinates": "D15", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 },
-    { "coordinates": "E15", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 },
-    { "coordinates": "F15", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 },
-    { "coordinates": "G15", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 },
-    { "coordinates": "H15", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 },
-    { "coordinates": "I15", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 },
-    { "coordinates": "J15", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 },
-    { "coordinates": "K15", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 },
-    { "coordinates": "L15", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 }
+    { "coordinates": "M14", "level": 1, "subLabel": "Village", "offset": { "x": 0.5, "y": 0.5 }, "resourceType": "Spice", "resourceValue": 100 }
   ],
   "tradingPosts": [
     { "coordinates": "A1", "level": 1, "offset": { "x": 0.5, "y": 0.5 } },
@@ -434,11 +424,11 @@
     { "coordinates": "K4", "level": 4, "offset": { "x": 0.5, "y": 0.5 } },
     { "coordinates": "A14", "level": 1, "offset": { "x": 0.5, "y": 0.5 } },
     { "coordinates": "B13", "level": 2, "offset": { "x": 0.5, "y": 0.5 } },
-    { "coordinates": "C13", "level": 3, "offset": { "x": 0.5, "y": 0.5 } },
+    { "coordinates": "C12", "level": 3, "offset": { "x": 0.5, "y": 0.5 } },
     { "coordinates": "D11", "level": 4, "offset": { "x": 0.5, "y": 0.5 } },
     { "coordinates": "N14", "level": 1, "offset": { "x": 0.5, "y": 0.5 } },
     { "coordinates": "M13", "level": 2, "offset": { "x": 0.5, "y": 0.5 } },
-    { "coordinates": "L13", "level": 3, "offset": { "x": 0.5, "y": 0.5 } },
+    { "coordinates": "L12", "level": 3, "offset": { "x": 0.5, "y": 0.5 } },
     { "coordinates": "K11", "level": 4, "offset": { "x": 0.5, "y": 0.5 } }
   ],
   "calendar": {
