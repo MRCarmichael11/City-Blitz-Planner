@@ -57,21 +57,27 @@ export function buildSeasonFromDataset(ds: SeasonDataset): SeasonDefinition {
         resourceType: (s.resourceType as ResourceType) || 'Mithril',
         resourceValue: strongholdValue(s.level),
       });
-      // cities (intersection)
-      for (const c of ds.cities) territories.push({
-        id: `C-${c.coordinates}`,
-        row: parseInt(c.coordinates.slice(1), 10),
-        col: c.coordinates.charCodeAt(0) - 64,
-        coordinates: c.coordinates,
-        tileType: 'city',
-        buildingLevel: c.level,
-        buildingType: 'City',
-        subLabel: c.subLabel,
-        resourceType: (c.resourceType as ResourceType) || 'Spice',
-        resourceValue: cityValue(c.level),
-        isUnlocked: false,
-        offset: c.offset ?? { x: 0.5, y: 0.5 },
-      });
+      // cities (on grid, or at intersection if offset is provided)
+      for (const c of ds.cities) {
+        const city: Territory = {
+          id: `C-${c.coordinates}`,
+          row: parseInt(c.coordinates.slice(1), 10),
+          col: c.coordinates.charCodeAt(0) - 64,
+          coordinates: c.coordinates,
+          tileType: 'city',
+          buildingLevel: c.level,
+          buildingType: 'City',
+          subLabel: c.subLabel,
+          resourceType: (c.resourceType as ResourceType) || 'Spice',
+          resourceValue: cityValue(c.level),
+          isUnlocked: false,
+        };
+        // Only apply offset if explicitly provided (S3 has intersection cities, S4 has grid cities)
+        if (c.offset) {
+          city.offset = c.offset;
+        }
+        territories.push(city);
+      }
       // trading posts (intersection)
       for (const t of ds.tradingPosts) territories.push({
         id: `TP-${t.coordinates}`,
