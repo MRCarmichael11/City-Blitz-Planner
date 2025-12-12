@@ -23,12 +23,10 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
 
   const territories = useMemo(() => map.territories, [map.territories]);
 
-  // IMPORTANT:
-  // S3 is an "interleaved" board: strongholds live on the primary grid and cities/TPs sit at intersections.
-  // If we render with cellSize === strongholdSize, intersection tiles will overlap/can hide edge strongholds
-  // (notably at the 12 and 6 o'clock outer-ring positions). We therefore render with a larger grid step.
-  const hasIntersections = territories.some(t => (t.offset?.x ?? 0) !== 0 || (t.offset?.y ?? 0) !== 0);
-  const gridStep = hasIntersections ? 72 : squareSize; // pixels per board cell (create intersection gaps only when needed)
+  // Rendering model:
+  // - S4 is a checkerboard of full-size cities/strongholds, plus a few intersection Trading Posts.
+  // - S3 is heavily interleaved with many intersection tiles; we keep extra spacing there for readability.
+  const gridStep = map.season === 'S3' ? 72 : squareSize;
   const width = map.gridSize.cols * gridStep;
   const height = map.gridSize.rows * gridStep;
 
@@ -43,9 +41,10 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
     const margin = 2 * gridStep; // render margin for smoothness
 
     return territories.filter(t => {
-      const isCityLike = t.tileType === 'city' || t.tileType === 'trading-post';
-      const w = isCityLike ? squareSize * cityScale : squareSize;
-      const h = isCityLike ? squareSize * cityScale : squareSize;
+      // S4 cities are full-size tiles; only trading posts are small intersection tiles.
+      const isSmall = (t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4');
+      const w = isSmall ? squareSize * cityScale : squareSize;
+      const h = isSmall ? squareSize * cityScale : squareSize;
       // Center all tiles within their "cell" so intersections sit cleanly between strongholds.
       const dx = (gridStep - w) / 2;
       const dy = (gridStep - h) / 2;
@@ -55,7 +54,7 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
       const rx0 = x, ry0 = y, rx1 = x + w, ry1 = y + h;
       return !(rx1 < vx0 - margin || rx0 > vx1 + margin || ry1 < vy0 - margin || ry0 > vy1 + margin);
     });
-  }, [territories, pan.x, pan.y, zoom, squareSize, cityScale, width, height, gridStep]);
+  }, [territories, pan.x, pan.y, zoom, squareSize, cityScale, width, height, gridStep, map.season]);
 
   const clampPan = useCallback((nx: number, ny: number, z: number) => {
     const cw = containerRef.current?.clientWidth ?? 0;
@@ -171,11 +170,11 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
                   filtered ? '' : 'opacity-30'
                 } ${(hoverId===t.id || (selectedId && selectedId===t.id)) ? 'ring-2 ring-primary' : ''} ${t.tileType === 'stronghold' ? 'bg-red-500/10 border-red-500/40' : t.tileType === 'city' ? 'bg-amber-500/10 border-amber-500/40' : t.tileType === 'trading-post' ? 'bg-black/60 border-black/70 text-white' : 'bg-yellow-500/10 border-yellow-500/40'}`}
                 style={{ 
-                  left: (((t.col-1)+(t.offset?.x??0))*gridStep) + (gridStep - (t.tileType === 'city' || t.tileType === 'trading-post' ? squareSize*cityScale : squareSize))/2,
-                  top: (((t.row-1)+(t.offset?.y??0))*gridStep) + (gridStep - (t.tileType === 'city' || t.tileType === 'trading-post' ? squareSize*cityScale : squareSize))/2,
-                  width: t.tileType === 'city' || t.tileType === 'trading-post' ? squareSize*cityScale : squareSize,
-                  height: t.tileType === 'city' || t.tileType === 'trading-post' ? squareSize*cityScale : squareSize,
-                  zIndex: t.tileType === 'city' || t.tileType === 'trading-post' ? 3 : (t.tileType === 'capitol' ? 4 : 2), pointerEvents: 'auto', cursor: t.tileType==='trading-post' ? 'not-allowed' : 'pointer',
+                  left: (((t.col-1)+(t.offset?.x??0))*gridStep) + (gridStep - (((t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4')) ? squareSize*cityScale : squareSize))/2,
+                  top: (((t.row-1)+(t.offset?.y??0))*gridStep) + (gridStep - (((t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4')) ? squareSize*cityScale : squareSize))/2,
+                  width: ((t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4')) ? squareSize*cityScale : squareSize,
+                  height: ((t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4')) ? squareSize*cityScale : squareSize,
+                  zIndex: (t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4') ? 3 : (t.tileType === 'capitol' ? 4 : 2), pointerEvents: 'auto', cursor: t.tileType==='trading-post' ? 'not-allowed' : 'pointer',
                   transform: undefined,
                   backgroundColor: bgOverlay || undefined,
                   borderColor: borderOverlay || undefined,
