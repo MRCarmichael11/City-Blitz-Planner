@@ -71,7 +71,9 @@ export function buildSeasonFromDataset(ds: SeasonDataset): SeasonDefinition {
         resourceType: (c.resourceType as ResourceType) || 'Spice',
         resourceValue: cityValue(c.level),
         isUnlocked: false,
-        offset: c.offset ?? { x: 0.5, y: 0.5 },
+        // Only apply an offset when the dataset explicitly requests one.
+        // S4 uses full-size city tiles on the main grid (no offset); S3 uses intersection cities (offset 0.5,0.5).
+        offset: c.offset,
       });
       // trading posts (intersection)
       for (const t of ds.tradingPosts) territories.push({
