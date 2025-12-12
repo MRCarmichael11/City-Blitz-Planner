@@ -12,505 +12,505 @@
     {
       "coordinates": "A1",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "C1",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "E1",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "G1",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "I1",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "K1",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "M1",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "B2",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "D2",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "F2",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "H2",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "J2",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "L2",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "A3",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "C3",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "E3",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "G3",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "I3",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "K3",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "M3",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "B4",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "D4",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "F4",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "H4",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "J4",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "L4",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "A5",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "C5",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "E5",
       "level": 5,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "G5",
       "level": 5,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "I5",
       "level": 5,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "K5",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "M5",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "B6",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "D6",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "F6",
       "level": 6,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "H6",
       "level": 6,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "J6",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "L6",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "A7",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "C7",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "E7",
       "level": 5,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "I7",
       "level": 5,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "K7",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "M7",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "B8",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "D8",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "F8",
       "level": 6,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "H8",
       "level": 6,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "J8",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "L8",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "A9",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "C9",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "E9",
       "level": 5,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "G9",
       "level": 5,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "I9",
       "level": 5,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "K9",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "M9",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "B10",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "D10",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "F10",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "H10",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "J10",
       "level": 4,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "L10",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "A11",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "C11",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "E11",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "G11",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "I11",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "K11",
       "level": 3,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "M11",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "B12",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "D12",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "F12",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "H12",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "J12",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "L12",
       "level": 2,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "A13",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "C13",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "E13",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "G13",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "I13",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "K13",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     },
     {
       "coordinates": "M13",
       "level": 1,
-      "resourceType": "Mithril",
+      "resourceType": "Stone",
       "resourceValue": 0
     }
   ],
@@ -519,588 +519,588 @@
       "coordinates": "B1",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "D1",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "F1",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "H1",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "J1",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "L1",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "A2",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "C2",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "E2",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "G2",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "I2",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "K2",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "M2",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "B3",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "D3",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "F3",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "H3",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "J3",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "L3",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "A4",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "C4",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "E4",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "G4",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "I4",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "K4",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "M4",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "B5",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "D5",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "F5",
       "level": 5,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "H5",
       "level": 5,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "J5",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "L5",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "A6",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "C6",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "E6",
       "level": 5,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "G6",
       "level": 6,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "I6",
       "level": 5,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "K6",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "M6",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "B7",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "D7",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "F7",
       "level": 6,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "H7",
       "level": 6,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "J7",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "L7",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "A8",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "C8",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "E8",
       "level": 5,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "G8",
       "level": 6,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "I8",
       "level": 5,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "K8",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "M8",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "B9",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "D9",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "F9",
       "level": 5,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "H9",
       "level": 5,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "J9",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "L9",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "A10",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "C10",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "E10",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "G10",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "I10",
       "level": 4,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "K10",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "M10",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "B11",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "D11",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "F11",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "H11",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "J11",
       "level": 3,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "L11",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "A12",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "C12",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "E12",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "G12",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "I12",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "K12",
       "level": 2,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "M12",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "B13",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "D13",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "F13",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "H13",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "J13",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     },
     {
       "coordinates": "L13",
       "level": 1,
       "subLabel": "City",
-      "resourceType": "Spice",
+      "resourceType": "Copper",
       "resourceValue": 0
     }
   ],
