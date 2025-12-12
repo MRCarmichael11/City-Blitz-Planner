@@ -1054,7 +1054,7 @@ export default function V2() {
               } else {
                 if (manualAction === 'capture') {
                   // Manual stepper ignores planner reservations: only rules apply
-                  const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
+                  const res = canCapture(t, { mode: 'action', seasonKey: season.key, step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                   if (res.ok && selectedAlliance) {
                     setEvents(prev => {
                       const next = [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }];
@@ -1084,7 +1084,7 @@ export default function V2() {
             if (mode === 'planning' && selectedAlliance) {
               const already = plannedAssignments[t.id]?.alliance === selectedAlliance;
               if (!already) {
-                const res = canCapture(t, { mode: 'planning', step: season.calendar.steps, calendar: season.calendar, territories: map.territories, assignments: plannedAssignments, selectedAlliance });
+                const res = canCapture(t, { mode: 'planning', seasonKey: season.key, step: season.calendar.steps, calendar: season.calendar, territories: map.territories, assignments: plannedAssignments, selectedAlliance });
                 if (res.ok) {
                   setPlannedAssignments(prev => ({ ...prev, [t.id]: { alliance: selectedAlliance, step: season.calendar.steps } }));
                   toast({ title: 'Planned', description: `${t.coordinates} → ${selectedAlliance}` });
@@ -1106,13 +1106,13 @@ export default function V2() {
                   if (!selectedAlliance) { toast({ title: 'Select an alliance', description: 'Pick an alliance to assign the tile to.' }); return; }
                   if (t.tileType === 'trading-post') { toast({ title: 'PvP Tile', description: 'Trading posts are player-held and uncapturable by alliances.' }); return; }
                   if (mode === 'planning') {
-                    const res = canCapture(t, { mode: 'planning', step: season.calendar.steps, calendar: season.calendar, territories: map.territories, assignments: plannedAssignments, selectedAlliance });
+                    const res = canCapture(t, { mode: 'planning', seasonKey: season.key, step: season.calendar.steps, calendar: season.calendar, territories: map.territories, assignments: plannedAssignments, selectedAlliance });
                     if (!res.ok) { toast({ title: 'Cannot assign', description: res.reason }); return; }
                     setPlannedAssignments(prev => ({ ...prev, [t.id]: { alliance: selectedAlliance, step: season.calendar.steps } }));
                     toast({ title: 'Planned', description: `${t.coordinates} → ${selectedAlliance}` });
                   } else {
                     // Manual stepper ignores planner reservations: only rules apply
-                    const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
+                    const res = canCapture(t, { mode: 'action', seasonKey: season.key, step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                     if (!res.ok) { toast({ title: 'Cannot capture', description: res.reason }); return; }
                     setEvents(prev => {
                       const next = [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }];

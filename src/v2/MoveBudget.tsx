@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Assignments, countsForStep, countsTotal, availableDaysForStep } from './rules';
+import { Assignments, countsForStep, countsTotal, availableDaysForStep, totalCapsForSeason } from './rules';
 import { MapData, SeasonDefinition } from './domain';
 
 interface Props {
@@ -16,7 +16,8 @@ export default function MoveBudget({ season, map, assignments, selectedAlliance,
 
   const days = availableDaysForStep(step, season.calendar);
   const stepCapS = 2 * days; const stepCapC = 2 * days;
-  const totalCapS = 8; const totalCapC = 8;
+  const caps = totalCapsForSeason(map.season);
+  const totalCapS = caps.strongholds; const totalCapC = caps.cities;
 
   const stepRemS = Math.max(0, stepCapS - perStep.strongholds);
   const stepRemC = Math.max(0, stepCapC - perStep.cities);
@@ -45,12 +46,12 @@ export default function MoveBudget({ season, map, assignments, selectedAlliance,
         </div>
       </div>
       <div className="mt-1 text-[10px] text-muted-foreground">
-        Per-day limit: 2S / 2C • Global caps: 8S / 8C
+        Per-day limit: 2S / 2C • Global caps: {totalCapS}S / {totalCapC}C
       </div>
       {(strandRiskS || strandRiskC) && (
         <div className="mt-2 text-[10px] text-red-500">
-          {strandRiskS && <div>Warning: At 8 strongholds and no stronghold moves left this step. If you abandon, you could be stranded at 7 until next step.</div>}
-          {strandRiskC && <div>Warning: At 8 cities and no city moves left this step. If you abandon, you could be stranded at 7 until next step.</div>}
+          {strandRiskS && <div>Warning: At {totalCapS} strongholds and no stronghold moves left this step. If you abandon, you could be stranded at {totalCapS - 1} until next step.</div>}
+          {strandRiskC && <div>Warning: At {totalCapC} cities and no city moves left this step. If you abandon, you could be stranded at {totalCapC - 1} until next step.</div>}
         </div>
       )}
     </div>

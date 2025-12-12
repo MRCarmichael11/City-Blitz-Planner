@@ -1,4 +1,4 @@
-import { Alliance, SeasonCalendar, Territory, Tick, ActionEvent, dayHalfFromTick, tickFromDayHalf } from './domain';
+import { Alliance, SeasonCalendar, SeasonKey, Territory, Tick, ActionEvent, dayHalfFromTick, tickFromDayHalf } from './domain';
 
 export type Mode = 'planning' | 'action';
 
@@ -11,6 +11,7 @@ export type Assignments = Record<string, Assignment>; // territoryId -> assignme
 
 export interface CaptureCheckParams {
   mode: Mode;
+  seasonKey?: SeasonKey;
   step: number; // current step (1..7) - for legacy UI display only
   calendar: SeasonCalendar;
   territories: Territory[];
@@ -22,6 +23,12 @@ export interface CaptureCheckParams {
 }
 
 export interface CaptureResult { ok: boolean; reason?: string }
+
+export function totalCapsForSeason(seasonKey: SeasonKey | undefined): { strongholds: number; cities: number } {
+  // S4: 6/6 cap; other seasons: 8/8 (legacy behavior)
+  if (seasonKey === 'S4') return { strongholds: 6, cities: 6 };
+  return { strongholds: 8, cities: 8 };
+}
 
 export function availableDaysForStep(step: number, calendar: SeasonCalendar): number {
   const sd = calendar.stepDays;
@@ -118,10 +125,11 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
     return { ok: false, reason: 'Already owned by this alliance' };
   }
 
-  // Global per-alliance hard caps: 8 strongholds + 8 cities, always enforced (preview/planning included)
+  // Global per-alliance hard caps, always enforced (preview/planning included)
+  const caps = totalCapsForSeason(p.seasonKey);
   const totals = countsTotal(p.assignments, p.selectedAlliance, p.territories);
-  if (t.tileType === 'stronghold' && totals.strongholds >= 8) return { ok: false, reason: 'Alliance cap reached: 8 strongholds total' }; // capitol excluded
-  if (t.tileType === 'city' && totals.cities >= 8) return { ok: false, reason: 'Alliance cap reached: 8 cities total' };
+  if (t.tileType === 'stronghold' && totals.strongholds >= caps.strongholds) return { ok: false, reason: `Alliance cap reached: ${caps.strongholds} strongholds total` }; // capitol excluded
+  if (t.tileType === 'city' && totals.cities >= caps.cities) return { ok: false, reason: `Alliance cap reached: ${caps.cities} cities total` };
 
   if (p.mode === 'planning') return { ok: true };
 
