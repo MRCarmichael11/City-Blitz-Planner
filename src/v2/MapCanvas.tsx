@@ -20,15 +20,17 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
 
   const squareSize = 56; // base stronghold tile px
   const cityScale = 0.6; // city/trading-post tiles are smaller than strongholds
+
+  const territories = useMemo(() => map.territories, [map.territories]);
+
   // IMPORTANT:
   // S3 is an "interleaved" board: strongholds live on the primary grid and cities/TPs sit at intersections.
   // If we render with cellSize === strongholdSize, intersection tiles will overlap/can hide edge strongholds
   // (notably at the 12 and 6 o'clock outer-ring positions). We therefore render with a larger grid step.
-  const gridStep = 72; // pixels per board cell (must be > squareSize to create intersection gaps)
+  const hasIntersections = territories.some(t => (t.offset?.x ?? 0) !== 0 || (t.offset?.y ?? 0) !== 0);
+  const gridStep = hasIntersections ? 72 : squareSize; // pixels per board cell (create intersection gaps only when needed)
   const width = map.gridSize.cols * gridStep;
   const height = map.gridSize.rows * gridStep;
-
-  const territories = useMemo(() => map.territories, [map.territories]);
 
   // Offscreen culling based on current viewport (pan/zoom)
   const visibleTerritories = useMemo(() => {

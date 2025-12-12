@@ -217,7 +217,8 @@ function AuthWidget() {
 
 export default function V2() {
   const { t } = useI18n();
-  const [seasonKey, setSeasonKey] = useState<SeasonKey>('S3');
+  // Default landing season is S4 (S3 is historical).
+  const [seasonKey, setSeasonKey] = useState<SeasonKey>('S4');
   const season = seasons[seasonKey];
   // 12-hour Action timeline state
   const [currentDay, setCurrentDay] = useState<number>(1);
@@ -1161,7 +1162,7 @@ export default function V2() {
                 <label className="block text-sm font-medium mb-1">Share Title</label>
                 <input
                   className="w-full border rounded px-3 py-2 bg-background text-foreground"
-                  placeholder="e.g., S3 Server Coordination Plan"
+                  placeholder="e.g., S4 Server Coordination Plan"
                   value={shareTitle}
                   onChange={(e) => setShareTitle(e.target.value)}
                 />
