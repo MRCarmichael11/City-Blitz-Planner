@@ -10,19 +10,7 @@
   },
   "strongholds": [
     {
-      "coordinates": "A1",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "B1",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "C1",
       "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -34,19 +22,7 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "E1",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "F1",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "G1",
       "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -58,19 +34,7 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "I1",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "J1",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "K1",
       "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -82,49 +46,37 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "M1",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "A2",
       "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "B2",
+      "coordinates": "C2",
       "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "D2",
+      "coordinates": "E2",
       "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "F2",
+      "coordinates": "G2",
       "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "H2",
+      "coordinates": "I2",
       "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "J2",
-      "level": 2,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "L2",
+      "coordinates": "K2",
       "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -136,14 +88,8 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "A3",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "C3",
-      "level": 3,
+      "coordinates": "B3",
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -154,19 +100,13 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "E3",
+      "coordinates": "F3",
       "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "G3",
-      "level": 3,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "I3",
+      "coordinates": "H3",
       "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -178,14 +118,8 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "K3",
-      "level": 3,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "M3",
-      "level": 1,
+      "coordinates": "L3",
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -196,31 +130,13 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "B4",
-      "level": 2,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "C4",
       "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "D4",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "E4",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "F4",
       "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -232,19 +148,7 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "H4",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "I4",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "J4",
       "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -256,26 +160,14 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "L4",
-      "level": 2,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "M4",
       "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "A5",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "C5",
-      "level": 3,
+      "coordinates": "B5",
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -286,19 +178,13 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "E5",
+      "coordinates": "F5",
       "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "G5",
-      "level": 5,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "I5",
+      "coordinates": "H5",
       "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -310,14 +196,8 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "K5",
-      "level": 3,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "M5",
-      "level": 1,
+      "coordinates": "L5",
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -328,20 +208,14 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "B6",
-      "level": 2,
+      "coordinates": "C6",
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "D6",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "F6",
-      "level": 6,
+      "coordinates": "E6",
+      "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -352,20 +226,14 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "H6",
-      "level": 6,
+      "coordinates": "I6",
+      "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "J6",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "L6",
-      "level": 2,
+      "coordinates": "K6",
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -376,20 +244,14 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "A7",
-      "level": 1,
+      "coordinates": "B7",
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "C7",
-      "level": 3,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "E7",
-      "level": 5,
+      "coordinates": "D7",
+      "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -406,20 +268,14 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "I7",
-      "level": 5,
+      "coordinates": "J7",
+      "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "K7",
-      "level": 3,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "M7",
-      "level": 1,
+      "coordinates": "L7",
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -430,20 +286,14 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "B8",
-      "level": 2,
+      "coordinates": "C8",
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "D8",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "F8",
-      "level": 6,
+      "coordinates": "E8",
+      "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -454,20 +304,14 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "H8",
-      "level": 6,
+      "coordinates": "I8",
+      "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "J8",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "L8",
-      "level": 2,
+      "coordinates": "K8",
+      "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -478,14 +322,8 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "A9",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "C9",
-      "level": 3,
+      "coordinates": "B9",
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -496,19 +334,13 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "E9",
+      "coordinates": "F9",
       "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "G9",
-      "level": 5,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "I9",
+      "coordinates": "H9",
       "level": 5,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -520,14 +352,8 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "K9",
-      "level": 3,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "M9",
-      "level": 1,
+      "coordinates": "L9",
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -538,31 +364,13 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "B10",
-      "level": 2,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "C10",
       "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "D10",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "E10",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "F10",
       "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -574,19 +382,7 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "H10",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "I10",
-      "level": 4,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "J10",
       "level": 4,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -598,26 +394,14 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "L10",
-      "level": 2,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "M10",
       "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "A11",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "C11",
-      "level": 3,
+      "coordinates": "B11",
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -628,19 +412,13 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "E11",
+      "coordinates": "F11",
       "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "G11",
-      "level": 3,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "I11",
+      "coordinates": "H11",
       "level": 3,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -652,14 +430,8 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "K11",
-      "level": 3,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "M11",
-      "level": 1,
+      "coordinates": "L11",
+      "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
@@ -670,37 +442,31 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "B12",
+      "coordinates": "C12",
       "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "D12",
+      "coordinates": "E12",
       "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "F12",
+      "coordinates": "G12",
       "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "H12",
+      "coordinates": "I12",
       "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
     },
     {
-      "coordinates": "J12",
-      "level": 2,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "L12",
+      "coordinates": "K12",
       "level": 2,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -712,19 +478,7 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "A13",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "B13",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "C13",
       "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -736,19 +490,7 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "E13",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "F13",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "G13",
       "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -760,19 +502,7 @@
       "resourceValue": 0
     },
     {
-      "coordinates": "I13",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
       "coordinates": "J13",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "K13",
       "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 0
@@ -782,278 +512,594 @@
       "level": 1,
       "resourceType": "Mithril",
       "resourceValue": 0
-    },
-    {
-      "coordinates": "M13",
-      "level": 1,
-      "resourceType": "Mithril",
-      "resourceValue": 0
     }
   ],
   "cities": [
     {
-      "coordinates": "C2",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "A1",
+      "level": 1,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "E2",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "C1",
+      "level": 1,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "G2",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "E1",
+      "level": 1,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "I2",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "G1",
+      "level": 1,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "K2",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "I1",
+      "level": 1,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "B3",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "K1",
+      "level": 1,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "F3",
+      "coordinates": "M1",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "B2",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "D2",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "F2",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "H2",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "J2",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "L2",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "A3",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "C3",
       "level": 3,
-      "subLabel": "FS",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "H3",
+      "coordinates": "E3",
       "level": 3,
-      "subLabel": "FS",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "L3",
-      "level": 2,
-      "subLabel": "HST",
-      "resourceType": "Spice",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "B5",
-      "level": 2,
-      "subLabel": "HST",
-      "resourceType": "Spice",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "F5",
-      "level": 5,
-      "subLabel": "ST",
-      "resourceType": "Spice",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "H5",
-      "level": 5,
-      "subLabel": "ST",
-      "resourceType": "Spice",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "L5",
-      "level": 2,
-      "subLabel": "HST",
-      "resourceType": "Spice",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "C6",
+      "coordinates": "G3",
       "level": 3,
-      "subLabel": "FS",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "E6",
-      "level": 5,
-      "subLabel": "ST",
-      "resourceType": "Spice",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "I6",
-      "level": 5,
-      "subLabel": "ST",
-      "resourceType": "Spice",
-      "resourceValue": 0
-    },
-    {
-      "coordinates": "K6",
+      "coordinates": "I3",
       "level": 3,
-      "subLabel": "FS",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "B7",
+      "coordinates": "K3",
+      "level": 3,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "M3",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "B4",
       "level": 2,
-      "subLabel": "HST",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "D7",
+      "coordinates": "D4",
       "level": 4,
-      "subLabel": "BF",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "J7",
+      "coordinates": "F4",
       "level": 4,
-      "subLabel": "BF",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "L7",
+      "coordinates": "H4",
+      "level": 4,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "J4",
+      "level": 4,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "L4",
       "level": 2,
-      "subLabel": "HST",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "C8",
+      "coordinates": "A5",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "C5",
       "level": 3,
-      "subLabel": "FS",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "E8",
+      "coordinates": "E5",
       "level": 5,
-      "subLabel": "ST",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "I8",
+      "coordinates": "G5",
       "level": 5,
-      "subLabel": "ST",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "K8",
+      "coordinates": "I5",
+      "level": 5,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "K5",
       "level": 3,
-      "subLabel": "FS",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "B9",
+      "coordinates": "M5",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "B6",
       "level": 2,
-      "subLabel": "HST",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "F9",
-      "level": 5,
-      "subLabel": "ST",
+      "coordinates": "D6",
+      "level": 4,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "H9",
-      "level": 5,
-      "subLabel": "ST",
+      "coordinates": "F6",
+      "level": 6,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "L9",
+      "coordinates": "H6",
+      "level": 6,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "J6",
+      "level": 4,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "L6",
       "level": 2,
-      "subLabel": "HST",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "B11",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "A7",
+      "level": 1,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "F11",
+      "coordinates": "C7",
       "level": 3,
-      "subLabel": "FS",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "H11",
+      "coordinates": "E7",
+      "level": 5,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "I7",
+      "level": 5,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "K7",
       "level": 3,
-      "subLabel": "FS",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "L11",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "M7",
+      "level": 1,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "C12",
+      "coordinates": "B8",
       "level": 2,
-      "subLabel": "HST",
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "E12",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "D8",
+      "level": 4,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "G12",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "F8",
+      "level": 6,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "I12",
-      "level": 2,
-      "subLabel": "HST",
+      "coordinates": "H8",
+      "level": 6,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     },
     {
-      "coordinates": "K12",
+      "coordinates": "J8",
+      "level": 4,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "L8",
       "level": 2,
-      "subLabel": "HST",
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "A9",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "C9",
+      "level": 3,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "E9",
+      "level": 5,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "G9",
+      "level": 5,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "I9",
+      "level": 5,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "K9",
+      "level": 3,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "M9",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "B10",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "D10",
+      "level": 4,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "F10",
+      "level": 4,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "H10",
+      "level": 4,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "J10",
+      "level": 4,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "L10",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "A11",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "C11",
+      "level": 3,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "E11",
+      "level": 3,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "G11",
+      "level": 3,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "I11",
+      "level": 3,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "K11",
+      "level": 3,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "M11",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "B12",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "D12",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "F12",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "H12",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "J12",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "L12",
+      "level": 2,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "A13",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "C13",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "E13",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "G13",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "I13",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "K13",
+      "level": 1,
+      "subLabel": "City",
+      "resourceType": "Spice",
+      "resourceValue": 0
+    },
+    {
+      "coordinates": "M13",
+      "level": 1,
+      "subLabel": "City",
       "resourceType": "Spice",
       "resourceValue": 0
     }
@@ -1191,54 +1237,102 @@
   "calendar": {
     "steps": 7,
     "cityUnlocks": {
-      "1": [],
+      "1": [
+        "A1",
+        "C1",
+        "E1",
+        "G1",
+        "I1",
+        "K1",
+        "M1",
+        "A3",
+        "M3",
+        "A5",
+        "M5",
+        "A7",
+        "M7",
+        "A9",
+        "M9",
+        "A11",
+        "M11",
+        "A13",
+        "C13",
+        "E13",
+        "G13",
+        "I13",
+        "K13",
+        "M13"
+      ],
       "2": [
-        "C2",
-        "E2",
-        "G2",
-        "I2",
-        "K2",
-        "B3",
-        "L3",
-        "B5",
-        "L5",
-        "B7",
-        "L7",
-        "B9",
-        "L9",
-        "B11",
-        "L11",
-        "C12",
-        "E12",
-        "G12",
-        "I12",
-        "K12"
+        "B2",
+        "D2",
+        "F2",
+        "H2",
+        "J2",
+        "L2",
+        "B4",
+        "L4",
+        "B6",
+        "L6",
+        "B8",
+        "L8",
+        "B10",
+        "L10",
+        "B12",
+        "D12",
+        "F12",
+        "H12",
+        "J12",
+        "L12"
       ],
       "3": [
-        "F3",
-        "H3",
-        "C6",
-        "K6",
-        "C8",
-        "K8",
-        "F11",
-        "H11"
+        "C3",
+        "E3",
+        "G3",
+        "I3",
+        "K3",
+        "C5",
+        "K5",
+        "C7",
+        "K7",
+        "C9",
+        "K9",
+        "C11",
+        "E11",
+        "G11",
+        "I11",
+        "K11"
       ],
       "4": [
-        "D7",
-        "J7"
+        "D4",
+        "F4",
+        "H4",
+        "J4",
+        "D6",
+        "J6",
+        "D8",
+        "J8",
+        "D10",
+        "F10",
+        "H10",
+        "J10"
       ],
       "5": [
-        "F5",
-        "H5",
-        "E6",
-        "I6",
-        "E8",
-        "I8",
-        "F9",
-        "H9"
+        "E5",
+        "G5",
+        "I5",
+        "E7",
+        "I7",
+        "E9",
+        "G9",
+        "I9"
       ],
-      "6": [],
+      "6": [
+        "F6",
+        "H6",
+        "F8",
+        "H8"
+      ],
       "7": [
         "G7"
       ]
@@ -1254,11 +1348,10 @@
     ]
   },
   "_meta": {
-    "source": "/workspace/s4-map.png",
-    "notes": "Cities are the labeled full tiles; blank tiles are strongholds. Trading posts detected on diagonals (TP1..TP4).",
+    "notes": "S4 checkerboard: full-tile cities on (r+c)%2==0 with T6 on N/E/S/W of capitol; blank tiles are strongholds. HM/DT ignored. Trading posts on diagonals TP1..TP4.",
     "counts": {
-      "strongholds": 130,
-      "cities": 38,
+      "strongholds": 84,
+      "cities": 84,
       "tradingPosts": 16
     }
   }
