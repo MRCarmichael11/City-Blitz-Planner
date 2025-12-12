@@ -144,15 +144,21 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
             const borderOverlay = color ? `${color}CC` : undefined; // ~80% opacity
             const filtered = selectedAlliance ? (asg ? asg.alliance === selectedAlliance : false) : true;
             const label = (() => {
-              if (t.tileType === 'capitol') return 'Tenryū Castle';
-              if (t.tileType === 'trading-post') return `TP Lv.${t.buildingLevel}`;
-              if (t.tileType === 'stronghold') {
-                const name = t.subLabel ? t.subLabel : 'S';
-                return `${name} Lv.${t.buildingLevel}`;
+              // S4 in-game convention: cities show labels, strongholds are blank.
+              if (map.season === 'S4') {
+                if (t.tileType === 'capitol') return 'Tenryū Castle\nLv.7';
+                if (t.tileType === 'trading-post') return `TP\nLv.${t.buildingLevel}`;
+                if (t.tileType === 'stronghold') return '';
+                // city
+                const name = t.subLabel ? t.subLabel : 'City';
+                return `${name}\nLv.${t.buildingLevel}`;
               }
-              // city
-              const name = t.subLabel ? t.subLabel : 'T';
-              return `${name} Lv.${t.buildingLevel}`;
+
+              // Default labeling for other seasons
+              if (t.tileType === 'stronghold') return `S${t.buildingLevel}`;
+              if (t.tileType === 'city') return `T${t.buildingLevel}`;
+              if (t.tileType === 'trading-post') return `TP${t.buildingLevel}`;
+              return 'Cap';
             })();
             return (
               <button
