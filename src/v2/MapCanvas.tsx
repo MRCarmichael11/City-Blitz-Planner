@@ -20,8 +20,13 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
 
   const squareSize = 56; // base stronghold tile px
   const cityScale = 0.6; // city/trading-post tiles are smaller than strongholds
-  const width = map.gridSize.cols * squareSize;
-  const height = map.gridSize.rows * squareSize;
+  // IMPORTANT:
+  // S3 is an "interleaved" board: strongholds live on the primary grid and cities/TPs sit at intersections.
+  // If we render with cellSize === strongholdSize, intersection tiles will overlap/can hide edge strongholds
+  // (notably at the 12 and 6 o'clock outer-ring positions). We therefore render with a larger grid step.
+  const gridStep = 72; // pixels per board cell (must be > squareSize to create intersection gaps)
+  const width = map.gridSize.cols * gridStep;
+  const height = map.gridSize.rows * gridStep;
 
   const territories = useMemo(() => map.territories, [map.territories]);
 
@@ -33,21 +38,22 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
     const vy0 = (-pan.y) / zoom;
     const vx1 = (cw - pan.x) / zoom;
     const vy1 = (ch - pan.y) / zoom;
-    const margin = 2 * squareSize; // render margin for smoothness
+    const margin = 2 * gridStep; // render margin for smoothness
 
     return territories.filter(t => {
       const isCityLike = t.tileType === 'city' || t.tileType === 'trading-post';
       const w = isCityLike ? squareSize * cityScale : squareSize;
       const h = isCityLike ? squareSize * cityScale : squareSize;
-      const dx = isCityLike ? (squareSize - w) / 2 : 0;
-      const dy = isCityLike ? (squareSize - h) / 2 : 0;
-      const x = (((t.col - 1) + (t.offset?.x ?? 0)) * squareSize) + dx;
-      const y = (((t.row - 1) + (t.offset?.y ?? 0)) * squareSize) + dy;
+      // Center all tiles within their "cell" so intersections sit cleanly between strongholds.
+      const dx = (gridStep - w) / 2;
+      const dy = (gridStep - h) / 2;
+      const x = (((t.col - 1) + (t.offset?.x ?? 0)) * gridStep) + dx;
+      const y = (((t.row - 1) + (t.offset?.y ?? 0)) * gridStep) + dy;
       // AABB intersect check with viewport box in world coords
       const rx0 = x, ry0 = y, rx1 = x + w, ry1 = y + h;
       return !(rx1 < vx0 - margin || rx0 > vx1 + margin || ry1 < vy0 - margin || ry0 > vy1 + margin);
     });
-  }, [territories, pan.x, pan.y, zoom, squareSize, cityScale, width, height]);
+  }, [territories, pan.x, pan.y, zoom, squareSize, cityScale, width, height, gridStep]);
 
   const clampPan = useCallback((nx: number, ny: number, z: number) => {
     const cw = containerRef.current?.clientWidth ?? 0;
@@ -121,11 +127,11 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
           style={{ width, height, transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
         >
           {/* Grid lines */}
-          {Array.from({ length: map.gridSize.cols }, (_, i) => (
-            <div key={`v${i}`} className="absolute top-0 bottom-0 border-l border-border/40" style={{ left: i*squareSize }} />
+          {Array.from({ length: map.gridSize.cols + 1 }, (_, i) => (
+            <div key={`v${i}`} className="absolute top-0 bottom-0 border-l border-border/40" style={{ left: i*gridStep }} />
           ))}
-          {Array.from({ length: map.gridSize.rows }, (_, i) => (
-            <div key={`h${i}`} className="absolute left-0 right-0 border-t border-border/40" style={{ top: i*squareSize }} />
+          {Array.from({ length: map.gridSize.rows + 1 }, (_, i) => (
+            <div key={`h${i}`} className="absolute left-0 right-0 border-t border-border/40" style={{ top: i*gridStep }} />
           ))}
 
           {/* Territories (culled) */}
@@ -146,12 +152,12 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
                   filtered ? '' : 'opacity-30'
                 } ${(hoverId===t.id || (selectedId && selectedId===t.id)) ? 'ring-2 ring-primary' : ''} ${t.tileType === 'stronghold' ? 'bg-red-500/10 border-red-500/40' : t.tileType === 'city' ? 'bg-amber-500/10 border-amber-500/40' : t.tileType === 'trading-post' ? 'bg-black/60 border-black/70 text-white' : 'bg-yellow-500/10 border-yellow-500/40'}`}
                 style={{ 
-                  left: ((t.col-1)+(t.offset?.x??0))*squareSize, 
-                  top: ((t.row-1)+(t.offset?.y??0))*squareSize,
+                  left: (((t.col-1)+(t.offset?.x??0))*gridStep) + (gridStep - (t.tileType === 'city' || t.tileType === 'trading-post' ? squareSize*cityScale : squareSize))/2,
+                  top: (((t.row-1)+(t.offset?.y??0))*gridStep) + (gridStep - (t.tileType === 'city' || t.tileType === 'trading-post' ? squareSize*cityScale : squareSize))/2,
                   width: t.tileType === 'city' || t.tileType === 'trading-post' ? squareSize*cityScale : squareSize,
                   height: t.tileType === 'city' || t.tileType === 'trading-post' ? squareSize*cityScale : squareSize,
                   zIndex: t.tileType === 'city' || t.tileType === 'trading-post' ? 3 : (t.tileType === 'capitol' ? 4 : 2), pointerEvents: 'auto', cursor: t.tileType==='trading-post' ? 'not-allowed' : 'pointer',
-                  transform: t.tileType === 'city' || t.tileType === 'trading-post' ? `translate(${(squareSize - squareSize*cityScale)/2}px, ${(squareSize - squareSize*cityScale)/2}px)` : undefined,
+                  transform: undefined,
                   backgroundColor: bgOverlay || undefined,
                   borderColor: borderOverlay || undefined,
                 }}
