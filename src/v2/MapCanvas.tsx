@@ -143,6 +143,17 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
             const bgOverlay = color ? `${color}80` : undefined; // ~50% opacity
             const borderOverlay = color ? `${color}CC` : undefined; // ~80% opacity
             const filtered = selectedAlliance ? (asg ? asg.alliance === selectedAlliance : false) : true;
+            const label = (() => {
+              if (t.tileType === 'capitol') return 'Tenryū Castle';
+              if (t.tileType === 'trading-post') return `TP Lv.${t.buildingLevel}`;
+              if (t.tileType === 'stronghold') {
+                const name = t.subLabel ? t.subLabel : 'S';
+                return `${name} Lv.${t.buildingLevel}`;
+              }
+              // city
+              const name = t.subLabel ? t.subLabel : 'T';
+              return `${name} Lv.${t.buildingLevel}`;
+            })();
             return (
               <button
                 key={t.id}
@@ -165,7 +176,7 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
                 }}
                 title={t.coordinates + ' ' + t.tileType + (t.isUnlocked===false ? ' (locked)' : '') + (asg ? ' • ' + asg.alliance : '') + (t.tileType === 'trading-post' ? ' • PvP (uncapturable by alliances)' : '')}
               >
-                {t.tileType === 'stronghold' ? `S${t.buildingLevel}` : t.tileType === 'city' ? `T${t.buildingLevel}` : t.tileType === 'trading-post' ? `TP${t.buildingLevel}` : 'Cap'}
+                <span className="whitespace-pre-line text-center">{label}</span>
               </button>
             );
           })}

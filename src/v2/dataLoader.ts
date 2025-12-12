@@ -4,7 +4,7 @@ export interface SeasonDataset {
   key: 'S1'|'S2'|'S3'|'S4'|'S0';
   gridSize: { rows: number; cols: number };
   capitol: { id: string; coordinates: string };
-  strongholds: Array<{ coordinates: string; level: number; resourceType?: string; resourceValue?: number }>;
+  strongholds: Array<{ coordinates: string; level: number; subLabel?: string; resourceType?: string; resourceValue?: number }>;
   cities: Array<{ coordinates: string; level: number; subLabel?: string; offset?: {x:number;y:number}; resourceType?: string; resourceValue?: number }>;
   tradingPosts: Array<{ coordinates: string; level: number; offset?: {x:number;y:number} }>;
   calendar?: SeasonCalendar;
@@ -54,6 +54,7 @@ export function buildSeasonFromDataset(ds: SeasonDataset): SeasonDefinition {
         tileType: 'stronghold',
         buildingLevel: s.level,
         buildingType: 'Stronghold',
+        subLabel: s.subLabel,
         resourceType: (s.resourceType as ResourceType) || 'Mithril',
         resourceValue: strongholdValue(s.level),
       });

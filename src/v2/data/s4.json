@@ -1,0 +1,1350 @@
+{
+  "key": "S4",
+  "gridSize": {
+    "rows": 13,
+    "cols": 13
+  },
+  "capitol": {
+    "id": "CAP-G7",
+    "coordinates": "G7"
+  },
+  "strongholds": [
+    {
+      "coordinates": "A1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "C1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "D1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "E1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "F1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "G1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "H1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "I1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "J1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "K1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "L1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "M1",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A2",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "D2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "E2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "F2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "G2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "H2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "I2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "J2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "K2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "L2",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M2",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A3",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B3",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C3",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "D3",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "E3",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "F3",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "G3",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "H3",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "I3",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "J3",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "K3",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "L3",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M3",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A4",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B4",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C4",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "D4",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "E4",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "F4",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "G4",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HM"
+    },
+    {
+      "coordinates": "H4",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "I4",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "J4",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "K4",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "L4",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M4",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A5",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B5",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C5",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "D5",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "E5",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "F5",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "G5",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "H5",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "I5",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "J5",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "K5",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "L5",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M5",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A6",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B6",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C6",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "D6",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "E6",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "F6",
+      "level": 6,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "E"
+    },
+    {
+      "coordinates": "G6",
+      "level": 6,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "E"
+    },
+    {
+      "coordinates": "H6",
+      "level": 6,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "E"
+    },
+    {
+      "coordinates": "I6",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "J6",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "K6",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "L6",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M6",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A7",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B7",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C7",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "D7",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "E7",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "F7",
+      "level": 6,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "E"
+    },
+    {
+      "coordinates": "H7",
+      "level": 6,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "E"
+    },
+    {
+      "coordinates": "I7",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "J7",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "K7",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "L7",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M7",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A8",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B8",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C8",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "D8",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "E8",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "F8",
+      "level": 6,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "E"
+    },
+    {
+      "coordinates": "G8",
+      "level": 6,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "E"
+    },
+    {
+      "coordinates": "H8",
+      "level": 6,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "E"
+    },
+    {
+      "coordinates": "I8",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "J8",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "K8",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "L8",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M8",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A9",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B9",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C9",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "D9",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "E9",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "F9",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "G9",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "DT"
+    },
+    {
+      "coordinates": "H9",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "I9",
+      "level": 5,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "ST"
+    },
+    {
+      "coordinates": "J9",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "K9",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "L9",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M9",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A10",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B10",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C10",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "D10",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "E10",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "F10",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "G10",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "H10",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "I10",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "J10",
+      "level": 4,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "BF"
+    },
+    {
+      "coordinates": "K10",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "L10",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M10",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A11",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B11",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C11",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "D11",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "E11",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "F11",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "G11",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "H11",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "I11",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "J11",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "K11",
+      "level": 3,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "FS"
+    },
+    {
+      "coordinates": "L11",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M11",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A12",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "C12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "D12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "E12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "F12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "G12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "H12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "I12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "J12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "K12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "L12",
+      "level": 2,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "HST"
+    },
+    {
+      "coordinates": "M12",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "A13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "B13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "C13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "D13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "E13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "F13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "G13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "H13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "I13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "J13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "K13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "L13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    },
+    {
+      "coordinates": "M13",
+      "level": 1,
+      "resourceType": "Mithril",
+      "resourceValue": 0,
+      "subLabel": "C"
+    }
+  ],
+  "cities": [],
+  "tradingPosts": [
+    {
+      "coordinates": "A1",
+      "level": 1,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "L1",
+      "level": 1,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "B2",
+      "level": 2,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "K2",
+      "level": 2,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "C3",
+      "level": 3,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "J3",
+      "level": 3,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "D4",
+      "level": 4,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "I4",
+      "level": 4,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "D9",
+      "level": 4,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "I9",
+      "level": 4,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "C10",
+      "level": 3,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "J10",
+      "level": 3,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "B11",
+      "level": 2,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "K11",
+      "level": 2,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "A12",
+      "level": 1,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "coordinates": "L12",
+      "level": 1,
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  ],
+  "calendar": {
+    "steps": 7,
+    "cityUnlocks": {
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [],
+      "5": [],
+      "6": [],
+      "7": [
+        "G7"
+      ]
+    },
+    "stepDays": [
+      3,
+      6,
+      10,
+      13,
+      17,
+      20,
+      28
+    ]
+  },
+  "_meta": {
+    "notes": "Generated from S4 map image; stronghold tiers use ring distance with labels C/HST/FS/BF/ST/E; special tiles HM@G4 and DT@G9. Trading posts detected via OCR.",
+    "strongholdSubLabels": {
+      "G4": "HM",
+      "G9": "DT"
+    }
+  }
+}
