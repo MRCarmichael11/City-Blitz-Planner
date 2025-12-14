@@ -42,8 +42,28 @@ export function isCityUnlocked(t: Territory): boolean {
   return !!t.isUnlocked;
 }
 
-export function hasAdjacentOwned(territories: Territory[], assignments: Assignments, alliance: string, t: Territory): boolean {
-  // Geometric adjacency on the half-step lattice:
+export function hasAdjacentOwned(
+  territories: Territory[],
+  assignments: Assignments,
+  alliance: string,
+  t: Territory,
+  seasonKey?: SeasonKey
+): boolean {
+  // S4 uses checkerboard movement rules: tiles are adjacent if they share an edge OR a corner.
+  // This enables diagonal progress across same-parity tiles (e.g., stronghold->stronghold).
+  if (seasonKey === 'S4') {
+    for (const [tid, asg] of Object.entries(assignments)) {
+      if (asg.alliance !== alliance) continue;
+      const n = territories.find(tt => tt.id === tid);
+      if (!n) continue;
+      const dx = Math.abs(n.col - t.col);
+      const dy = Math.abs(n.row - t.row);
+      if (dx <= 1 && dy <= 1 && (dx + dy) > 0) return true;
+    }
+    return false;
+  }
+
+  // Default (S1/S2/S3): geometric adjacency on the half-step lattice:
   // stronghold centers at (2r,2c), city/TP centers at (2r+1,2c+1). Two tiles are adjacent if |dx|+|dy| === 2.
   const tX = 2 * t.col + (t.offset?.x ? 1 : 0);
   const tY = 2 * t.row + (t.offset?.y ? 1 : 0);
@@ -219,7 +239,7 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
     }
   } else {
     // 3) Adjacency required for ALL captures thereafter (both strongholds and cities)
-    if (!hasAdjacentOwned(p.territories, p.assignments, p.selectedAlliance, t)) {
+    if (!hasAdjacentOwned(p.territories, p.assignments, p.selectedAlliance, t, p.seasonKey)) {
       return { ok: false, reason: 'Need an adjacent owned tile to capture' };
     }
   }
