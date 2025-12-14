@@ -24,6 +24,12 @@ export interface CaptureCheckParams {
 
 export interface CaptureResult { ok: boolean; reason?: string }
 
+function isCapitolTile(t: Territory): boolean {
+  // Defensive: treat anything explicitly marked as Capitol as non-counting for caps,
+  // even if it was accidentally typed as a city in a dataset.
+  return t.tileType === 'capitol' || t.buildingType === 'Capitol' || t.id.startsWith('CAP-');
+}
+
 export function totalCapsForSeason(seasonKey: SeasonKey | undefined): { strongholds: number; cities: number } {
   // S4: 6/6 cap; other seasons: 8/8 (legacy behavior)
   if (seasonKey === 'S4') return { strongholds: 6, cities: 6 };
@@ -85,6 +91,7 @@ export function countsForStep(assignments: Assignments, alliance: string, step: 
     if (a.alliance !== alliance || a.step !== step) continue;
     const t = territories.find(tt => tt.id === tid);
     if (!t) continue;
+    if (isCapitolTile(t)) continue; // Capitol never counts toward caps
     if (t.tileType === 'stronghold') strongholds++;
     else if (t.tileType === 'city') cities++;
   }
@@ -97,6 +104,7 @@ export function countsTotal(assignments: Assignments, alliance: string, territor
     if (a.alliance !== alliance) continue;
     const t = territories.find(tt => tt.id === tid);
     if (!t) continue;
+    if (isCapitolTile(t)) continue; // Capitol never counts toward caps
     if (t.tileType === 'stronghold') strongholds++;
     else if (t.tileType === 'city') cities++;
   }
@@ -129,6 +137,7 @@ function dailyCapsUsedFor(alliance: string, day: number, events: ActionEvent[], 
     if (d !== day || e.alliance !== alliance || e.action !== 'capture') continue;
     const t = territories.find(tt => tt.id === e.tileId);
     if (!t) continue;
+    if (isCapitolTile(t)) continue; // Capitol is excluded from daily caps too
     if (t.tileType === 'stronghold') S++; else if (t.tileType === 'city') C++;
   }
   return { S, C };
