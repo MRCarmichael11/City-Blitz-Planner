@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Assignments } from './rules';
+import { Assignments, dailyCapsUsedFor } from './rules';
 import { Alliance, MapData, Territory, type Tick, type ActionEvent, dayHalfFromTick } from './domain';
 import { Card } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -96,12 +96,12 @@ export default function AllianceLegend({ map, assignments, selectedAlliance, onS
         rec.lastTick = e.tick;
         rec.lastLabel = `Day ${dhalf.day} ${dhalf.half}`;
       }
-      const d = dayHalfFromTick(e.tick).day;
-      if (d !== day || e.action !== 'capture') continue;
-      const t = map.territories.find(tt => tt.id === e.tileId);
-      if (!t) continue;
-      if (t.tileType === 'stronghold') rec.todayS += 1;
-      else if (t.tileType === 'city') rec.todayC += 1;
+    }
+    // Compute today's daily-cap usage using the same logic as canCapture (including same-day refunds).
+    for (const rec of byName.values()) {
+      const used = dailyCapsUsedFor(rec.alliance.name, day, events, map.territories);
+      rec.todayS = used.S;
+      rec.todayC = used.C;
     }
 
     const arr = Array.from(byName.values());

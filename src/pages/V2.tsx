@@ -1074,7 +1074,9 @@ export default function V2() {
                     toast({ title: 'Cannot capture', description: res.reason });
                   }
                 } else {
-                  setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }].sort((a,b)=> a.tick - b.tick));
+                  // For releases, record the owning alliance so daily-cap refunds work even if no alliance is selected.
+                  const owner = selectedAlliance || derivedAssignments[t.id]?.alliance || '';
+                  setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: owner, action: 'release' }].sort((a,b)=> a.tick - b.tick));
                   toast({ title: 'Scheduled release', description: `${t.coordinates} at Tick ${currentTick}` });
                 }
               }
@@ -1135,7 +1137,9 @@ export default function V2() {
                     setPlannedAssignments(prev => { const n = { ...prev }; delete n[t.id]; return n; });
                     toast({ title: 'Unplanned', description: `${t.coordinates}` });
                   } else {
-                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }].sort((a,b)=> a.tick - b.tick));
+                    // For releases, record the owning alliance so daily-cap refunds work even if no alliance is selected.
+                    const owner = selectedAlliance || derivedAssignments[t.id]?.alliance || '';
+                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: owner, action: 'release' }].sort((a,b)=> a.tick - b.tick));
                     toast({ title: 'Released', description: `${t.coordinates}` });
                   }
                 }}

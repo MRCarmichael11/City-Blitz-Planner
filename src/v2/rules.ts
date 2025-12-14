@@ -130,15 +130,30 @@ function recaptureAllowedAtTick(tileId: string, events: ActionEvent[] | undefine
   return null;
 }
 
-function dailyCapsUsedFor(alliance: string, day: number, events: ActionEvent[], territories: Territory[]): { S: number; C: number } {
-  let S = 0, C = 0;
+export function dailyCapsUsedFor(alliance: string, day: number, events: ActionEvent[], territories: Territory[]): { S: number; C: number } {
+  // Action-stepper quality-of-life:
+  // If an alliance captures a tile and then releases it later the SAME day, treat that as an undone move
+  // and refund the daily cap. (We only ever check the current day’s cap in canCapture.)
+  //
+  // Implementation: for each tile, keep the last action performed by this alliance on that day.
+  // Last action = capture => counts as a used move; last action = release => does not.
+  const lastByTile = new Map<string, 'capture' | 'release'>();
+
   for (const e of events) {
     const { day: d } = dayHalfFromTick(e.tick);
-    if (d !== day || e.alliance !== alliance || e.action !== 'capture') continue;
-    const t = territories.find(tt => tt.id === e.tileId);
+    if (d !== day || e.alliance !== alliance) continue;
+    if (e.action !== 'capture' && e.action !== 'release') continue;
+    lastByTile.set(e.tileId, e.action);
+  }
+
+  let S = 0, C = 0;
+  for (const [tileId, last] of lastByTile.entries()) {
+    if (last !== 'capture') continue;
+    const t = territories.find(tt => tt.id === tileId);
     if (!t) continue;
     if (isCapitolTile(t)) continue; // Capitol is excluded from daily caps too
-    if (t.tileType === 'stronghold') S++; else if (t.tileType === 'city') C++;
+    if (t.tileType === 'stronghold') S++;
+    else if (t.tileType === 'city') C++;
   }
   return { S, C };
 }
