@@ -120,10 +120,31 @@ function protectionTicksFor(t: Territory): number {
 
 function recaptureAllowedAtTick(tileId: string, events: ActionEvent[] | undefined): Tick | null {
   if (!events || events.length === 0) return null;
-  // Find last capture on this tile
+  // Find the last *effective* capture on this tile.
+  //
+  // Action-stepper quality-of-life:
+  // If a capture is undone by a release later the SAME day, treat it as if it never happened
+  // for protection timer purposes (no protection should be applied).
+  //
+  // Note: we only examine events up to the current tick (caller responsibility).
+  let latestReleaseTick: Tick | null = null;
+  let latestReleaseDay: number | null = null;
   for (let i = events.length - 1; i >= 0; i--) {
     const e = events[i];
-    if (e.tileId === tileId && e.action === 'capture') {
+    if (e.tileId !== tileId) continue;
+    const { day } = dayHalfFromTick(e.tick);
+    if (e.action === 'release') {
+      if (latestReleaseTick === null) {
+        latestReleaseTick = e.tick;
+        latestReleaseDay = day;
+      }
+      continue;
+    }
+    if (e.action === 'capture') {
+      // If there is a release later the same day, ignore this capture for protection.
+      if (latestReleaseTick !== null && latestReleaseDay === day && latestReleaseTick > e.tick) {
+        continue;
+      }
       return e.tick + 0 as Tick; // caller will add protection based on tile type
     }
   }
