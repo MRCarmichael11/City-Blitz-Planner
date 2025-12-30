@@ -51,7 +51,7 @@ export default function OrgAdminPage() {
             catch (e: any) { setOrgError(e.message || 'Failed to load org'); }
           }}>Load</button>
           <span className="text-muted-foreground">or</span>
-          <input className="border rounded px-2 py-1 bg-background text-foreground w-[140px]" placeholder="Slug (e.g., anubis3)" value={orgSlug} onChange={(e)=> setOrgSlug(e.target.value)} />
+          <input className="border rounded px-2 py-1 bg-background text-foreground w-[140px]" placeholder="Slug (e.g., blue3)" value={orgSlug} onChange={(e)=> setOrgSlug(e.target.value)} />
           <button className="px-2 py-1 border rounded disabled:opacity-50" onClick={async ()=>{
             try { setOrgError(null); const slug = orgSlug.trim(); if (!slug) { setOrgError('Enter a slug'); return; } const found = await getOrgBySlug(slug); if (!found) { setOrgError('Slug not found'); return; } localStorage.setItem('current_org', found.id); setOrgId(found.id); alert(`Org loaded: ${found.slug || found.id}`); }
             catch (e: any) { setOrgError(e.message || 'Failed to load by slug'); }

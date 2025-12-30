@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { listFactions, listAlliances } from '@/services/adminApi';
 import { assertBracketParity } from '@/lib/brackets';
 import { supabase } from '@/services/supabaseClient';
+import { normalizeTeamName } from '@/lib/teams';
 
 export default function DeclarationForm() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
@@ -41,7 +42,7 @@ export default function DeclarationForm() {
         <div className="flex gap-2">
           <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={factionId} onChange={e=> setFactionId(e.target.value)}>
             <option value="">Target faction…</option>
-            {factions.map(f=> <option key={f.id} value={f.id}>{f.name}</option>)}
+            {factions.map(f=> <option key={f.id} value={f.id}>{normalizeTeamName(f.name)}</option>)}
           </select>
           <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={targetId} onChange={e=> setTargetId(e.target.value)} disabled={!factionId}>
             <option value="">Target alliance…</option>
