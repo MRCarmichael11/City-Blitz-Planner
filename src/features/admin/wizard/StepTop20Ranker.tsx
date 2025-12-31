@@ -1,6 +1,7 @@
 import { getBracket } from '@/lib/brackets';
 import { useEffect, useMemo, useState } from 'react';
 import { listAlliances, listFactions, setAllianceRank } from '@/services/adminApi';
+import { normalizeTeamName } from '@/lib/teams';
 
 export default function StepTop20Ranker() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
@@ -46,7 +47,7 @@ export default function StepTop20Ranker() {
       <p className="text-sm text-muted-foreground">Drag to order 1..20 per faction. Others remain unranked (Bracket 3).</p>
       <div className="flex items-center gap-2 text-xs">
         <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={factionId} onChange={e=> setFactionId(e.target.value)}>
-          {factions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+          {factions.map(f => <option key={f.id} value={f.id}>{normalizeTeamName(f.name)}</option>)}
         </select>
       </div>
       <div className="flex gap-2 text-xs">
