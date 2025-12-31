@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { clearAllServers, deleteServer, listServers, createServer, listFactions, createFaction, mapServerToFaction, getServerFaction } from '@/services/adminApi';
 import { normalizeTeamName } from '@/lib/teams';
+import { supabase } from '@/services/supabaseClient';
+import { can, getMembership } from '@/lib/rbac';
 
 export default function StepServersAndFactions() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
@@ -11,11 +13,29 @@ export default function StepServersAndFactions() {
   const [newFaction, setNewFaction] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [mapping, setMapping] = useState<Record<string, string | null>>({});
+  const [canManageServers, setCanManageServers] = useState(false);
 
   useEffect(() => {
     if (!orgId) return;
     listServers(orgId).then(setServers).catch(()=>{});
     listFactions(orgId).then(fs=> { setFactions(fs); const saved = localStorage.getItem('my_faction_id') || ''; if (saved && fs.find(f=> f.id===saved)) setMyFactionId(saved); }).catch(()=>{});
+  }, [orgId]);
+
+  useEffect(() => {
+    (async () => {
+      if (!orgId || !supabase) { setCanManageServers(false); return; }
+      try {
+        const { data: userRes } = await (supabase as any).auth.getUser();
+        const uid = userRes?.user?.id;
+        if (!uid) { setCanManageServers(false); return; }
+        const mem = await getMembership(orgId, uid);
+        if (mem && can.adminOrg(mem.role)) { setCanManageServers(true); return; }
+        const { data: org } = await (supabase as any).from('orgs').select('created_by').eq('id', orgId).maybeSingle();
+        setCanManageServers(org?.created_by === uid);
+      } catch {
+        setCanManageServers(false);
+      }
+    })();
   }, [orgId]);
 
   useEffect(() => {
@@ -36,9 +56,11 @@ export default function StepServersAndFactions() {
         <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!newServer.trim() || !orgId} onClick={async ()=>{
           try { setError(null); const s = await createServer(orgId, newServer.trim()); setServers(prev=> [...prev, s]); setNewServer(''); } catch (e: any) { setError(e.message || 'Failed to add server'); }
         }}>Add Server</button>
-        <button className="px-2 py-1 border rounded text-sm text-red-700 border-red-300 disabled:opacity-50" disabled={!orgId || servers.length === 0} onClick={async ()=>{
+        <button className="px-2 py-1 border rounded text-sm text-red-700 border-red-300 disabled:opacity-50" disabled={!canManageServers || !orgId || servers.length === 0} onClick={async ()=>{
           if (!orgId) return;
-          if (!confirm('Clear ALL servers for this org? This will also delete server mappings, alliances, and any strike declarations that reference those alliances.')) return;
+          if (!canManageServers) { setError('Only org admin/creator can clear servers.'); return; }
+          const typed = prompt('Type CLEAR to confirm clearing ALL servers for this org.\n\nThis will delete servers, mappings, alliances, and strike declarations.');
+          if (typed !== 'CLEAR') return;
           try {
             setError(null);
             await clearAllServers(orgId);
@@ -69,9 +91,11 @@ export default function StepServersAndFactions() {
                 <option value="">Select faction…</option>
                 {factions.map(f => <option key={f.id} value={f.id}>{normalizeTeamName(f.name)}</option>)}
               </select>
-              <button className="ml-auto px-2 py-1 border rounded text-xs text-red-700 border-red-300" title="Delete server" onClick={async ()=>{
+              <button className="ml-auto px-2 py-1 border rounded text-xs text-red-700 border-red-300 disabled:opacity-50" disabled={!canManageServers} title={canManageServers ? 'Delete server' : 'Only org admin/creator can delete servers'} onClick={async ()=>{
                 if (!orgId) return;
-                if (!confirm(`Delete server ${s.name}? This will also delete alliances on this server and any strike declarations that reference them.`)) return;
+                if (!canManageServers) { setError('Only org admin/creator can delete servers.'); return; }
+                const typed = prompt(`Type DELETE to confirm deleting server ${s.name}.\n\nThis will delete alliances on this server and strike declarations that reference them.`);
+                if (typed !== 'DELETE') return;
                 try {
                   setError(null);
                   await deleteServer(orgId, s.id);
