@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useMemo as useReactMemo } from 'react';
 import { createInvite, listInvites, createBroadcastInvite, getActiveBroadcastInvite, revokeBroadcastInvite } from '@/services/inviteApi';
 import { useEffect as useEffectReact } from 'react';
 import { listAlliances, listFactions, listServers } from '@/services/adminApi';
+import { normalizeTeamName } from '@/lib/teams';
 
 export default function InviteMaker() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
@@ -83,7 +84,7 @@ export default function InviteMaker() {
         <div className="flex items-center gap-2">
           <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={factionId} onChange={e=> { setFactionId(e.target.value); setServerId(''); setAllianceId(''); }}>
             <option value="">Faction…</option>
-            {factions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            {factions.map(f => <option key={f.id} value={f.id}>{normalizeTeamName(f.name)}</option>)}
           </select>
           <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={serverId} onChange={e=> { setServerId(e.target.value); setAllianceId(''); }}>
             <option value="">Server…</option>

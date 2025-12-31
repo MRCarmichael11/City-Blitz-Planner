@@ -4,6 +4,7 @@ import { listAlliances } from '@/services/adminApi';
 import { getMembership, can } from '@/lib/rbac';
 import { getBracket } from '@/lib/brackets';
 import { useI18n } from '@/i18n';
+import { normalizeTeamName } from '@/lib/teams';
 
 type Faction = { id: string; name: string };
 type Alliance = { id: string; tag: string; name: string; rank_int: number | null; server?: { name: string } };
@@ -77,7 +78,7 @@ export default function StrikeBoard() {
       .catch(()=>{});
   }, [orgId, factionId, factions]);
 
-  // Load attacker alliances from my faction (Anubis)
+  // Load attacker alliances from my faction
   useEffect(() => {
     if (!orgId || !factionId) { setAttackerAlliances([]); setAttackerId(''); return; }
     (supabase as any)
@@ -248,10 +249,10 @@ export default function StrikeBoard() {
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <div className="text-xs border rounded px-2 py-1 bg-accent/40">
-          {t('labels.myFaction')}: <strong>{(factions.find(f=> f.id===factionId)?.name) || '—'}</strong>
+          {t('labels.myFaction')}: <strong>{normalizeTeamName((factions.find(f=> f.id===factionId)?.name) || '—')}</strong>
         </div>
         <div className="text-xs border rounded px-2 py-1 bg-accent/40">
-          {t('labels.targeting')}: <strong>{(factions.find(f=> f.id===opponentFactionId)?.name) || '—'}</strong>
+          {t('labels.targeting')}: <strong>{normalizeTeamName((factions.find(f=> f.id===opponentFactionId)?.name) || '—')}</strong>
         </div>
         {isOrgAdmin ? (
           <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={attackerId} onChange={e=> setAttackerId(e.target.value)}>

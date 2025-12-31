@@ -56,6 +56,107 @@ export async function createServer(orgId: string, name: string): Promise<Server>
   return data as Server;
 }
 
+/**
+ * Deletes a server and its related data.
+ *
+ * Notes:
+ * - `declarations` references `alliances` with ON DELETE RESTRICT, so we must delete affected declarations first.
+ * - `invites.alliance_id` also references `alliances` (no cascade), so we null it before deleting alliances.
+ */
+export async function deleteServer(orgId: string, serverId: string): Promise<void> {
+  // Find alliances on this server (needed to clean up restricted references)
+  const { data: alliances, error: alliancesErr } = await (supabase as any)
+    .from('alliances')
+    .select('id')
+    .eq('org_id', orgId)
+    .eq('server_id', serverId);
+  if (alliancesErr) throw alliancesErr;
+
+  const allianceIds: string[] = (alliances || []).map((a: any) => a.id).filter(Boolean);
+
+  // Delete declarations that reference those alliances (declaring or target)
+  if (allianceIds.length) {
+    const { data: declA, error: declAErr } = await (supabase as any)
+      .from('declarations')
+      .select('id')
+      .eq('org_id', orgId)
+      .in('declaring_alliance_id', allianceIds);
+    if (declAErr) throw declAErr;
+
+    const { data: declT, error: declTErr } = await (supabase as any)
+      .from('declarations')
+      .select('id')
+      .eq('org_id', orgId)
+      .in('target_alliance_id', allianceIds);
+    if (declTErr) throw declTErr;
+
+    const declIds = Array.from(new Set([...(declA || []), ...(declT || [])].map((d: any) => d.id).filter(Boolean)));
+    if (declIds.length) {
+      const { error: declDelErr } = await (supabase as any)
+        .from('declarations')
+        .delete()
+        .eq('org_id', orgId)
+        .in('id', declIds);
+      if (declDelErr) throw declDelErr;
+    }
+
+    // Null any invites tied to these alliances so alliance deletion doesn't fail
+    const { error: invitesErr } = await (supabase as any)
+      .from('invites')
+      .update({ alliance_id: null })
+      .eq('org_id', orgId)
+      .in('alliance_id', allianceIds);
+    if (invitesErr) throw invitesErr;
+  }
+
+  // Remove dependent rows, then the server itself
+  const { error: allianceDelErr } = await (supabase as any)
+    .from('alliances')
+    .delete()
+    .eq('org_id', orgId)
+    .eq('server_id', serverId);
+  if (allianceDelErr) throw allianceDelErr;
+
+  const { error: mapDelErr } = await (supabase as any)
+    .from('server_faction_map')
+    .delete()
+    .eq('org_id', orgId)
+    .eq('server_id', serverId);
+  if (mapDelErr) throw mapDelErr;
+
+  const { error: serverDelErr } = await (supabase as any)
+    .from('servers')
+    .delete()
+    .eq('org_id', orgId)
+    .eq('id', serverId);
+  if (serverDelErr) throw serverDelErr;
+}
+
+/**
+ * Clears all servers for an org.
+ *
+ * This also clears alliances and strike declarations (required to satisfy FK constraints),
+ * and unlinks invites from any alliances that are being deleted.
+ */
+export async function clearAllServers(orgId: string): Promise<void> {
+  // Declarations must be deleted before alliances because of ON DELETE RESTRICT.
+  const { error: declErr } = await (supabase as any).from('declarations').delete().eq('org_id', orgId);
+  if (declErr) throw declErr;
+
+  // Unlink invites from alliances (otherwise deleting alliances can fail).
+  const { error: invitesErr } = await (supabase as any).from('invites').update({ alliance_id: null }).eq('org_id', orgId);
+  if (invitesErr) throw invitesErr;
+
+  const { error: allianceErr } = await (supabase as any).from('alliances').delete().eq('org_id', orgId);
+  if (allianceErr) throw allianceErr;
+
+  const { error: mapErr } = await (supabase as any).from('server_faction_map').delete().eq('org_id', orgId);
+  if (mapErr) throw mapErr;
+
+  const { error: serverErr } = await (supabase as any).from('servers').delete().eq('org_id', orgId);
+  if (serverErr) throw serverErr;
+}
+
 export async function listFactions(orgId: string): Promise<Faction[]> {
   const { data, error } = await (supabase as any).from('factions').select('*').eq('org_id', orgId).order('name');
   if (error) throw error;

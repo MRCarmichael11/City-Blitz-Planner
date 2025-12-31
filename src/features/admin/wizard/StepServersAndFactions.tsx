@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { listServers, createServer, listFactions, createFaction, mapServerToFaction, getServerFaction } from '@/services/adminApi';
+import { clearAllServers, deleteServer, listServers, createServer, listFactions, createFaction, mapServerToFaction, getServerFaction } from '@/services/adminApi';
+import { normalizeTeamName } from '@/lib/teams';
+import { supabase } from '@/services/supabaseClient';
+import { can, getMembership } from '@/lib/rbac';
 
 export default function StepServersAndFactions() {
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
@@ -10,6 +13,7 @@ export default function StepServersAndFactions() {
   const [newFaction, setNewFaction] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [mapping, setMapping] = useState<Record<string, string | null>>({});
+  const [canManageServers, setCanManageServers] = useState(false);
 
   useEffect(() => {
     if (!orgId) return;
@@ -18,7 +22,25 @@ export default function StepServersAndFactions() {
   }, [orgId]);
 
   useEffect(() => {
-    if (!orgId || servers.length === 0) return;
+    (async () => {
+      if (!orgId || !supabase) { setCanManageServers(false); return; }
+      try {
+        const { data: userRes } = await (supabase as any).auth.getUser();
+        const uid = userRes?.user?.id;
+        if (!uid) { setCanManageServers(false); return; }
+        const mem = await getMembership(orgId, uid);
+        if (mem && can.adminOrg(mem.role)) { setCanManageServers(true); return; }
+        const { data: org } = await (supabase as any).from('orgs').select('created_by').eq('id', orgId).maybeSingle();
+        setCanManageServers(org?.created_by === uid);
+      } catch {
+        setCanManageServers(false);
+      }
+    })();
+  }, [orgId]);
+
+  useEffect(() => {
+    if (!orgId) return;
+    if (servers.length === 0) { setMapping({}); return; }
     Promise.all(servers.map(s => getServerFaction(orgId, s.id))).then(rows => {
       const m: Record<string, string | null> = {};
       rows.forEach((r, idx) => { m[servers[idx].id] = r?.faction_id ?? null; });
@@ -34,8 +56,22 @@ export default function StepServersAndFactions() {
         <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!newServer.trim() || !orgId} onClick={async ()=>{
           try { setError(null); const s = await createServer(orgId, newServer.trim()); setServers(prev=> [...prev, s]); setNewServer(''); } catch (e: any) { setError(e.message || 'Failed to add server'); }
         }}>Add Server</button>
+        <button className="px-2 py-1 border rounded text-sm text-red-700 border-red-300 disabled:opacity-50" disabled={!canManageServers || !orgId || servers.length === 0} onClick={async ()=>{
+          if (!orgId) return;
+          if (!canManageServers) { setError('Only org admin/creator can clear servers.'); return; }
+          const typed = prompt('Type CLEAR to confirm clearing ALL servers for this org.\n\nThis will delete servers, mappings, alliances, and strike declarations.');
+          if (typed !== 'CLEAR') return;
+          try {
+            setError(null);
+            await clearAllServers(orgId);
+            setServers([]);
+            setMapping({});
+          } catch (e: any) {
+            setError(e.message || 'Failed to clear servers');
+          }
+        }}>Clear all</button>
         <div className="mx-2" />
-        <input className="border rounded px-2 py-1 text-sm bg-background text-foreground" placeholder="New faction (e.g., Gendarmarie)" value={newFaction} onChange={e=> setNewFaction(e.target.value)} />
+        <input className="border rounded px-2 py-1 text-sm bg-background text-foreground" placeholder="New faction (e.g., Blue Team)" value={newFaction} onChange={e=> setNewFaction(e.target.value)} />
         <button className="px-2 py-1 border rounded text-sm disabled:opacity-50" disabled={!newFaction.trim() || !orgId} onClick={async ()=>{
           try { setError(null); const f = await createFaction(orgId, newFaction.trim()); setFactions(prev=> [...prev, f]); setNewFaction(''); } catch (e: any) { setError(e.message || 'Failed to add faction'); }
         }}>Add Faction</button>
@@ -53,8 +89,26 @@ export default function StepServersAndFactions() {
                 try { setError(null); const row = await mapServerToFaction(orgId, s.id, val); setMapping(prev=> ({ ...prev, [s.id]: row.faction_id })); } catch (err: any) { setError(err.message || 'Failed to map server'); }
               }}>
                 <option value="">Select faction…</option>
-                {factions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                {factions.map(f => <option key={f.id} value={f.id}>{normalizeTeamName(f.name)}</option>)}
               </select>
+              <button className="ml-auto px-2 py-1 border rounded text-xs text-red-700 border-red-300 disabled:opacity-50" disabled={!canManageServers} title={canManageServers ? 'Delete server' : 'Only org admin/creator can delete servers'} onClick={async ()=>{
+                if (!orgId) return;
+                if (!canManageServers) { setError('Only org admin/creator can delete servers.'); return; }
+                const typed = prompt(`Type DELETE to confirm deleting server ${s.name}.\n\nThis will delete alliances on this server and strike declarations that reference them.`);
+                if (typed !== 'DELETE') return;
+                try {
+                  setError(null);
+                  await deleteServer(orgId, s.id);
+                  setServers(prev => prev.filter(x => x.id !== s.id));
+                  setMapping(prev => {
+                    const next = { ...prev };
+                    delete next[s.id];
+                    return next;
+                  });
+                } catch (e: any) {
+                  setError(e.message || 'Failed to delete server');
+                }
+              }}>Delete</button>
             </div>
           ))}
         </div>
@@ -64,9 +118,9 @@ export default function StepServersAndFactions() {
         <div className="border rounded p-3">
           <div className="flex items-center gap-2">
             <div className="text-sm font-medium">My Faction</div>
-            <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={myFactionId} onChange={e=> { setMyFactionId(e.target.value); localStorage.setItem('my_faction_id', e.target.value); localStorage.setItem('my_faction_name', factions.find(f=> f.id===e.target.value)?.name || ''); }}>
+            <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={myFactionId} onChange={e=> { setMyFactionId(e.target.value); localStorage.setItem('my_faction_id', e.target.value); localStorage.setItem('my_faction_name', normalizeTeamName(factions.find(f=> f.id===e.target.value)?.name || '')); }}>
               <option value="">Select…</option>
-              {factions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              {factions.map(f => <option key={f.id} value={f.id}>{normalizeTeamName(f.name)}</option>)}
             </select>
             {myFactionId && <span className="text-xs text-muted-foreground">Saved for Strike Planner</span>}
           </div>
