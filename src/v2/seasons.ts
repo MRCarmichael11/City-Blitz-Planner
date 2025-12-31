@@ -54,6 +54,13 @@ function simpleCities(rows: number, cols: number): Territory[] {
 import s3DataJson from './data/s3.json' assert { type: 'json' };
 export const S3: SeasonDefinition = buildSeasonFromDataset(s3DataJson as import('./dataLoader').SeasonDataset);
 
+// S4 is also dataset-driven - similar to S3 with some key differences:
+// - 15x15 grid instead of 13x13
+// - T6 cities on cardinal axes instead of diagonal corners
+// - New tile types: Holiday Market (HM) and Defensive Tower (DT) near center
+import s4DataJson from './data/s4.json' assert { type: 'json' };
+export const S4: SeasonDefinition = buildSeasonFromDataset(s4DataJson as import('./dataLoader').SeasonDataset);
+
 export const S1: SeasonDefinition = {
   key: 'S1',
   name: 'Season 1',
@@ -76,13 +83,3 @@ export const S2: SeasonDefinition = {
   }
 };
 
-export const S4: SeasonDefinition = {
-  key: 'S4',
-  name: 'Season 4',
-  gridSize: { rows: 15, cols: 15 },
-  calendar: { steps: 7, cityUnlocks: { 7: ['H8'] }, stepDays: [3,6,10,13,17,20,28] },
-  generateBaseMap() {
-    const { rows, cols } = this.gridSize;
-    return [...edgeStrongholds(rows, cols), ...simpleCities(rows, cols)];
-  }
-};
