@@ -20,10 +20,15 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
 
   const squareSize = 56; // base stronghold tile px
   const cityScale = 0.6; // city/trading-post tiles are smaller than strongholds
-  const width = map.gridSize.cols * squareSize;
-  const height = map.gridSize.rows * squareSize;
 
   const territories = useMemo(() => map.territories, [map.territories]);
+
+  // Rendering model:
+  // - S4 is a checkerboard of full-size cities/strongholds, plus a few intersection Trading Posts.
+  // - S3 is heavily interleaved with many intersection tiles; we keep extra spacing there for readability.
+  const gridStep = map.season === 'S3' ? 72 : squareSize;
+  const width = map.gridSize.cols * gridStep;
+  const height = map.gridSize.rows * gridStep;
 
   // Offscreen culling based on current viewport (pan/zoom)
   const visibleTerritories = useMemo(() => {
@@ -33,21 +38,23 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
     const vy0 = (-pan.y) / zoom;
     const vx1 = (cw - pan.x) / zoom;
     const vy1 = (ch - pan.y) / zoom;
-    const margin = 2 * squareSize; // render margin for smoothness
+    const margin = 2 * gridStep; // render margin for smoothness
 
     return territories.filter(t => {
-      const isCityLike = t.tileType === 'city' || t.tileType === 'trading-post';
-      const w = isCityLike ? squareSize * cityScale : squareSize;
-      const h = isCityLike ? squareSize * cityScale : squareSize;
-      const dx = isCityLike ? (squareSize - w) / 2 : 0;
-      const dy = isCityLike ? (squareSize - h) / 2 : 0;
-      const x = (((t.col - 1) + (t.offset?.x ?? 0)) * squareSize) + dx;
-      const y = (((t.row - 1) + (t.offset?.y ?? 0)) * squareSize) + dy;
+      // S4 cities are full-size tiles; only trading posts are small intersection tiles.
+      const isSmall = (t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4');
+      const w = isSmall ? squareSize * cityScale : squareSize;
+      const h = isSmall ? squareSize * cityScale : squareSize;
+      // Center all tiles within their "cell" so intersections sit cleanly between strongholds.
+      const dx = (gridStep - w) / 2;
+      const dy = (gridStep - h) / 2;
+      const x = (((t.col - 1) + (t.offset?.x ?? 0)) * gridStep) + dx;
+      const y = (((t.row - 1) + (t.offset?.y ?? 0)) * gridStep) + dy;
       // AABB intersect check with viewport box in world coords
       const rx0 = x, ry0 = y, rx1 = x + w, ry1 = y + h;
       return !(rx1 < vx0 - margin || rx0 > vx1 + margin || ry1 < vy0 - margin || ry0 > vy1 + margin);
     });
-  }, [territories, pan.x, pan.y, zoom, squareSize, cityScale, width, height]);
+  }, [territories, pan.x, pan.y, zoom, squareSize, cityScale, width, height, gridStep, map.season]);
 
   const clampPan = useCallback((nx: number, ny: number, z: number) => {
     const cw = containerRef.current?.clientWidth ?? 0;
@@ -121,11 +128,11 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
           style={{ width, height, transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
         >
           {/* Grid lines */}
-          {Array.from({ length: map.gridSize.cols }, (_, i) => (
-            <div key={`v${i}`} className="absolute top-0 bottom-0 border-l border-border/40" style={{ left: i*squareSize }} />
+          {Array.from({ length: map.gridSize.cols + 1 }, (_, i) => (
+            <div key={`v${i}`} className="absolute top-0 bottom-0 border-l border-border/40" style={{ left: i*gridStep }} />
           ))}
-          {Array.from({ length: map.gridSize.rows }, (_, i) => (
-            <div key={`h${i}`} className="absolute left-0 right-0 border-t border-border/40" style={{ top: i*squareSize }} />
+          {Array.from({ length: map.gridSize.rows + 1 }, (_, i) => (
+            <div key={`h${i}`} className="absolute left-0 right-0 border-t border-border/40" style={{ top: i*gridStep }} />
           ))}
 
           {/* Territories (culled) */}
@@ -135,6 +142,23 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
             const bgOverlay = color ? `${color}80` : undefined; // ~50% opacity
             const borderOverlay = color ? `${color}CC` : undefined; // ~80% opacity
             const filtered = selectedAlliance ? (asg ? asg.alliance === selectedAlliance : false) : true;
+            const label = (() => {
+              // S4 in-game convention: cities show labels, strongholds are blank.
+              if (map.season === 'S4') {
+                if (t.tileType === 'capitol') return 'Tenryū Castle\nLv.7';
+                if (t.tileType === 'trading-post') return `TP\nLv.${t.buildingLevel}`;
+                if (t.tileType === 'stronghold') return '';
+                // city
+                const name = t.subLabel ? t.subLabel : 'City';
+                return `${name}\nLv.${t.buildingLevel}`;
+              }
+
+              // Default labeling for other seasons
+              if (t.tileType === 'stronghold') return `S${t.buildingLevel}`;
+              if (t.tileType === 'city') return `T${t.buildingLevel}`;
+              if (t.tileType === 'trading-post') return `TP${t.buildingLevel}`;
+              return 'Cap';
+            })();
             return (
               <button
                 key={t.id}
@@ -146,18 +170,18 @@ export default function MapCanvas({ map, selectedAlliance, assignments, selected
                   filtered ? '' : 'opacity-30'
                 } ${(hoverId===t.id || (selectedId && selectedId===t.id)) ? 'ring-2 ring-primary' : ''} ${t.tileType === 'stronghold' ? 'bg-red-500/10 border-red-500/40' : t.tileType === 'city' ? 'bg-amber-500/10 border-amber-500/40' : t.tileType === 'trading-post' ? 'bg-black/60 border-black/70 text-white' : 'bg-yellow-500/10 border-yellow-500/40'}`}
                 style={{ 
-                  left: ((t.col-1)+(t.offset?.x??0))*squareSize, 
-                  top: ((t.row-1)+(t.offset?.y??0))*squareSize,
-                  width: t.tileType === 'city' || t.tileType === 'trading-post' ? squareSize*cityScale : squareSize,
-                  height: t.tileType === 'city' || t.tileType === 'trading-post' ? squareSize*cityScale : squareSize,
-                  zIndex: t.tileType === 'city' || t.tileType === 'trading-post' ? 3 : (t.tileType === 'capitol' ? 4 : 2), pointerEvents: 'auto', cursor: t.tileType==='trading-post' ? 'not-allowed' : 'pointer',
-                  transform: t.tileType === 'city' || t.tileType === 'trading-post' ? `translate(${(squareSize - squareSize*cityScale)/2}px, ${(squareSize - squareSize*cityScale)/2}px)` : undefined,
+                  left: (((t.col-1)+(t.offset?.x??0))*gridStep) + (gridStep - (((t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4')) ? squareSize*cityScale : squareSize))/2,
+                  top: (((t.row-1)+(t.offset?.y??0))*gridStep) + (gridStep - (((t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4')) ? squareSize*cityScale : squareSize))/2,
+                  width: ((t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4')) ? squareSize*cityScale : squareSize,
+                  height: ((t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4')) ? squareSize*cityScale : squareSize,
+                  zIndex: (t.tileType === 'trading-post') || (t.tileType === 'city' && map.season !== 'S4') ? 3 : (t.tileType === 'capitol' ? 4 : 2), pointerEvents: 'auto', cursor: t.tileType==='trading-post' ? 'not-allowed' : 'pointer',
+                  transform: undefined,
                   backgroundColor: bgOverlay || undefined,
                   borderColor: borderOverlay || undefined,
                 }}
                 title={t.coordinates + ' ' + t.tileType + (t.isUnlocked===false ? ' (locked)' : '') + (asg ? ' • ' + asg.alliance : '') + (t.tileType === 'trading-post' ? ' • PvP (uncapturable by alliances)' : '')}
               >
-                {t.tileType === 'stronghold' ? `S${t.buildingLevel}` : t.tileType === 'city' ? `T${t.buildingLevel}` : t.tileType === 'trading-post' ? `TP${t.buildingLevel}` : 'Cap'}
+                <span className="whitespace-pre-line text-center">{label}</span>
               </button>
             );
           })}

@@ -8,7 +8,7 @@ import MapCanvas from '@/v2/MapCanvas';
 import { Mode, Assignments } from '@/v2/rules';
 import TerritoryDetailsPanel from '@/v2/TerritoryDetailsPanel';
 import { getSharedMap, type SharedMapWithData } from '@/services/sharedMaps';
-import { ChevronLeft, ExternalLink } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 
 const seasons = { S1, S2, S3, S4 } as const;
 
@@ -191,9 +191,6 @@ export default function SharedMapViewer() {
             <div className="text-xs text-muted-foreground">
               Season {seasonKey.replace('S', '')} • Share ID: {shareId}
             </div>
-            <Link to="/" className="border rounded px-2 py-1 text-xs inline-flex items-center gap-1 hover:bg-accent">
-              <ExternalLink className="w-4 h-4" /> Open Full Planner
-            </Link>
           </div>
         </div>
       </header>

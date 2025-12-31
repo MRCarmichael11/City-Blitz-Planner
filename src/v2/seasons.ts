@@ -82,4 +82,3 @@ export const S2: SeasonDefinition = {
     return [...edgeStrongholds(rows, cols), ...simpleCities(rows, cols)];
   }
 };
-

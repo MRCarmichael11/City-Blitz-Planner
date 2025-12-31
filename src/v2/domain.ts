@@ -1,6 +1,6 @@
 // v2 domain types and helpers
 export type TileType = 'stronghold' | 'city' | 'trading-post' | 'capitol';
-export type ResourceType = 'Mithril' | 'Spice' | 'Iron' | 'Coal' | 'Rare Soil' | 'None';
+export type ResourceType = 'Mithril' | 'Spice' | 'Stone' | 'Copper' | 'Iron' | 'Coal' | 'Rare Soil' | 'None';
 
 export type SeasonKey = 'S0' | 'S1' | 'S2' | 'S3' | 'S4';
 

@@ -1,4 +1,4 @@
-import { Alliance, SeasonCalendar, Territory, Tick, ActionEvent, dayHalfFromTick, tickFromDayHalf } from './domain';
+import { Alliance, SeasonCalendar, SeasonKey, Territory, Tick, ActionEvent, dayHalfFromTick, tickFromDayHalf } from './domain';
 
 export type Mode = 'planning' | 'action';
 
@@ -11,6 +11,7 @@ export type Assignments = Record<string, Assignment>; // territoryId -> assignme
 
 export interface CaptureCheckParams {
   mode: Mode;
+  seasonKey?: SeasonKey;
   step: number; // current step (1..7) - for legacy UI display only
   calendar: SeasonCalendar;
   territories: Territory[];
@@ -22,6 +23,18 @@ export interface CaptureCheckParams {
 }
 
 export interface CaptureResult { ok: boolean; reason?: string }
+
+function isCapitolTile(t: Territory): boolean {
+  // Defensive: treat anything explicitly marked as Capitol as non-counting for caps,
+  // even if it was accidentally typed as a city in a dataset.
+  return t.tileType === 'capitol' || t.buildingType === 'Capitol' || t.id.startsWith('CAP-');
+}
+
+export function totalCapsForSeason(seasonKey: SeasonKey | undefined): { strongholds: number; cities: number } {
+  // S4: 6/6 cap; other seasons: 8/8 (legacy behavior)
+  if (seasonKey === 'S4') return { strongholds: 6, cities: 6 };
+  return { strongholds: 8, cities: 8 };
+}
 
 export function availableDaysForStep(step: number, calendar: SeasonCalendar): number {
   const sd = calendar.stepDays;
@@ -35,8 +48,28 @@ export function isCityUnlocked(t: Territory): boolean {
   return !!t.isUnlocked;
 }
 
-export function hasAdjacentOwned(territories: Territory[], assignments: Assignments, alliance: string, t: Territory): boolean {
-  // Geometric adjacency on the half-step lattice:
+export function hasAdjacentOwned(
+  territories: Territory[],
+  assignments: Assignments,
+  alliance: string,
+  t: Territory,
+  seasonKey?: SeasonKey
+): boolean {
+  // S4 uses checkerboard movement rules: tiles are adjacent if they share an edge OR a corner.
+  // This enables diagonal progress across same-parity tiles (e.g., stronghold->stronghold).
+  if (seasonKey === 'S4') {
+    for (const [tid, asg] of Object.entries(assignments)) {
+      if (asg.alliance !== alliance) continue;
+      const n = territories.find(tt => tt.id === tid);
+      if (!n) continue;
+      const dx = Math.abs(n.col - t.col);
+      const dy = Math.abs(n.row - t.row);
+      if (dx <= 1 && dy <= 1 && (dx + dy) > 0) return true;
+    }
+    return false;
+  }
+
+  // Default (S1/S2/S3): geometric adjacency on the half-step lattice:
   // stronghold centers at (2r,2c), city/TP centers at (2r+1,2c+1). Two tiles are adjacent if |dx|+|dy| === 2.
   const tX = 2 * t.col + (t.offset?.x ? 1 : 0);
   const tY = 2 * t.row + (t.offset?.y ? 1 : 0);
@@ -58,6 +91,7 @@ export function countsForStep(assignments: Assignments, alliance: string, step: 
     if (a.alliance !== alliance || a.step !== step) continue;
     const t = territories.find(tt => tt.id === tid);
     if (!t) continue;
+    if (isCapitolTile(t)) continue; // Capitol never counts toward caps
     if (t.tileType === 'stronghold') strongholds++;
     else if (t.tileType === 'city') cities++;
   }
@@ -70,6 +104,7 @@ export function countsTotal(assignments: Assignments, alliance: string, territor
     if (a.alliance !== alliance) continue;
     const t = territories.find(tt => tt.id === tid);
     if (!t) continue;
+    if (isCapitolTile(t)) continue; // Capitol never counts toward caps
     if (t.tileType === 'stronghold') strongholds++;
     else if (t.tileType === 'city') cities++;
   }
@@ -85,24 +120,61 @@ function protectionTicksFor(t: Territory): number {
 
 function recaptureAllowedAtTick(tileId: string, events: ActionEvent[] | undefined): Tick | null {
   if (!events || events.length === 0) return null;
-  // Find last capture on this tile
+  // Find the last *effective* capture on this tile.
+  //
+  // Action-stepper quality-of-life:
+  // If a capture is undone by a release later the SAME day, treat it as if it never happened
+  // for protection timer purposes (no protection should be applied).
+  //
+  // Note: we only examine events up to the current tick (caller responsibility).
+  let latestReleaseTick: Tick | null = null;
+  let latestReleaseDay: number | null = null;
   for (let i = events.length - 1; i >= 0; i--) {
     const e = events[i];
-    if (e.tileId === tileId && e.action === 'capture') {
+    if (e.tileId !== tileId) continue;
+    const { day } = dayHalfFromTick(e.tick);
+    if (e.action === 'release') {
+      if (latestReleaseTick === null) {
+        latestReleaseTick = e.tick;
+        latestReleaseDay = day;
+      }
+      continue;
+    }
+    if (e.action === 'capture') {
+      // If there is a release later the same day, ignore this capture for protection.
+      if (latestReleaseTick !== null && latestReleaseDay === day && latestReleaseTick > e.tick) {
+        continue;
+      }
       return e.tick + 0 as Tick; // caller will add protection based on tile type
     }
   }
   return null;
 }
 
-function dailyCapsUsedFor(alliance: string, day: number, events: ActionEvent[], territories: Territory[]): { S: number; C: number } {
-  let S = 0, C = 0;
+export function dailyCapsUsedFor(alliance: string, day: number, events: ActionEvent[], territories: Territory[]): { S: number; C: number } {
+  // Action-stepper quality-of-life:
+  // If an alliance captures a tile and then releases it later the SAME day, treat that as an undone move
+  // and refund the daily cap. (We only ever check the current day’s cap in canCapture.)
+  //
+  // Implementation: for each tile, keep the last action performed by this alliance on that day.
+  // Last action = capture => counts as a used move; last action = release => does not.
+  const lastByTile = new Map<string, 'capture' | 'release'>();
+
   for (const e of events) {
     const { day: d } = dayHalfFromTick(e.tick);
-    if (d !== day || e.alliance !== alliance || e.action !== 'capture') continue;
-    const t = territories.find(tt => tt.id === e.tileId);
+    if (d !== day || e.alliance !== alliance) continue;
+    if (e.action !== 'capture' && e.action !== 'release') continue;
+    lastByTile.set(e.tileId, e.action);
+  }
+
+  let S = 0, C = 0;
+  for (const [tileId, last] of lastByTile.entries()) {
+    if (last !== 'capture') continue;
+    const t = territories.find(tt => tt.id === tileId);
     if (!t) continue;
-    if (t.tileType === 'stronghold') S++; else if (t.tileType === 'city') C++;
+    if (isCapitolTile(t)) continue; // Capitol is excluded from daily caps too
+    if (t.tileType === 'stronghold') S++;
+    else if (t.tileType === 'city') C++;
   }
   return { S, C };
 }
@@ -118,10 +190,11 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
     return { ok: false, reason: 'Already owned by this alliance' };
   }
 
-  // Global per-alliance hard caps: 8 strongholds + 8 cities, always enforced (preview/planning included)
+  // Global per-alliance hard caps, always enforced (preview/planning included)
+  const caps = totalCapsForSeason(p.seasonKey);
   const totals = countsTotal(p.assignments, p.selectedAlliance, p.territories);
-  if (t.tileType === 'stronghold' && totals.strongholds >= 8) return { ok: false, reason: 'Alliance cap reached: 8 strongholds total' }; // capitol excluded
-  if (t.tileType === 'city' && totals.cities >= 8) return { ok: false, reason: 'Alliance cap reached: 8 cities total' };
+  if (t.tileType === 'stronghold' && totals.strongholds >= caps.strongholds) return { ok: false, reason: `Alliance cap reached: ${caps.strongholds} strongholds total` }; // capitol excluded
+  if (t.tileType === 'city' && totals.cities >= caps.cities) return { ok: false, reason: `Alliance cap reached: ${caps.cities} cities total` };
 
   if (p.mode === 'planning') return { ok: true };
 
@@ -211,7 +284,7 @@ export function canCapture(t: Territory, p: CaptureCheckParams): CaptureResult {
     }
   } else {
     // 3) Adjacency required for ALL captures thereafter (both strongholds and cities)
-    if (!hasAdjacentOwned(p.territories, p.assignments, p.selectedAlliance, t)) {
+    if (!hasAdjacentOwned(p.territories, p.assignments, p.selectedAlliance, t, p.seasonKey)) {
       return { ok: false, reason: 'Need an adjacent owned tile to capture' };
     }
   }

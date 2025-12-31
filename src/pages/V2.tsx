@@ -217,7 +217,8 @@ function AuthWidget() {
 
 export default function V2() {
   const { t } = useI18n();
-  const [seasonKey, setSeasonKey] = useState<SeasonKey>('S3');
+  // Default landing season is S4 (S3 is historical).
+  const [seasonKey, setSeasonKey] = useState<SeasonKey>('S4');
   const season = seasons[seasonKey];
   // 12-hour Action timeline state
   const [currentDay, setCurrentDay] = useState<number>(1);
@@ -1104,7 +1105,7 @@ export default function V2() {
               } else {
                 if (manualAction === 'capture') {
                   // Manual stepper ignores planner reservations: only rules apply
-                  const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
+                  const res = canCapture(t, { mode: 'action', seasonKey: season.key, step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                   if (res.ok && selectedAlliance) {
                     setEvents(prev => {
                       const next = [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }];
@@ -1124,7 +1125,9 @@ export default function V2() {
                     toast({ title: 'Cannot capture', description: res.reason });
                   }
                 } else {
-                  setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }].sort((a,b)=> a.tick - b.tick));
+                  // For releases, record the owning alliance so daily-cap refunds work even if no alliance is selected.
+                  const owner = selectedAlliance || derivedAssignments[t.id]?.alliance || '';
+                  setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: owner, action: 'release' }].sort((a,b)=> a.tick - b.tick));
                   toast({ title: 'Scheduled release', description: `${t.coordinates} at Tick ${currentTick}` });
                 }
               }
@@ -1134,7 +1137,7 @@ export default function V2() {
             if (mode === 'planning' && selectedAlliance) {
               const already = plannedAssignments[t.id]?.alliance === selectedAlliance;
               if (!already) {
-                const res = canCapture(t, { mode: 'planning', step: season.calendar.steps, calendar: season.calendar, territories: map.territories, assignments: plannedAssignments, selectedAlliance });
+                const res = canCapture(t, { mode: 'planning', seasonKey: season.key, step: season.calendar.steps, calendar: season.calendar, territories: map.territories, assignments: plannedAssignments, selectedAlliance });
                 if (res.ok) {
                   setPlannedAssignments(prev => ({ ...prev, [t.id]: { alliance: selectedAlliance, step: season.calendar.steps } }));
                   toast({ title: 'Planned', description: `${t.coordinates} → ${selectedAlliance}` });
@@ -1156,13 +1159,13 @@ export default function V2() {
                   if (!selectedAlliance) { toast({ title: 'Select an alliance', description: 'Pick an alliance to assign the tile to.' }); return; }
                   if (t.tileType === 'trading-post') { toast({ title: 'PvP Tile', description: 'Trading posts are player-held and uncapturable by alliances.' }); return; }
                   if (mode === 'planning') {
-                    const res = canCapture(t, { mode: 'planning', step: season.calendar.steps, calendar: season.calendar, territories: map.territories, assignments: plannedAssignments, selectedAlliance });
+                    const res = canCapture(t, { mode: 'planning', seasonKey: season.key, step: season.calendar.steps, calendar: season.calendar, territories: map.territories, assignments: plannedAssignments, selectedAlliance });
                     if (!res.ok) { toast({ title: 'Cannot assign', description: res.reason }); return; }
                     setPlannedAssignments(prev => ({ ...prev, [t.id]: { alliance: selectedAlliance, step: season.calendar.steps } }));
                     toast({ title: 'Planned', description: `${t.coordinates} → ${selectedAlliance}` });
                   } else {
                     // Manual stepper ignores planner reservations: only rules apply
-                    const res = canCapture(t, { mode: 'action', step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
+                    const res = canCapture(t, { mode: 'action', seasonKey: season.key, step: derivedStep, calendar: season.calendar, territories: map.territories, assignments: derivedAssignments, selectedAlliance, currentTick, events: events.filter(e=> e.tick <= currentTick) });
                     if (!res.ok) { toast({ title: 'Cannot capture', description: res.reason }); return; }
                     setEvents(prev => {
                       const next = [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance, action: 'capture' }];
@@ -1185,7 +1188,9 @@ export default function V2() {
                     setPlannedAssignments(prev => { const n = { ...prev }; delete n[t.id]; return n; });
                     toast({ title: 'Unplanned', description: `${t.coordinates}` });
                   } else {
-                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: selectedAlliance || '', action: 'release' }].sort((a,b)=> a.tick - b.tick));
+                    // For releases, record the owning alliance so daily-cap refunds work even if no alliance is selected.
+                    const owner = selectedAlliance || derivedAssignments[t.id]?.alliance || '';
+                    setEvents(prev => [...prev, { tick: currentTick, tileId: t.id, alliance: owner, action: 'release' }].sort((a,b)=> a.tick - b.tick));
                     toast({ title: 'Released', description: `${t.coordinates}` });
                   }
                 }}
@@ -1212,7 +1217,7 @@ export default function V2() {
                 <label className="block text-sm font-medium mb-1">Share Title</label>
                 <input
                   className="w-full border rounded px-3 py-2 bg-background text-foreground"
-                  placeholder="e.g., S3 Server Coordination Plan"
+                  placeholder="e.g., S4 Server Coordination Plan"
                   value={shareTitle}
                   onChange={(e) => setShareTitle(e.target.value)}
                 />

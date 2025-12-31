@@ -267,7 +267,7 @@ function findStrongholdTargets(
   const candidates = map.territories.filter(t => 
     t.tileType === 'stronghold' && 
     !currentState[t.id] && // Not owned by anyone
-    isAdjacent(t, holdings) // Adjacent to current holdings
+    isAdjacent(t, holdings, map.season) // Adjacent to current holdings
   );
   
   // Sort by preference: center-ward movement, higher levels for high priority
@@ -307,7 +307,7 @@ function findCityTargets(
   const candidates = map.territories.filter(t => 
     t.tileType === 'city' && 
     !currentState[t.id] && // Not owned by anyone
-    isAdjacent(t, strongholds) // Adjacent to strongholds (rule requirement)
+    isAdjacent(t, strongholds, map.season) // Adjacent to strongholds (rule requirement)
   );
   
   // Sort by resource value priority
@@ -324,15 +324,26 @@ function findCityTargets(
 }
 
 // Check if territory is adjacent to any in holdings list
-function isAdjacent(territory: Territory, holdings: Territory[]): boolean {
-  for (const holding of holdings) {
-    const dx = Math.abs(territory.col - holding.col);
-    const dy = Math.abs(territory.row - holding.row);
-    
-    // Adjacent in grid (including diagonals)
-    if (dx <= 1 && dy <= 1 && (dx + dy > 0)) {
-      return true;
+function isAdjacent(territory: Territory, holdings: Territory[], seasonKey: MapData['season']): boolean {
+  // Keep planner adjacency aligned with capture rules:
+  // - S4: edge OR corner adjacency (checkerboard movement)
+  // - Others: half-step lattice adjacency (intersection model)
+  if (seasonKey === 'S4') {
+    for (const holding of holdings) {
+      const dx = Math.abs(territory.col - holding.col);
+      const dy = Math.abs(territory.row - holding.row);
+      if (dx <= 1 && dy <= 1 && (dx + dy > 0)) return true;
     }
+    return false;
+  }
+
+  const tX = 2 * territory.col + (territory.offset?.x ? 1 : 0);
+  const tY = 2 * territory.row + (territory.offset?.y ? 1 : 0);
+  for (const holding of holdings) {
+    const hX = 2 * holding.col + (holding.offset?.x ? 1 : 0);
+    const hY = 2 * holding.row + (holding.offset?.y ? 1 : 0);
+    const man = Math.abs(hX - tX) + Math.abs(hY - tY);
+    if (man === 2) return true;
   }
   return false;
 }
