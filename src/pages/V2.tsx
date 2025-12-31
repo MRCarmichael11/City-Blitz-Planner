@@ -318,7 +318,16 @@ export default function V2() {
       const raw3 = localStorage.getItem(STORAGE_KEY_V3);
       if (raw3) {
         const parsed3 = JSON.parse(raw3);
-        if (parsed3.alliances && Array.isArray(parsed3.alliances)) setAlliances(parsed3.alliances);
+        // Load alliances per-season (v3.1) or fallback to global alliances (v3.0)
+        const seasonAlliances = parsed3.alliancesBySeason?.[season.key];
+        if (seasonAlliances && Array.isArray(seasonAlliances)) {
+          setAlliances(seasonAlliances);
+        } else if (parsed3.alliances && Array.isArray(parsed3.alliances)) {
+          // Migration: copy global alliances to this season only if no season-specific data exists
+          setAlliances(parsed3.alliances);
+        } else {
+          setAlliances([]);
+        }
         let evts: ActionEvent[] | undefined = parsed3.eventsBySeason && parsed3.eventsBySeason[season.key] as ActionEvent[] | undefined;
         // One-time migration: Day 8 Amex on C-H12 fix
         const MIG_KEY = 'v3_migration_amex_h12_day8';
@@ -412,7 +421,13 @@ export default function V2() {
         import('@/services/userData').then(({ getUserSeasonData }) => {
           getUserSeasonData(uid, season.key).then(remote => {
             if (!remote) return;
-            if (Array.isArray(remote.alliances)) setAlliances(remote.alliances);
+            // Support both v3.1 (alliancesBySeason) and v3.0 (alliances) formats
+            const seasonAlliances = remote.alliancesBySeason?.[season.key];
+            if (Array.isArray(seasonAlliances)) {
+              setAlliances(seasonAlliances);
+            } else if (Array.isArray(remote.alliances)) {
+              setAlliances(remote.alliances);
+            }
             if (remote.eventsBySeason && remote.eventsBySeason[season.key]) setEvents(remote.eventsBySeason[season.key]);
             if (remote.plannedBySeason && remote.plannedBySeason[season.key]) setPlannedAssignments(remote.plannedBySeason[season.key]);
           }).catch(()=>{});
@@ -429,13 +444,15 @@ export default function V2() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [season.key]);
 
-  // Save on changes as v3 (including planned end-state) locally and, if signed in, to Supabase
+  // Save on changes as v3.1 (alliances per-season) locally and, if signed in, to Supabase
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_V3);
-      const parsed = raw ? JSON.parse(raw) : { version: 3, alliances, eventsBySeason: {}, plannedBySeason: {} };
-      parsed.version = 3;
-      parsed.alliances = alliances;
+      const parsed = raw ? JSON.parse(raw) : { version: 3.1, alliancesBySeason: {}, eventsBySeason: {}, plannedBySeason: {} };
+      parsed.version = 3.1;
+      // Store alliances per-season
+      parsed.alliancesBySeason = parsed.alliancesBySeason || {};
+      parsed.alliancesBySeason[season.key] = alliances;
       parsed.eventsBySeason = parsed.eventsBySeason || {};
       parsed.eventsBySeason[season.key] = events;
       parsed.plannedBySeason = parsed.plannedBySeason || {};
@@ -451,7 +468,7 @@ export default function V2() {
         const uid = data.session?.user?.id;
         if (!uid) return;
         import('@/services/userData').then(({ saveUserSeasonData }) => {
-          const payload = { version: 3, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+          const payload = { version: 3.1, alliancesBySeason: { [season.key]: alliances }, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
           saveUserSeasonData(uid, season.key, payload).catch(() => {});
         });
       }).catch(()=>{});
@@ -557,7 +574,7 @@ export default function V2() {
                   <>
                     <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={async ()=>{
                       if (!authUser) return;
-                      const payload = { version: 3, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+                      const payload = { version: 3.1, alliancesBySeason: { [season.key]: alliances }, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
                       try {
                         const { saveUserSeasonData } = await import('@/services/userData');
                         const ok = await saveUserSeasonData(authUser.id, season.key, payload);
@@ -574,7 +591,11 @@ export default function V2() {
                         const { getUserSeasonData } = await import('@/services/userData');
                         const remote = await getUserSeasonData(authUser.id, season.key);
                         if (!remote) { toast({ title: 'No server data', description: `No saved data found for ${season.key}.` }); return; }
-                        if (Array.isArray(remote.alliances)) setAlliances(remote.alliances);
+                        // Support both v3.1 (alliancesBySeason) and v3.0 (alliances) formats
+                        const seasonAlliances = remote.alliancesBySeason?.[season.key];
+                        if (Array.isArray(seasonAlliances)) setAlliances(seasonAlliances);
+                        else if (Array.isArray(remote.alliances)) setAlliances(remote.alliances);
+                        else setAlliances([]);
                         if (remote.eventsBySeason && remote.eventsBySeason[season.key]) setEvents(remote.eventsBySeason[season.key]); else setEvents([]);
                         if (remote.plannedBySeason && remote.plannedBySeason[season.key]) setPlannedAssignments(remote.plannedBySeason[season.key]); else setPlannedAssignments({});
                         toast({ title: 'Reloaded from server', description: `Applied ${season.key} data from your account.` });
@@ -590,7 +611,7 @@ export default function V2() {
                           payload = await getUserSeasonData(authUser.id, season.key);
                         }
                         if (!payload) {
-                          payload = { version: 3, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+                          payload = { version: 3.1, alliancesBySeason: { [season.key]: alliances }, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
                         }
                         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                         const url = URL.createObjectURL(blob); const a = document.createElement('a');
@@ -752,7 +773,7 @@ export default function V2() {
               </DropdownMenu.Trigger>
               <DropdownMenu.Content className="z-50 min-w-[260px] rounded border bg-card p-1 shadow-md">
                 <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded" onClick={()=>{
-                  const data = { version: 3, season: season.key, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+                  const data = { version: 3.1, season: season.key, alliancesBySeason: { [season.key]: alliances }, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
                   const blob = new Blob([JSON.stringify(data,null,2)], { type: 'application/json' });
                   const url = URL.createObjectURL(blob); const a = document.createElement('a');
                   a.href = url; a.download = `lastwar-v3-${season.key}.json`; a.click(); URL.revokeObjectURL(url);
@@ -763,8 +784,11 @@ export default function V2() {
                     const f = e.target.files?.[0]; if (!f) return; const text = await f.text();
                     try {
                       const parsed = JSON.parse(text);
-                      if (parsed.version === 3) {
-                        if (parsed.alliances && Array.isArray(parsed.alliances)) setAlliances(parsed.alliances);
+                      if (parsed.version >= 3) {
+                        // Support both v3.1 (alliancesBySeason) and v3.0 (alliances) formats
+                        const seasonAlliances = parsed.alliancesBySeason?.[season.key];
+                        if (Array.isArray(seasonAlliances)) setAlliances(seasonAlliances);
+                        else if (parsed.alliances && Array.isArray(parsed.alliances)) setAlliances(parsed.alliances);
                         if (parsed.eventsBySeason && parsed.eventsBySeason[season.key]) setEvents(parsed.eventsBySeason[season.key] as ActionEvent[]);
                         if (parsed.plannedBySeason && parsed.plannedBySeason[season.key]) setPlannedAssignments(parsed.plannedBySeason[season.key] as Assignments);
                         toast({ title: 'Imported', description: 'v3 data imported.' });
@@ -996,6 +1020,33 @@ export default function V2() {
                     <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded disabled:opacity-50" disabled={!lastClearedPlan} onClick={() => { if (!lastClearedPlan) return; setPlannedAssignments(lastClearedPlan); setLastClearedPlan(null); toast({ title: 'Undo', description: 'Restored planned assignments.' }); }}>{t('planning.undoClearPlan')}</button>
                   </div>
                 )}
+                {/* Reset Season - available in both modes */}
+                <div className="border-t mt-1 pt-1">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded text-destructive" title="Reset all data for this season">Reset Season ({season.key})</button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Reset {season.key} completely?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will clear ALL data for {season.key}: alliances, events, and planned assignments. This cannot be undone. Other seasons will not be affected.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => {
+                          setAlliances([]);
+                          setEvents([]);
+                          setPlannedAssignments({});
+                          setLastCleared(null);
+                          setLastClearedPlan(null);
+                          toast({ title: 'Season reset', description: `All ${season.key} data has been cleared. You can now start fresh.` });
+                        }}>Reset Season</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </DropdownMenu.Content>
             </DropdownMenu.Root>
 
@@ -1205,7 +1256,7 @@ export default function V2() {
                     if (!authUser || !shareTitle.trim()) return;
                     
                     try {
-                      const payload = { version: 3, alliances, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
+                      const payload = { version: 3.1, alliancesBySeason: { [season.key]: alliances }, eventsBySeason: { [season.key]: events }, plannedBySeason: { [season.key]: plannedAssignments } };
                       const { createSharedMap } = await import('@/services/sharedMaps');
                       const result = await createSharedMap(authUser.id, season.key, shareTitle.trim(), payload);
                       

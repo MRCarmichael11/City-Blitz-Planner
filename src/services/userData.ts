@@ -3,8 +3,9 @@ import type { Alliance, ActionEvent } from '@/v2/domain';
 import type { Assignments } from '@/v2/rules';
 
 export type V3Payload = {
-  version: 3;
-  alliances: Alliance[];
+  version: number; // 3 or 3.1
+  alliances?: Alliance[]; // v3.0 format (global alliances)
+  alliancesBySeason?: Record<string, Alliance[]>; // v3.1 format (per-season alliances)
   eventsBySeason: Record<string, ActionEvent[]>;
   plannedBySeason: Record<string, Assignments>;
 };
