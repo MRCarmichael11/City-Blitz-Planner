@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { lazy, Suspense } from 'react';
+import PendingInviteHandler from './components/PendingInviteHandler';
 const CityBlitz = lazy(() => import('./pages/V2')); // rename later if desired
 const SharedMapViewer = lazy(() => import('./pages/SharedMapViewer'));
 const FactionStrike = lazy(() => import('./features/strike/FactionStrikePage'));
@@ -21,6 +22,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <PendingInviteHandler />
         <Routes>
           <Route path="/" element={<Suspense fallback={<div>Loading...</div>}><CityBlitz /></Suspense>} />
           <Route path="/shared/:shareId" element={<Suspense fallback={<div>Loading shared map...</div>}><SharedMapViewer /></Suspense>} />

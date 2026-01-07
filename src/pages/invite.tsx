@@ -15,15 +15,23 @@ export default function InvitePage() {
         localStorage.setItem('current_org', res.org_id);
         setStatus(`Joined org as ${res.role}. Redirecting…`);
         setTimeout(() => navigate('/faction-strike-planner'), 300);
-      } catch (e: any) {
-        if ((e?.message || '').toLowerCase().includes('not signed in')) {
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : (typeof e === 'string' ? e : '');
+        if (msg.toLowerCase().includes('not signed in')) {
           setStatus('Please sign in to accept the invite…');
+          // Some OAuth providers / Supabase configurations will redirect back to the Site URL (often `/`)
+          // instead of preserving `/invite?...`. Persist the token so the app can complete acceptance after login.
+          try {
+            localStorage.setItem('pending_invite_token', token);
+            localStorage.setItem('pending_invite_next', '/faction-strike-planner');
+          } catch { /* ignore */ }
           // trigger OAuth flow to preserve URL
           const { supabase } = await import('@/services/supabaseClient');
-          (supabase as any).auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+          if (!supabase) throw new Error('Auth not configured');
+          await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
           return;
         }
-        setStatus(e.message || 'Invalid invite');
+        setStatus(msg || 'Invalid invite');
       }
     })();
   }, [token, navigate]);
