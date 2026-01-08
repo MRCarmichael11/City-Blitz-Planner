@@ -6,8 +6,12 @@ create table if not exists orgs (
   name text not null,
   season text not null,
   created_by uuid not null,
+  s4_week int not null default 1,
   created_at timestamptz not null default now()
 );
+
+-- Backfill/ensure column exists even if table existed before
+alter table orgs add column if not exists s4_week int not null default 1;
 
 create table if not exists org_memberships (
   id uuid primary key default gen_random_uuid(),
