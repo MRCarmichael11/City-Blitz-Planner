@@ -13,6 +13,38 @@ create table if not exists orgs (
 -- Backfill/ensure column exists even if table existed before
 alter table orgs add column if not exists s4_week int not null default 1;
 
+-- Optional RLS policy: allow org admins/server admins (or org creator) to update the org row.
+-- This helps when RLS is enabled in an existing Supabase project.
+do $$
+begin
+  begin
+    create policy "orgs_update_admin" on orgs
+      for update
+      to authenticated
+      using (
+        auth.uid() = created_by
+        or exists (
+          select 1 from org_memberships m
+          where m.org_id = orgs.id
+            and m.user_id = auth.uid()
+            and m.role in ('org_admin','server_admin')
+        )
+      )
+      with check (
+        auth.uid() = created_by
+        or exists (
+          select 1 from org_memberships m
+          where m.org_id = orgs.id
+            and m.user_id = auth.uid()
+            and m.role in ('org_admin','server_admin')
+        )
+      );
+  exception when duplicate_object then
+    -- policy already exists
+    null;
+  end;
+end $$;
+
 create table if not exists org_memberships (
   id uuid primary key default gen_random_uuid(),
   org_id uuid not null references orgs(id) on delete cascade,

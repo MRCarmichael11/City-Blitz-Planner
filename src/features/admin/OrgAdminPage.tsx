@@ -143,7 +143,7 @@ export default function OrgAdminPage() {
                 if (!res.ok) {
                   // Still apply locally so the admin can immediately use the rule in this browser.
                   writeOrgRules(id, { season: 'S4', s4_week: next });
-                  alert('Could not save to server (RLS/schema). Applied locally for this browser.');
+                  alert(`Could not save to server (RLS/schema). Applied locally for this browser.\n\nServer error: ${res.error}`);
                   return;
                 }
                 writeOrgRules(id, { season: 'S4', s4_week: next });

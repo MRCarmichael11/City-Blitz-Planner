@@ -31,7 +31,10 @@ export async function getOrgBySlug(slug: string): Promise<Org | null> {
   return data as Org | null;
 }
 
-export async function setOrgS4Week(orgId: string, week: 1 | 2 | 3): Promise<{ ok: true; s4_week: number } | { ok: false }> {
+export async function setOrgS4Week(
+  orgId: string,
+  week: 1 | 2 | 3
+): Promise<{ ok: true; s4_week: number } | { ok: false; error: string }> {
   if (!supabase) return { ok: false };
   const { data, error } = await (supabase as any)
     .from('orgs')
@@ -39,7 +42,7 @@ export async function setOrgS4Week(orgId: string, week: 1 | 2 | 3): Promise<{ ok
     .eq('id', orgId)
     .select('s4_week')
     .maybeSingle();
-  if (error || !data) return { ok: false };
+  if (error || !data) return { ok: false, error: error?.message || 'update_failed' };
   return { ok: true, s4_week: data.s4_week as number };
 }
 
