@@ -5,7 +5,7 @@ import StepAlliances from './wizard/StepAlliances';
 import StepTop20Ranker from './wizard/StepTop20Ranker';
 import InviteMaker from './InviteMaker';
 import AllianceRepsManager from './AllianceRepsManager';
-import { createOrgWithSlug, getOrgById, getOrgBySlug, listUserOrgs, setOrgS4Week } from '@/services/adminApi';
+import { createOrgWithSlug, getOrgById, getOrgBySlug, listUserOrgs, setOrgS4Week, setOrgSeason } from '@/services/adminApi';
 import ToolSwitcher from '@/components/ToolSwitcher';
 import { readOrgRules, writeOrgRules } from '@/lib/orgRules';
 
@@ -120,6 +120,31 @@ export default function OrgAdminPage() {
             }
             catch (e: any) { setOrgError(e.message || 'Failed to load by slug'); }
           }}>Load by Slug</button>
+          {orgIdIsUuid && (
+            <>
+              <span className="text-muted-foreground">•</span>
+              <span className="text-muted-foreground">Season</span>
+              <select
+                className="border rounded px-2 py-1 bg-background text-foreground"
+                value={derivedSeason || 'S'}
+                onChange={async (e) => {
+                  const next = (e.target.value || 'S').toUpperCase();
+                  setLoadedOrgSeason(next);
+                  writeOrgRules(orgIdTrim, { season: next, s4_week: readOrgRules(orgIdTrim).s4_week ?? 1 });
+                  const res = await setOrgSeason(orgIdTrim, next);
+                  if (!res.ok) {
+                    alert(`Could not save season to server. Applied locally for this browser.\n\nServer error: ${res.error}`);
+                    return;
+                  }
+                  writeOrgRules(orgIdTrim, { season: res.season.toUpperCase(), s4_week: readOrgRules(orgIdTrim).s4_week ?? 1 });
+                }}
+              >
+                <option value="S3">S3</option>
+                <option value="S4">S4</option>
+                <option value="S">S</option>
+              </select>
+            </>
+          )}
           <span className="text-muted-foreground">•</span>
           <input className="border rounded px-2 py-1 bg-background text-foreground w-[160px]" placeholder="New org name" value={orgName} onChange={(e)=> setOrgName(e.target.value)} />
           <input className="border rounded px-2 py-1 bg-background text-foreground w-[64px]" placeholder="Season" value={orgSeason} onChange={(e)=> setOrgSeason(e.target.value)} />

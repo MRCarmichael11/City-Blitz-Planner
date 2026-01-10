@@ -46,6 +46,20 @@ export async function setOrgS4Week(
   return { ok: true, s4_week: data.s4_week as number };
 }
 
+export async function setOrgSeason(orgId: string, season: string): Promise<{ ok: true; season: string } | { ok: false; error: string }> {
+  if (!supabase) return { ok: false, error: 'supabase_not_configured' };
+  const normalized = (season || '').trim().toUpperCase();
+  if (!normalized) return { ok: false, error: 'season_required' };
+  const { data, error } = await (supabase as any)
+    .from('orgs')
+    .update({ season: normalized })
+    .eq('id', orgId)
+    .select('season')
+    .maybeSingle();
+  if (error || !data) return { ok: false, error: error?.message || 'update_failed' };
+  return { ok: true, season: String(data.season) };
+}
+
 export async function createOrgWithSlug(name: string, season: string, slug?: string): Promise<Org> {
   const payload: any = { name, season, slug: slug ?? null, created_by: (await (supabase as any).auth.getUser()).data.user?.id || null };
   const { data, error } = await (supabase as any).from('orgs').insert(payload).select('*').single();
