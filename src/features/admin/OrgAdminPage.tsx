@@ -164,14 +164,24 @@ export default function OrgAdminPage() {
                 const next = (e.target.value === '2' ? 2 : e.target.value === '3' ? 3 : 1) as 1 | 2 | 3;
                 setS4Week(next);
                 const id = orgId.trim();
-                const res = await setOrgS4Week(id, next);
-                if (!res.ok) {
-                  // Still apply locally so the admin can immediately use the rule in this browser.
+                try {
+                  const res = await setOrgS4Week(id, next);
+                  if (!res || !('ok' in res)) {
+                    writeOrgRules(id, { season: 'S4', s4_week: next });
+                    alert('Could not save to server (unexpected response). Applied locally for this browser.');
+                    return;
+                  }
+                  if (!res.ok) {
+                    // Still apply locally so the admin can immediately use the rule in this browser.
+                    writeOrgRules(id, { season: 'S4', s4_week: next });
+                    alert(`Could not save to server (RLS/schema). Applied locally for this browser.\n\nServer error: ${res.error}`);
+                    return;
+                  }
                   writeOrgRules(id, { season: 'S4', s4_week: next });
-                  alert(`Could not save to server (RLS/schema). Applied locally for this browser.\n\nServer error: ${res.error}`);
-                  return;
+                } catch (err: unknown) {
+                  writeOrgRules(id, { season: 'S4', s4_week: next });
+                  alert(`Could not save to server (unexpected error). Applied locally for this browser.\n\n${err instanceof Error ? err.message : String(err)}`);
                 }
-                writeOrgRules(id, { season: 'S4', s4_week: next });
               }}
             >
               <option value={1}>Week 1 (1–10, 11–20)</option>

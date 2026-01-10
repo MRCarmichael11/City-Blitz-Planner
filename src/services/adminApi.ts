@@ -35,29 +35,37 @@ export async function setOrgS4Week(
   orgId: string,
   week: 1 | 2 | 3
 ): Promise<{ ok: true; s4_week: number } | { ok: false; error: string }> {
-  if (!supabase) return { ok: false };
-  const { data, error } = await (supabase as any)
-    .from('orgs')
-    .update({ s4_week: week })
-    .eq('id', orgId)
-    .select('s4_week')
-    .maybeSingle();
-  if (error || !data) return { ok: false, error: error?.message || 'update_failed' };
-  return { ok: true, s4_week: data.s4_week as number };
+  if (!supabase) return { ok: false, error: 'supabase_not_configured' };
+  try {
+    const { data, error } = await (supabase as any)
+      .from('orgs')
+      .update({ s4_week: week })
+      .eq('id', orgId)
+      .select('s4_week')
+      .maybeSingle();
+    if (error || !data) return { ok: false, error: error?.message || 'update_failed' };
+    return { ok: true, s4_week: data.s4_week as number };
+  } catch (e: unknown) {
+    return { ok: false, error: e instanceof Error ? e.message : 'update_failed' };
+  }
 }
 
 export async function setOrgSeason(orgId: string, season: string): Promise<{ ok: true; season: string } | { ok: false; error: string }> {
   if (!supabase) return { ok: false, error: 'supabase_not_configured' };
   const normalized = (season || '').trim().toUpperCase();
   if (!normalized) return { ok: false, error: 'season_required' };
-  const { data, error } = await (supabase as any)
-    .from('orgs')
-    .update({ season: normalized })
-    .eq('id', orgId)
-    .select('season')
-    .maybeSingle();
-  if (error || !data) return { ok: false, error: error?.message || 'update_failed' };
-  return { ok: true, season: String(data.season) };
+  try {
+    const { data, error } = await (supabase as any)
+      .from('orgs')
+      .update({ season: normalized })
+      .eq('id', orgId)
+      .select('season')
+      .maybeSingle();
+    if (error || !data) return { ok: false, error: error?.message || 'update_failed' };
+    return { ok: true, season: String(data.season) };
+  } catch (e: unknown) {
+    return { ok: false, error: e instanceof Error ? e.message : 'update_failed' };
+  }
 }
 
 export async function createOrgWithSlug(name: string, season: string, slug?: string): Promise<Org> {
