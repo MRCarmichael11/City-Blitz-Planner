@@ -5,8 +5,9 @@ import StepAlliances from './wizard/StepAlliances';
 import StepTop20Ranker from './wizard/StepTop20Ranker';
 import InviteMaker from './InviteMaker';
 import AllianceRepsManager from './AllianceRepsManager';
-import { createOrgWithSlug, getOrgById, getOrgBySlug, listUserOrgs } from '@/services/adminApi';
+import { createOrgWithSlug, getOrgById, getOrgBySlug, listUserOrgs, setOrgS4Week } from '@/services/adminApi';
 import ToolSwitcher from '@/components/ToolSwitcher';
+import { readOrgRules, writeOrgRules } from '@/lib/orgRules';
 
 export default function OrgAdminPage() {
   const params = useParams();
@@ -19,6 +20,8 @@ export default function OrgAdminPage() {
   const [orgError, setOrgError] = useState<string | null>(null);
   const [orgs, setOrgs] = useState<Array<{ id: string; name: string; season: string; slug?: string }>>([]);
   const [runningSchema, setRunningSchema] = useState(false);
+  const [loadedOrgSeason, setLoadedOrgSeason] = useState<string>('');
+  const [s4Week, setS4Week] = useState<1 | 2 | 3>(1);
 
   useEffect(() => {
     const initial = urlOrg || localStorage.getItem('current_org') || '';
@@ -32,6 +35,25 @@ export default function OrgAdminPage() {
   useEffect(() => {
     localStorage.setItem('admin_step', String(step));
   }, [step]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const id = (orgId || '').trim();
+        if (!/^[0-9a-fA-F-]{36}$/.test(id)) return;
+        const org = await getOrgById(id);
+        if (!org) return;
+        const season = (org.season || '').toUpperCase();
+        setLoadedOrgSeason(season);
+        const cached = readOrgRules(id);
+        const wk = (cached.s4_week ?? org.s4_week ?? 1);
+        setS4Week((wk === 2 ? 2 : wk === 3 ? 3 : 1) as 1 | 2 | 3);
+        writeOrgRules(id, { season, s4_week: wk });
+      } catch {
+        // ignore
+      }
+    })();
+  }, [orgId]);
 
   return (
     <div className="container mx-auto p-4 space-y-4">
@@ -47,7 +69,20 @@ export default function OrgAdminPage() {
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <input className="border rounded px-2 py-1 bg-background text-foreground w-[200px]" placeholder="Org ID (uuid)" value={orgId} onChange={(e)=> setOrgId(e.target.value)} />
           <button className="px-2 py-1 border rounded disabled:opacity-50" onClick={async ()=>{
-            try { setOrgError(null); const id = orgId.trim(); if (!/^[0-9a-fA-F-]{36}$/.test(id)) { setOrgError('Enter a valid UUID'); return; } const found = await getOrgById(id); if (!found) { setOrgError('Org not found'); return; } localStorage.setItem('current_org', found.id); alert('Org loaded'); }
+            try {
+              setOrgError(null);
+              const id = orgId.trim();
+              if (!/^[0-9a-fA-F-]{36}$/.test(id)) { setOrgError('Enter a valid UUID'); return; }
+              const found = await getOrgById(id);
+              if (!found) { setOrgError('Org not found'); return; }
+              localStorage.setItem('current_org', found.id);
+              const season = String(found.season || 'S').toUpperCase();
+              setLoadedOrgSeason(season);
+              const wk = (found.s4_week ?? 1);
+              setS4Week((wk === 2 ? 2 : wk === 3 ? 3 : 1) as 1 | 2 | 3);
+              writeOrgRules(found.id, { season, s4_week: wk });
+              alert('Org loaded');
+            }
             catch (e: any) { setOrgError(e.message || 'Failed to load org'); }
           }}>Load</button>
           <span className="text-muted-foreground">or</span>
@@ -65,6 +100,31 @@ export default function OrgAdminPage() {
             catch (e: any) { setOrgError(e.message || 'Failed to create org'); }
           }}>Create</button>
         </div>
+        {(loadedOrgSeason || '').toUpperCase() === 'S4' && /^[0-9a-fA-F-]{36}$/.test((orgId || '').trim()) && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            <div className="text-xs font-medium">S4 Bracket Week</div>
+            <select
+              className="border rounded px-2 py-1 bg-background text-foreground"
+              value={s4Week}
+              onChange={async (e) => {
+                const next = (e.target.value === '2' ? 2 : e.target.value === '3' ? 3 : 1) as 1 | 2 | 3;
+                setS4Week(next);
+                const id = orgId.trim();
+                const res = await setOrgS4Week(id, next);
+                if (!res.ok) {
+                  alert('Failed to save S4 week');
+                  return;
+                }
+                writeOrgRules(id, { season: 'S4', s4_week: next });
+              }}
+            >
+              <option value={1}>Week 1 (1–10, 11–20)</option>
+              <option value={2}>Week 2 (1–6, 7–12, 13–18, 19–20)</option>
+              <option value={3}>Week 3 (1–3, 4–7, 8–11, 12–15, 16–19, 20)</option>
+            </select>
+            <span className="text-muted-foreground">Affects Strike Planner bracket-matching rules.</span>
+          </div>
+        )}
       </div>
       {orgs.length > 0 && (
         <div className="border rounded p-2 text-sm">

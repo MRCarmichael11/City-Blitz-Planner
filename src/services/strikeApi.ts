@@ -43,7 +43,8 @@ export async function lockDeclaration(orgId: string, declarationId: string): Pro
   if (e0 || !decl) throw e0 || new Error('not_found');
   const { data: atk } = await (supabase as any).from('alliances').select('rank_int').eq('org_id', orgId).eq('id', decl.declaring_alliance_id).single();
   const { data: def } = await (supabase as any).from('alliances').select('rank_int').eq('org_id', orgId).eq('id', decl.target_alliance_id).single();
-  const parity = assertBracketParity(atk?.rank_int ?? null, def?.rank_int ?? null);
+  const { data: org } = await (supabase as any).from('orgs').select('season,s4_week').eq('id', orgId).maybeSingle();
+  const parity = assertBracketParity(atk?.rank_int ?? null, def?.rank_int ?? null, { season: org?.season ?? null, s4Week: org?.s4_week ?? null });
   if (!parity.ok) return { ok: false, error: parity.reason, a: parity.a, b: parity.b };
   const { error } = await (supabase as any).from('declarations').update({ status: 'locked', locked_bracket_attacker: parity.a, locked_bracket_target: parity.b }).eq('org_id', orgId).eq('id', declarationId);
   if (error) {

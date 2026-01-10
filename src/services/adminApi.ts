@@ -1,6 +1,6 @@
 import { supabase } from '@/services/supabaseClient';
 
-export type Org = { id: string; name: string; season: string };
+export type Org = { id: string; name: string; season: string; slug?: string | null; s4_week?: number | null };
 export type Server = { id: string; org_id: string; name: string };
 export type Faction = { id: string; org_id: string; name: string; color?: string | null };
 export type ServerFactionMap = { id: string; org_id: string; server_id: string; faction_id: string };
@@ -29,6 +29,18 @@ export async function getOrgBySlug(slug: string): Promise<Org | null> {
   const { data, error } = await (supabase as any).from('orgs').select('*').ilike('slug', slug).maybeSingle();
   if (error) throw error;
   return data as Org | null;
+}
+
+export async function setOrgS4Week(orgId: string, week: 1 | 2 | 3): Promise<{ ok: true; s4_week: number } | { ok: false }> {
+  if (!supabase) return { ok: false };
+  const { data, error } = await (supabase as any)
+    .from('orgs')
+    .update({ s4_week: week })
+    .eq('id', orgId)
+    .select('s4_week')
+    .maybeSingle();
+  if (error || !data) return { ok: false };
+  return { ok: true, s4_week: data.s4_week as number };
 }
 
 export async function createOrgWithSlug(name: string, season: string, slug?: string): Promise<Org> {

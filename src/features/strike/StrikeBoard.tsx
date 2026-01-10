@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/services/supabaseClient';
 import { listAlliances } from '@/services/adminApi';
 import { getMembership, can } from '@/lib/rbac';
-import { getBracket } from '@/lib/brackets';
+import { getBracket, getBracketRanges } from '@/lib/brackets';
 import { useI18n } from '@/i18n';
 import { normalizeTeamName } from '@/lib/teams';
+import { readOrgRules, writeOrgRules } from '@/lib/orgRules';
 
 type Faction = { id: string; name: string };
 type Alliance = { id: string; tag: string; name: string; rank_int: number | null; server?: { name: string } };
@@ -13,6 +14,8 @@ type InterestRow = { declId: string | null; count: number; participants: Array<{
 export default function StrikeBoard() {
   const { t } = useI18n();
   const orgId = useMemo(() => localStorage.getItem('current_org') || '', []);
+  const [orgSeason, setOrgSeason] = useState<string>('S');
+  const [s4Week, setS4Week] = useState<1 | 2 | 3>(1);
   const [factions, setFactions] = useState<Faction[]>([]);
   const [factionId, setFactionId] = useState<string>('');
   const [opponentFactionId, setOpponentFactionId] = useState<string>('');
@@ -27,11 +30,26 @@ export default function StrikeBoard() {
   const [isAllianceLeader, setIsAllianceLeader] = useState<boolean>(false);
   const attackerBracket = useMemo(() => {
     const a = attackerAlliances.find(x => x.id === attackerId);
-    return getBracket(a?.rank_int ?? null);
-  }, [attackerAlliances, attackerId]);
+    return getBracket(a?.rank_int ?? null, { season: orgSeason, s4Week });
+  }, [attackerAlliances, attackerId, orgSeason, s4Week]);
+  const bracketRanges = useMemo(() => getBracketRanges({ season: orgSeason, s4Week }), [orgSeason, s4Week]);
 
   useEffect(() => {
     if (!orgId || !supabase) return;
+    // Load org rules for bracket parity (season + S4 week). Use cache first, then refresh from DB.
+    (async () => {
+      try {
+        const cached = readOrgRules(orgId);
+        if (cached?.season) setOrgSeason(String(cached.season).toUpperCase());
+        if (cached?.s4_week) setS4Week((cached.s4_week === 2 ? 2 : cached.s4_week === 3 ? 3 : 1) as 1 | 2 | 3);
+        const { data: org } = await (supabase as any).from('orgs').select('season,s4_week').eq('id', orgId).maybeSingle();
+        if (org?.season) setOrgSeason(String(org.season).toUpperCase());
+        if (org?.s4_week) setS4Week((org.s4_week === 2 ? 2 : org.s4_week === 3 ? 3 : 1) as 1 | 2 | 3);
+        writeOrgRules(orgId, { season: String(org?.season || cached?.season || 'S').toUpperCase(), s4_week: org?.s4_week ?? cached?.s4_week ?? 1 });
+      } catch {
+        // ignore
+      }
+    })();
     (supabase as any).from('factions').select('id,name').eq('org_id', orgId).then(({ data }: any)=>{
       setFactions(data||[]);
       const preferred = localStorage.getItem('my_faction_id') || '';
@@ -279,76 +297,52 @@ export default function StrikeBoard() {
             </tr>
           </thead>
           <tbody>
-            {/* Bracket 1 */}
-            <tr className="bg-primary/10">
-              <td className="px-2 py-1 font-medium" colSpan={4}>{t('bracket.b1')}</td>
-            </tr>
-            {top20.filter(a => (a.rank_int ?? 99) <= 10).map(a => {
-              const meta = interest[a.id] || { declId: null, count: 0, participants: [] };
-              const b = getBracket(a.rank_int ?? null);
-              const parityOk = attackerBracket === b && attackerBracket !== 3;
+            {bracketRanges.map((range, idx) => {
+              const rows = top20.filter(a => {
+                const r = a.rank_int ?? null;
+                if (r == null) return false;
+                return r >= range.start && r <= range.end;
+              });
+              if (!rows.length) return null;
+              const label = `Bracket ${idx + 1} (${range.start}–${range.end})`;
               return (
-                <tr key={a.id} className="border-t">
-                  <td className="px-2 py-1">{a.rank_int ?? ''}</td>
-                  <td className="px-2 py-1 font-mono">{a.tag} {a.server?.name ? `(${a.server.name})` : ''}</td>
-                  <td className="px-2 py-1">
-                    {meta.count>0 ? (
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <span className="text-xs border rounded px-1">{meta.count}</span>
-                        {meta.participants.map((p) => (
-                          <span key={p.id} className="text-xs border rounded px-1 inline-flex items-center gap-1">
-                            {p.tag}{p.server?.name ? ` (${p.server.name})` : ''}
-                            {(isOrgAdmin || (lockedAlliance?.id === p.id && isAllianceLeader)) && (
-                              <button className="ml-1 text-[10px]" title="Remove" onClick={()=> handleWithdraw(a.id, p.id)}>✕</button>
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                    ) : <span className="text-xs text-muted-foreground">None</span>}
-                  </td>
-                  <td className="px-2 py-1 space-x-1">
-                    <button className="px-2 py-1 border rounded text-xs disabled:opacity-50" disabled={!attackerId || !parityOk} onClick={()=> handleInterested(a.id)} title={parityOk? t('tooltips.markInterest') : t('tooltips.bracketMismatch')}>{t('actions.interested')}</button>
-                    {(attackerId && (isOrgAdmin || (lockedAlliance?.id === attackerId && isAllianceLeader)) && meta.participants.some(p=> p.id===attackerId)) && (
-                      <button className="px-2 py-1 border rounded text-xs" onClick={()=> handleWithdraw(a.id, attackerId)}>{t('actions.withdraw')}</button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-            {/* Bracket 2 */}
-            <tr className="bg-secondary/10">
-              <td className="px-2 py-1 font-medium" colSpan={4}>{t('bracket.b2')}</td>
-            </tr>
-            {top20.filter(a => (a.rank_int ?? 0) > 10).map(a => {
-              const meta = interest[a.id] || { declId: null, count: 0, participants: [] };
-              const b = getBracket(a.rank_int ?? null);
-              const parityOk = attackerBracket === b && attackerBracket !== 3;
-              return (
-                <tr key={a.id} className="border-t">
-                  <td className="px-2 py-1">{a.rank_int ?? ''}</td>
-                  <td className="px-2 py-1 font-mono">{a.tag} {a.server?.name ? `(${a.server.name})` : ''}</td>
-                  <td className="px-2 py-1">
-                    {meta.count>0 ? (
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <span className="text-xs border rounded px-1">{meta.count}</span>
-                        {meta.participants.map((p) => (
-                          <span key={p.id} className="text-xs border rounded px-1 inline-flex items-center gap-1">
-                            {p.tag}{p.server?.name ? ` (${p.server.name})` : ''}
-                            {(isOrgAdmin || (lockedAlliance?.id === p.id && isAllianceLeader)) && (
-                              <button className="ml-1 text-[10px]" title="Remove" onClick={()=> handleWithdraw(a.id, p.id)}>✕</button>
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                    ) : <span className="text-xs text-muted-foreground">None</span>}
-                  </td>
-                  <td className="px-2 py-1 space-x-1">
-                    <button className="px-2 py-1 border rounded text-xs disabled:opacity-50" disabled={!attackerId || !parityOk} onClick={()=> handleInterested(a.id)} title={parityOk? t('tooltips.markInterest') : t('tooltips.bracketMismatch')}>{t('actions.interested')}</button>
-                    {(attackerId && (isOrgAdmin || (lockedAlliance?.id === attackerId && isAllianceLeader)) && meta.participants.some(p=> p.id===attackerId)) && (
-                      <button className="px-2 py-1 border rounded text-xs" onClick={()=> handleWithdraw(a.id, attackerId)}>{t('actions.withdraw')}</button>
-                    )}
-                  </td>
-                </tr>
+                <Fragment key={`br-${idx}`}>
+                  <tr className={idx % 2 === 0 ? 'bg-primary/10' : 'bg-secondary/10'}>
+                    <td className="px-2 py-1 font-medium" colSpan={4}>{label}</td>
+                  </tr>
+                  {rows.map(a => {
+                    const meta = interest[a.id] || { declId: null, count: 0, participants: [] };
+                    const b = getBracket(a.rank_int ?? null, { season: orgSeason, s4Week });
+                    const parityOk = attackerBracket != null && b != null && attackerBracket === b;
+                    return (
+                      <tr key={a.id} className="border-t">
+                        <td className="px-2 py-1">{a.rank_int ?? ''}</td>
+                        <td className="px-2 py-1 font-mono">{a.tag} {a.server?.name ? `(${a.server.name})` : ''}</td>
+                        <td className="px-2 py-1">
+                          {meta.count>0 ? (
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <span className="text-xs border rounded px-1">{meta.count}</span>
+                              {meta.participants.map((p) => (
+                                <span key={p.id} className="text-xs border rounded px-1 inline-flex items-center gap-1">
+                                  {p.tag}{p.server?.name ? ` (${p.server.name})` : ''}
+                                  {(isOrgAdmin || (lockedAlliance?.id === p.id && isAllianceLeader)) && (
+                                    <button className="ml-1 text-[10px]" title="Remove" onClick={()=> handleWithdraw(a.id, p.id)}>✕</button>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          ) : <span className="text-xs text-muted-foreground">None</span>}
+                        </td>
+                        <td className="px-2 py-1 space-x-1">
+                          <button className="px-2 py-1 border rounded text-xs disabled:opacity-50" disabled={!attackerId || !parityOk} onClick={()=> handleInterested(a.id)} title={parityOk? t('tooltips.markInterest') : t('tooltips.bracketMismatch')}>{t('actions.interested')}</button>
+                          {(attackerId && (isOrgAdmin || (lockedAlliance?.id === attackerId && isAllianceLeader)) && meta.participants.some(p=> p.id===attackerId)) && (
+                            <button className="px-2 py-1 border rounded text-xs" onClick={()=> handleWithdraw(a.id, attackerId)}>{t('actions.withdraw')}</button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </Fragment>
               );
             })}
           </tbody>
