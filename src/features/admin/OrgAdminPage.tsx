@@ -23,6 +23,16 @@ export default function OrgAdminPage() {
   const [loadedOrgSeason, setLoadedOrgSeason] = useState<string>('');
   const [s4Week, setS4Week] = useState<1 | 2 | 3>(1);
 
+  const orgIdTrim = (orgId || '').trim();
+  const orgIdIsUuid = /^[0-9a-fA-F-]{36}$/.test(orgIdTrim);
+  const cachedRules = useMemo(() => (orgIdIsUuid ? readOrgRules(orgIdTrim) : {}), [orgIdIsUuid, orgIdTrim]);
+  const listSeason = useMemo(() => {
+    if (!orgIdIsUuid) return '';
+    const found = orgs.find(o => o.id === orgIdTrim);
+    return (found?.season || '').toUpperCase();
+  }, [orgIdIsUuid, orgIdTrim, orgs]);
+  const derivedSeason = (loadedOrgSeason || cachedRules.season || listSeason || '').toUpperCase();
+
   useEffect(() => {
     const initial = urlOrg || localStorage.getItem('current_org') || '';
     setOrgId(initial);
@@ -41,19 +51,24 @@ export default function OrgAdminPage() {
       try {
         const id = (orgId || '').trim();
         if (!/^[0-9a-fA-F-]{36}$/.test(id)) return;
+        // optimistic: set from cache/list immediately (helps if direct org select is blocked by RLS)
+        if (cachedRules?.season) setLoadedOrgSeason(String(cachedRules.season).toUpperCase());
+        else if (listSeason) setLoadedOrgSeason(listSeason);
+        const wk0 = cachedRules?.s4_week ?? 1;
+        setS4Week((wk0 === 2 ? 2 : wk0 === 3 ? 3 : 1) as 1 | 2 | 3);
+
         const org = await getOrgById(id);
         if (!org) return;
         const season = (org.season || '').toUpperCase();
         setLoadedOrgSeason(season);
-        const cached = readOrgRules(id);
-        const wk = (cached.s4_week ?? org.s4_week ?? 1);
+        const wk = (cachedRules.s4_week ?? org.s4_week ?? 1);
         setS4Week((wk === 2 ? 2 : wk === 3 ? 3 : 1) as 1 | 2 | 3);
         writeOrgRules(id, { season, s4_week: wk });
       } catch {
         // ignore
       }
     })();
-  }, [orgId]);
+  }, [orgId, cachedRules, listSeason]);
 
   return (
     <div className="container mx-auto p-4 space-y-4">
@@ -88,7 +103,21 @@ export default function OrgAdminPage() {
           <span className="text-muted-foreground">or</span>
           <input className="border rounded px-2 py-1 bg-background text-foreground w-[140px]" placeholder="Slug (e.g., blue3)" value={orgSlug} onChange={(e)=> setOrgSlug(e.target.value)} />
           <button className="px-2 py-1 border rounded disabled:opacity-50" onClick={async ()=>{
-            try { setOrgError(null); const slug = orgSlug.trim(); if (!slug) { setOrgError('Enter a slug'); return; } const found = await getOrgBySlug(slug); if (!found) { setOrgError('Slug not found'); return; } localStorage.setItem('current_org', found.id); setOrgId(found.id); alert(`Org loaded: ${found.slug || found.id}`); }
+            try {
+              setOrgError(null);
+              const slug = orgSlug.trim();
+              if (!slug) { setOrgError('Enter a slug'); return; }
+              const found = await getOrgBySlug(slug);
+              if (!found) { setOrgError('Slug not found'); return; }
+              localStorage.setItem('current_org', found.id);
+              setOrgId(found.id);
+              const season = String(found.season || 'S').toUpperCase();
+              setLoadedOrgSeason(season);
+              const wk = (found.s4_week ?? readOrgRules(found.id).s4_week ?? 1);
+              setS4Week((wk === 2 ? 2 : wk === 3 ? 3 : 1) as 1 | 2 | 3);
+              writeOrgRules(found.id, { season, s4_week: wk });
+              alert(`Org loaded: ${(found as any).slug || found.id}`);
+            }
             catch (e: any) { setOrgError(e.message || 'Failed to load by slug'); }
           }}>Load by Slug</button>
           <span className="text-muted-foreground">•</span>
@@ -100,7 +129,7 @@ export default function OrgAdminPage() {
             catch (e: any) { setOrgError(e.message || 'Failed to create org'); }
           }}>Create</button>
         </div>
-        {(loadedOrgSeason || '').toUpperCase() === 'S4' && /^[0-9a-fA-F-]{36}$/.test((orgId || '').trim()) && (
+        {derivedSeason === 'S4' && orgIdIsUuid && (
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
             <div className="text-xs font-medium">S4 Bracket Week</div>
             <select
@@ -112,7 +141,9 @@ export default function OrgAdminPage() {
                 const id = orgId.trim();
                 const res = await setOrgS4Week(id, next);
                 if (!res.ok) {
-                  alert('Failed to save S4 week');
+                  // Still apply locally so the admin can immediately use the rule in this browser.
+                  writeOrgRules(id, { season: 'S4', s4_week: next });
+                  alert('Could not save to server (RLS/schema). Applied locally for this browser.');
                   return;
                 }
                 writeOrgRules(id, { season: 'S4', s4_week: next });
@@ -131,7 +162,15 @@ export default function OrgAdminPage() {
           <div className="font-medium mb-1">Your Orgs</div>
           <div className="flex flex-wrap gap-2">
             {orgs.map(o => (
-              <button key={o.id} className="px-2 py-1 border rounded" onClick={()=>{ localStorage.setItem('current_org', o.id); setOrgId(o.id); alert(`Org loaded: ${o.slug || o.id}`); }}>
+              <button key={o.id} className="px-2 py-1 border rounded" onClick={()=>{
+                localStorage.setItem('current_org', o.id);
+                setOrgId(o.id);
+                setLoadedOrgSeason(String(o.season || 'S').toUpperCase());
+                const wk = readOrgRules(o.id).s4_week ?? 1;
+                setS4Week((wk === 2 ? 2 : wk === 3 ? 3 : 1) as 1 | 2 | 3);
+                writeOrgRules(o.id, { season: String(o.season || 'S').toUpperCase(), s4_week: wk });
+                alert(`Org loaded: ${o.slug || o.id}`);
+              }}>
                 {o.slug || o.name} ({o.season})
               </button>
             ))}
