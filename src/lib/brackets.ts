@@ -20,8 +20,10 @@ function normalizeS4Week(week?: number | null): 1 | 2 | 3 {
 
 export function getBracketRanges(config?: BracketConfig): BracketRange[] {
   const season = (config?.season || '').toUpperCase();
-  if (season === 'S4') {
-    const wk = normalizeS4Week(config?.s4Week ?? 1);
+  const wk = normalizeS4Week(config?.s4Week ?? 1);
+  // If the org/admin explicitly sets week 2/3, apply S4 shrinking rules even if the org's season
+  // string isn't configured as "S4" (common during migration / older org records).
+  if (season === 'S4' || wk !== 1) {
     if (wk === 1) return [{ start: 1, end: 10 }, { start: 11, end: 20 }];
     if (wk === 2) return [{ start: 1, end: 6 }, { start: 7, end: 12 }, { start: 13, end: 18 }, { start: 19, end: 20 }];
     // Week 3: user-provided "1–3, 4–7 etc" — interpret as continuing 4-wide buckets after the first 3.

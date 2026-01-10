@@ -129,7 +129,7 @@ export default function OrgAdminPage() {
             catch (e: any) { setOrgError(e.message || 'Failed to create org'); }
           }}>Create</button>
         </div>
-        {derivedSeason === 'S4' && orgIdIsUuid && (
+        {orgIdIsUuid && (
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
             <div className="text-xs font-medium">S4 Bracket Week</div>
             <select
@@ -153,7 +153,9 @@ export default function OrgAdminPage() {
               <option value={2}>Week 2 (1–6, 7–12, 13–18, 19–20)</option>
               <option value={3}>Week 3 (1–3, 4–7, 8–11, 12–15, 16–19, 20)</option>
             </select>
-            <span className="text-muted-foreground">Affects Strike Planner bracket-matching rules.</span>
+            <span className="text-muted-foreground">
+              Detected season: <strong>{derivedSeason || 'unknown'}</strong>. This setting affects Strike Planner bracket-matching rules.
+            </span>
           </div>
         )}
       </div>

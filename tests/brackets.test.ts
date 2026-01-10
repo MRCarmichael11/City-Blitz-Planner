@@ -31,5 +31,12 @@ describe('brackets', () => {
     expect(assertBracketParity(18, 19, cfg)).toMatchObject({ ok: false, reason: 'bracket_mismatch' });
     expect(assertBracketParity(19, 20, cfg)).toMatchObject({ ok: true });
   });
+
+  it('week 2 setting applies even if season is not S4', () => {
+    const cfg = { season: 'S', s4Week: 2 };
+    expect(getBracket(6, cfg)).toBe(1);
+    expect(getBracket(7, cfg)).toBe(2);
+    expect(assertBracketParity(6, 7, cfg)).toMatchObject({ ok: false, reason: 'bracket_mismatch' });
+  });
 });
 
