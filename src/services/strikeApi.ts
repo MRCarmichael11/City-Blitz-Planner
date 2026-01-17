@@ -15,7 +15,7 @@ export type Declaration = {
   locked_bracket_target?: number | null;
 };
 
-export async function listDeclarations(orgId: string, filters?: { status?: string; factionId?: string; bracket?: 1|2|3 }): Promise<Declaration[]> {
+export async function listDeclarations(orgId: string, filters?: { status?: string; factionId?: string; bracket?: number }): Promise<Declaration[]> {
   let q = (supabase as any).from('declarations').select('*').eq('org_id', orgId);
   if (filters?.status) q = q.eq('status', filters.status);
   const { data, error } = await q.order('start', { ascending: true });
@@ -37,7 +37,7 @@ export async function createDeclaration(input: Omit<Declaration, 'id'|'status'|'
   if (error) throw error;
 }
 
-export async function lockDeclaration(orgId: string, declarationId: string): Promise<{ ok: true } | { ok: false; error: 'lock_conflict'|'bracket_mismatch'|'bracket_locked'; a?: number; b?: number }>{
+export async function lockDeclaration(orgId: string, declarationId: string): Promise<{ ok: true } | { ok: false; error: 'lock_conflict'|'bracket_mismatch'|'bracket_locked'; a?: number | null; b?: number | null }>{
   // Load attacker/defender ranks
   const { data: decl, error: e0 } = await (supabase as any).from('declarations').select('*').eq('org_id', orgId).eq('id', declarationId).single();
   if (e0 || !decl) throw e0 || new Error('not_found');

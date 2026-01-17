@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { listFactions, listAlliances } from '@/services/adminApi';
-import { assertBracketParity } from '@/lib/brackets';
+import { assertBracketParity, formatBracketLabel, getBracket } from '@/lib/brackets';
 import { supabase } from '@/services/supabaseClient';
 import { normalizeTeamName } from '@/lib/teams';
 
@@ -27,7 +27,9 @@ export default function DeclarationForm() {
     const d = targetAlliances.find((x:any)=> x.id === targetId)?.rank_int ?? null;
     if (attackerId && targetId) {
       const r = assertBracketParity(a, d);
-      setParity(r.ok ? null : (r.reason === 'bracket_locked' ? `Bracket locked (attacker B${r.a}, defender B${r.b})` : `Bracket mismatch (B${r.a} vs B${r.b})`));
+      setParity(r.ok ? null : (r.reason === 'bracket_locked'
+        ? `Bracket locked (attacker ${formatBracketLabel(r.a)}, defender ${formatBracketLabel(r.b)})`
+        : `Bracket mismatch (${formatBracketLabel(r.a)} vs ${formatBracketLabel(r.b)})`));
     } else setParity(null);
   }, [attackerId, targetId, attackerAlliances, targetAlliances]);
 
@@ -37,7 +39,14 @@ export default function DeclarationForm() {
       <div className="grid md:grid-cols-2 gap-2">
         <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={attackerId} onChange={e=> setAttackerId(e.target.value)}>
           <option value="">Attacking alliance…</option>
-          {attackerAlliances.map((a:any)=> <option key={a.id} value={a.id}>{a.tag} — {a.name} {a.rank_int? `(B${a.rank_int<=10?1:a.rank_int<=20?2:3})`:''}</option>)}
+          {attackerAlliances.map((a:any)=> {
+            const bracket = getBracket(a.rank_int ?? null);
+            return (
+              <option key={a.id} value={a.id}>
+                {a.tag} — {a.name} {bracket ? `(B${bracket})` : ''}
+              </option>
+            );
+          })}
         </select>
         <div className="flex gap-2">
           <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={factionId} onChange={e=> setFactionId(e.target.value)}>
@@ -46,7 +55,14 @@ export default function DeclarationForm() {
           </select>
           <select className="border rounded px-2 py-1 text-sm bg-background text-foreground" value={targetId} onChange={e=> setTargetId(e.target.value)} disabled={!factionId}>
             <option value="">Target alliance…</option>
-            {targetAlliances.map((a:any)=> <option key={a.id} value={a.id}>{a.tag} — {a.name} {a.rank_int? `(B${a.rank_int<=10?1:a.rank_int<=20?2:3})`:''}</option>)}
+            {targetAlliances.map((a:any)=> {
+              const bracket = getBracket(a.rank_int ?? null);
+              return (
+                <option key={a.id} value={a.id}>
+                  {a.tag} — {a.name} {bracket ? `(B${bracket})` : ''}
+                </option>
+              );
+            })}
           </select>
         </div>
         <input className="border rounded px-2 py-1 text-sm bg-background text-foreground" type="datetime-local" value={start} onChange={e=> setStart(e.target.value)} />

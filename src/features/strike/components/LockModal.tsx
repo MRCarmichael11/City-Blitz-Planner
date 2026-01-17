@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { lockDeclaration } from '@/services/strikeApi';
+import { formatBracketLabel, MAX_RANK } from '@/lib/brackets';
 
 export default function LockModal({ orgId, declarationId }: { orgId?: string; declarationId?: string }) {
   const [msg, setMsg] = useState<string | null>(null);
@@ -10,8 +11,11 @@ export default function LockModal({ orgId, declarationId }: { orgId?: string; de
         const res = await lockDeclaration(orgId, declarationId);
         if (!res.ok) {
           if (res.error === 'lock_conflict') setMsg('Lock conflict: attacker or target already locked in overlapping window.');
-          else if (res.error === 'bracket_mismatch') setMsg(`Bracket mismatch: must be B${res.a}↔B${res.a}.`);
-          else if (res.error === 'bracket_locked') setMsg('Bracket locked: one side is B3 (unranked/over 20).');
+          else if (res.error === 'bracket_mismatch') {
+            setMsg(`Bracket mismatch: must be ${formatBracketLabel(res.a ?? null)}↔${formatBracketLabel(res.a ?? null)}.`);
+          } else if (res.error === 'bracket_locked') {
+            setMsg(`Bracket locked: ${formatBracketLabel(res.a ?? null)}↔${formatBracketLabel(res.b ?? null)} includes unranked/outside top ${MAX_RANK}.`);
+          }
         } else setMsg('Locked');
       }}>Lock</button>
       {msg && <span className="text-muted-foreground">{msg}</span>}
