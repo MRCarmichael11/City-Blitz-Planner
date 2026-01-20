@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/services/supabaseClient';
 import { listAlliances } from '@/services/adminApi';
 import { getMembership, can } from '@/lib/rbac';
-import { getBracket } from '@/lib/brackets';
+import { assertBracketParity, getBracket } from '@/lib/brackets';
 import { useI18n } from '@/i18n';
 import { normalizeTeamName } from '@/lib/teams';
 
@@ -132,31 +132,53 @@ export default function StrikeBoard() {
 
   useEffect(() => {
     if (!orgId || top20.length === 0) { setInterest({}); return; }
-    (supabase as any)
-      .from('declarations')
-      .select('id,target_alliance_id')
-      .eq('org_id', orgId)
-      .eq('status','proposed')
-      .in('target_alliance_id', top20.map(a=> a.id))
-      .then(async ({ data }: any) => {
+    let cancelled = false;
+    const targetRankById = new Map(top20.map(a => [a.id, a.rank_int ?? null]));
+    (async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from('declarations')
+          .select('id,target_alliance_id')
+          .eq('org_id', orgId)
+          .eq('status','proposed')
+          .in('target_alliance_id', top20.map(a=> a.id));
         const map: Record<string, { id: string }> = {};
         (data||[]).forEach((d: any)=> { map[d.target_alliance_id] = { id: d.id }; });
         const out: Record<string, InterestRow> = {};
         for (const row of Object.entries(map)) {
           const targetId = row[0];
           const declId = (row[1] as any).id;
+          const targetRank = targetRankById.get(targetId) ?? null;
           const { data: parts } = await (supabase as any).from('declaration_participants').select('alliance_id').eq('declaration_id', declId);
           const ids = (parts||[]).map((p:any)=> p.alliance_id);
           if (ids.length) {
-            const { data: attackers } = await (supabase as any).from('alliances').select('id,tag,server:servers(name)').in('id', ids);
-            const participants = (attackers || []).map((x:any)=> ({ id: x.id, tag: x.tag, server: x.server || null }));
-            out[targetId] = { declId, count: ids.length, participants };
+            const { data: attackers } = await (supabase as any).from('alliances').select('id,tag,rank_int,server:servers(name)').in('id', ids);
+            const invalidIds: string[] = [];
+            const participants = (attackers || []).flatMap((x:any)=> {
+              const parity = assertBracketParity(x.rank_int ?? null, targetRank);
+              if (!parity.ok) {
+                invalidIds.push(x.id);
+                return [];
+              }
+              return [{ id: x.id, tag: x.tag, server: x.server || null }];
+            });
+            if (invalidIds.length) {
+              await (supabase as any)
+                .from('declaration_participants')
+                .delete()
+                .eq('declaration_id', declId)
+                .in('alliance_id', invalidIds);
+            }
+            out[targetId] = { declId, count: participants.length, participants };
           } else {
             out[targetId] = { declId, count: 0, participants: [] };
           }
         }
-        setInterest(out);
-      }).catch(()=>{});
+        if (!cancelled) setInterest(out);
+      } catch {
+      }
+    })();
+    return () => { cancelled = true; };
   }, [orgId, top20]);
 
   const handleInterested = async (targetAllianceId: string) => {
