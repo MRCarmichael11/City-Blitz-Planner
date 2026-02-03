@@ -1,0 +1,74 @@
+[
+  {
+    "season": 4,
+    "bracketSize": 64,
+    "surge": "S4 Surge 1",
+    "silverMax": 380000,
+    "blueMax": 1050000,
+    "purpleMax": 3400000,
+    "notes": "Community-reported estimate"
+  },
+  {
+    "season": 4,
+    "bracketSize": 64,
+    "surge": "S4 Surge 2",
+    "silverMax": 410000,
+    "blueMax": 1200000,
+    "purpleMax": 3800000,
+    "notes": "Community-reported estimate"
+  },
+  {
+    "season": 5,
+    "bracketSize": 64,
+    "surge": "S5 Surge 1",
+    "silverMax": 450000,
+    "blueMax": 1350000,
+    "purpleMax": 4100000,
+    "notes": "Community-reported estimate"
+  },
+  {
+    "season": 5,
+    "bracketSize": 64,
+    "surge": "S5 Surge 2",
+    "silverMax": 395000,
+    "blueMax": 1140000,
+    "purpleMax": 3650000,
+    "notes": "Community-reported estimate"
+  },
+  {
+    "season": 4,
+    "bracketSize": 32,
+    "surge": "S4 Surge 1",
+    "silverMax": 300000,
+    "blueMax": 900000,
+    "purpleMax": 2900000,
+    "notes": "Community-reported estimate"
+  },
+  {
+    "season": 4,
+    "bracketSize": 32,
+    "surge": "S4 Surge 2",
+    "silverMax": 320000,
+    "blueMax": 980000,
+    "purpleMax": 3100000,
+    "notes": "Community-reported estimate"
+  },
+  {
+    "season": 5,
+    "bracketSize": 32,
+    "surge": "S5 Surge 1",
+    "silverMax": 350000,
+    "blueMax": 1050000,
+    "purpleMax": 3300000,
+    "notes": "Community-reported estimate"
+  },
+  {
+    "season": 5,
+    "bracketSize": 48,
+    "surge": "S5 Surge 1",
+    "silverMax": 360000,
+    "blueMax": 1100000,
+    "purpleMax": 3500000,
+    "notes": "Community-reported estimate"
+  }
+]
