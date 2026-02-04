@@ -13,6 +13,7 @@ const FactionStrike = lazy(() => import('./features/strike/FactionStrikePage'));
 const OrgAdmin = lazy(() => import('./features/admin/OrgAdminPage'));
 const InvitePage = lazy(() => import('./pages/invite'));
 const SuperAdmin = lazy(() => import('./features/admin/SuperAdminPage'));
+const TransferScore = lazy(() => import('./pages/TransferScore'));
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/admin/org/:orgId" element={<Suspense fallback={<div>Loading admin...</div>}><OrgAdmin /></Suspense>} />
           <Route path="/invite" element={<Suspense fallback={<div>Loading invite...</div>}><InvitePage /></Suspense>} />
           <Route path="/super-admin" element={<Suspense fallback={<div>Loading…</div>}><SuperAdmin /></Suspense>} />
+          <Route path="/tools/transfer-score" element={<Suspense fallback={<div>Loading transfer calculator...</div>}><TransferScore /></Suspense>} />
           {/* Legacy route removed; single-page app is City Blitz Planner */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

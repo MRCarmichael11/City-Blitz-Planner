@@ -18,7 +18,16 @@ export default function ToolSwitcher({ orgId }: Props) {
   const isStrike = pathname.startsWith('/faction-strike-planner');
   const isAdmin = pathname.startsWith('/admin');
   const isSuper = pathname.startsWith('/super-admin');
-  const tab = isStrike ? 'strike' : isAdmin ? 'admin' : isSuper ? 'super' : 'blitz';
+  const isTransfer = pathname.startsWith('/tools/transfer-score');
+  const tab = isStrike
+    ? 'strike'
+    : isAdmin
+    ? 'admin'
+    : isSuper
+    ? 'super'
+    : isTransfer
+    ? 'transfer'
+    : 'blitz';
 
   const saved = typeof window !== 'undefined' ? localStorage.getItem('current_org') : null;
   const resolvedOrg = isUuid(orgId || saved || undefined) ? (orgId || (saved as string)) : null;
@@ -107,6 +116,7 @@ export default function ToolSwitcher({ orgId }: Props) {
       <div className="inline-flex rounded-full border overflow-hidden">
         <Link to="/" className={`px-3 py-1 text-xs ${tab==='blitz' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>City Blitz</Link>
         <Link to="/faction-strike-planner" className={`px-3 py-1 text-xs ${tab==='strike' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Strike Planner</Link>
+        <Link to="/tools/transfer-score" className={`px-3 py-1 text-xs ${tab==='transfer' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Transfer Score</Link>
         {showAdmin && (
           <Link to={(bootstrappedOrgId ? generatePath('/admin/org/:orgId', { orgId: bootstrappedOrgId }) : adminHref)} className={`px-3 py-1 text-xs ${tab==='admin' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>Admin</Link>
         )}
